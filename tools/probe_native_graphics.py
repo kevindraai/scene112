@@ -202,25 +202,28 @@ def invoke(
             env={**os.environ, **environment} if environment else None,
         ) as process:
             diagnostics["pid"] = process.pid
-            # Reserve the last five seconds of the existing budget for a stack
-            # sample of this exact child. Never sample any other application.
+            # Diagnose this exact child early enough to preserve stack evidence.
+            # Absolute deadlines include diagnostic time; the runtime budget is
+            # unchanged and every subprocess is synchronously reaped.
             sampling = (
                 sample_own_process
                 and platform.system() == "Darwin"
                 and Path(command[0]).name == "Scene112"
-                and timeout > 5
             )
-            try:
-                output, stderr = process.communicate(
-                    timeout=timeout - 5 if sampling else timeout
-                )
-            except subprocess.TimeoutExpired:
-                if sampling:
-                    diagnostics["live_sample"] = sample_child(process.pid, log.parent)
-                remaining = max(0.001, timeout - (time.monotonic() - started))
+            sample_times = [60, 180] if sampling else []
+            sample_times = [point for point in sample_times if point + 12 < timeout]
+            checkpoints = [*sample_times, timeout]
+            for checkpoint in checkpoints:
+                remaining = max(0.001, started + checkpoint - time.monotonic())
                 try:
                     output, stderr = process.communicate(timeout=remaining)
+                    break
                 except subprocess.TimeoutExpired:
+                    if checkpoint != timeout:
+                        if process.poll() is None:
+                            diagnostic = sample_child(process.pid, log.parent, checkpoint)
+                            diagnostics.setdefault("live_samples", []).append(diagnostic)
+                        continue
                     process.kill()
                     output, stderr = process.communicate()
                     output += (
@@ -241,36 +244,49 @@ def invoke(
     return code, output
 
 
-def sample_child(pid: int, evidence: Path) -> dict:
+def sample_child(pid: int, evidence: Path, elapsed_checkpoint: int) -> dict:
+    stem = f"live-process-{elapsed_checkpoint}s"
     command = [
-        "sample",
-        str(pid),
-        "1",
-        "1",
-        "-file",
-        str((evidence / "live-process-sample.txt").resolve()),
+        "sample", str(pid), "1", "1", "-file",
+        str((evidence / (stem + "-sample.txt")).resolve()),
     ]
     result = {
         "pid": pid,
+        "checkpoint_seconds": elapsed_checkpoint,
         "command": command,
-        "scope": "own child stack sampled before bounded timeout",
+        "scope": "own child stack and CPU/RSS; diagnostic time is inside runtime timeout",
     }
-    try:
-        sampled = subprocess.run(
-            command,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            timeout=3,
-        )
-        (evidence / "live-sample-command.txt").write_text(
-            sampled.stdout, encoding="utf-8"
-        )
-        result["returncode"] = sampled.returncode
-    except (OSError, subprocess.TimeoutExpired) as error:
-        result["capture_error"] = str(error)
+    commands = [
+        ("process_snapshot", ["ps", "-p", str(pid), "-o", "pid=,ppid=,%cpu=,rss=,state=,etime=,comm="], 2),
+        ("sample", command, 10),
+    ]
+    for name, invocation, budget in commands:
+        record = {"command": invocation, "timeout_seconds": budget}
+        try:
+            sampled = subprocess.run(
+                invocation,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                timeout=budget,
+            )
+            output = sampled.stdout
+            record["returncode"] = sampled.returncode
+        except subprocess.TimeoutExpired as error:
+            # subprocess.run already kills and waits for the diagnostic child.
+            output = error.stdout or ""
+            if isinstance(output, bytes):
+                output = output.decode("utf-8", errors="replace")
+            record["capture_error"] = str(error)
+        except OSError as error:
+            output = ""
+            record["capture_error"] = str(error)
+        filename = stem + "-" + name + "-command.txt"
+        (evidence / filename).write_text(output, encoding="utf-8")
+        record["output_file"] = filename
+        result[name] = record
     return result
 
 
@@ -736,6 +752,34 @@ def implementation_details(backend: dict) -> dict:
     }
 
 
+def profile_pair(
+    executable: Path,
+    output_dir: Path,
+    data_dir: Path,
+    primary_driver: str,
+    compatibility_driver: str,
+    *,
+    primary_environment: dict[str, str],
+    allow_angle_fallback: bool,
+    compatibility_first: bool,
+) -> list[dict]:
+    # The selected Intel tier runs on the fresh host before experimental driver
+    # crashes. Preserve the established report order and all failure semantics.
+    order = ["forward_plus", "gl_compatibility"]
+    if compatibility_first:
+        order.reverse()
+    results = {}
+    for renderer in order:
+        if renderer == "forward_plus":
+            result = profile(executable, output_dir, data_dir, renderer,
+                             primary_driver, environment=primary_environment)
+        else:
+            result = profile(executable, output_dir, data_dir, renderer,
+                             compatibility_driver, allow_angle_fallback=allow_angle_fallback)
+        results[renderer] = result
+    return [results["forward_plus"], results["gl_compatibility"]]
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--archive", required=True, type=Path)
@@ -812,24 +856,16 @@ def main() -> int:
         if not executable.is_file():
             raise ValueError("Missing standalone executable")
         primary, compatibility = profile_drivers(args.platform, platform.machine())
-        results.append(
-            profile(
+        results.extend(
+            profile_pair(
                 executable.resolve(),
                 args.output_dir,
                 user_directory(args.platform),
-                "forward_plus",
                 primary,
-                environment=primary_environment,
-            )
-        )
-        results.append(
-            profile(
-                executable.resolve(),
-                args.output_dir,
-                user_directory(args.platform),
-                "gl_compatibility",
                 compatibility,
+                primary_environment=primary_environment,
                 allow_angle_fallback=args.platform == "windows",
+                compatibility_first=args.intel_compatibility_quality,
             )
         )
         if (

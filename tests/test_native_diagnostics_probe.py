@@ -103,6 +103,8 @@ class NativeDiagnostics(unittest.TestCase):
             stored = probe.json_read((base / "process.invoke.json").read_text())
             self.assertTrue(stored["timed_out"])
             self.assertGreater(stored["pid"], 0)
+            with self.assertRaises(ProcessLookupError):
+                os.kill(stored["pid"], 0)
 
     def test_environment_override_is_child_local_and_recorded(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -125,40 +127,129 @@ class NativeDiagnostics(unittest.TestCase):
                 stored["environment_overrides"], {"SCENE112_FIXTURE_ENV": "child"}
             )
 
-    def test_live_sample_is_own_pid_before_kill_inside_existing_budget(self):
+    def test_live_samples_use_own_pid_at_60_and_180_without_extending_240(self):
         with tempfile.TemporaryDirectory() as directory:
             base = Path(directory)
             process = MagicMock()
             process.pid = 91
-            process.communicate.side_effect = [
-                subprocess.TimeoutExpired("fixture", 5),
-                subprocess.TimeoutExpired("fixture", 5),
-                ("partial", None),
-            ]
-            lifecycle = MagicMock()
-            lifecycle.attach_mock(process, "child")
+            process.poll.return_value = None
+            now = [0.0]
+            observed_samples = []
+
+            def communicate(*, timeout=None):
+                if timeout is None:
+                    return ("partial", None)
+                now[0] += timeout
+                raise subprocess.TimeoutExpired("fixture", timeout)
+
+            def sample(pid, path, checkpoint):
+                observed_samples.append((pid, path, checkpoint, now[0]))
+                now[0] += 12  # Both bounded diagnostic commands consume budget.
+                return {"pid": pid, "checkpoint_seconds": checkpoint}
+
+            process.communicate.side_effect = communicate
             with (
                 patch.object(probe.subprocess, "Popen") as popen,
                 patch.object(probe.platform, "system", return_value="Darwin"),
-                patch.object(probe, "sample_child", return_value={"pid": 91}) as sample,
+                patch.object(probe.time, "monotonic", side_effect=lambda: now[0]),
+                patch.object(probe, "sample_child", side_effect=sample),
             ):
-                lifecycle.attach_mock(sample, "sample")
                 popen.return_value.__enter__.return_value = process
                 code, _ = probe.invoke(
-                    ["/fixture/Scene112"],
-                    base,
-                    base / "process.txt",
-                    timeout=10,
-                    sample_own_process=True,
+                    ["/fixture/Scene112"], base, base / "process.txt",
+                    timeout=240, sample_own_process=True,
                 )
             self.assertEqual(code, 124)
-            sample.assert_called_once_with(91, base)
-            names = [call[0] for call in lifecycle.mock_calls]
-            self.assertLess(names.index("sample"), names.index("child.kill"))
-            self.assertEqual(process.communicate.call_args_list[0].kwargs["timeout"], 5)
-            self.assertLessEqual(
-                process.communicate.call_args_list[1].kwargs["timeout"], 10
-            )
+            self.assertEqual(observed_samples, [(91, base, 60, 60), (91, base, 180, 180)])
+            self.assertEqual(now[0], 240)
+            self.assertEqual([c.kwargs.get("timeout") for c in process.communicate.call_args_list],
+                             [60, 108, 48, None])
+            process.kill.assert_called_once()
+            stored = probe.json_read((base / "process.invoke.json").read_text())
+            self.assertEqual(len(stored["live_samples"]), 2)
+            self.assertEqual(stored["wall_seconds"], 240)
+
+    def test_success_between_checkpoints_does_not_sample_or_kill_after_exit(self):
+        with tempfile.TemporaryDirectory() as directory:
+            process = MagicMock(pid=42, returncode=0)
+            process.communicate.return_value = ("clean", None)
+            with (
+                patch.object(probe.subprocess, "Popen") as popen,
+                patch.object(probe.platform, "system", return_value="Darwin"),
+                patch.object(probe, "sample_child") as sample,
+            ):
+                popen.return_value.__enter__.return_value = process
+                code, output = probe.invoke(["/fixture/Scene112"], Path(directory),
+                                            Path(directory) / "process.txt", timeout=240,
+                                            sample_own_process=True)
+            self.assertEqual((code, output), (0, "clean"))
+            sample.assert_not_called()
+            process.kill.assert_not_called()
+
+    def test_short_timeout_never_reserves_unavailable_diagnostic_budget(self):
+        with tempfile.TemporaryDirectory() as directory:
+            process = MagicMock(pid=42, returncode=0)
+            process.communicate.return_value = ("clean", None)
+            with (
+                patch.object(probe.subprocess, "Popen") as popen,
+                patch.object(probe.platform, "system", return_value="Darwin"),
+                patch.object(probe, "sample_child") as sample,
+            ):
+                popen.return_value.__enter__.return_value = process
+                probe.invoke(["/fixture/Scene112"], Path(directory), Path(directory) / "process.txt",
+                             timeout=10, sample_own_process=True)
+            sample.assert_not_called()
+            self.assertLessEqual(process.communicate.call_args.kwargs["timeout"], 10)
+
+    def test_sample_preserves_partial_timeout_output_and_exact_pid_only(self):
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory)
+            with patch.object(probe.subprocess, "run") as run:
+                run.side_effect = [
+                    subprocess.CompletedProcess([], 0, "91 80 97.3 600000 R 00:01 Scene112"),
+                    subprocess.TimeoutExpired("sample", 10, output=b"partial stack"),
+                ]
+                result = probe.sample_child(91, base, 60)
+            self.assertEqual(run.call_args_list[0].args[0][:3], ["ps", "-p", "91"])
+            self.assertEqual(run.call_args_list[0].kwargs["timeout"], 2)
+            self.assertEqual(run.call_args_list[1].args[0][:4], ["sample", "91", "1", "1"])
+            self.assertEqual(run.call_args_list[1].kwargs["timeout"], 10)
+            self.assertIn("capture_error", result["sample"])
+            self.assertEqual((base / result["sample"]["output_file"]).read_text(), "partial stack")
+
+    def test_selected_compatibility_executes_first_with_original_result_order(self):
+        primary = {"status": "failed_before_backend_report", "returncode": -6}
+        compatibility = {"status": "timed_out", "returncode": 124}
+        seen = []
+
+        def fake_profile(*args, **kwargs):
+            seen.append((args[3], args[4], kwargs))
+            return primary if args[3] == "forward_plus" else compatibility
+
+        with patch.object(probe, "profile", side_effect=fake_profile):
+            results = probe.profile_pair(Path("Scene112"), Path("evidence"), Path("data"),
+                                         "vulkan", "opengl3", primary_environment={"MVK_TEST": "0"},
+                                         allow_angle_fallback=False, compatibility_first=True)
+        self.assertEqual([x[0] for x in seen], ["gl_compatibility", "forward_plus"])
+        self.assertIs(results[0], primary)
+        self.assertIs(results[1], compatibility)
+        self.assertEqual(seen[0][2], {"allow_angle_fallback": False})
+        self.assertEqual(seen[1][2], {"environment": {"MVK_TEST": "0"}})
+        self.assertEqual([x["status"] for x in results], ["failed_before_backend_report", "timed_out"])
+
+    def test_other_platform_profile_order_and_angle_option_are_preserved(self):
+        seen = []
+
+        def fake_profile(*args, **kwargs):
+            seen.append((args[3], args[4], kwargs))
+            return {"status": "passed"}
+
+        with patch.object(probe, "profile", side_effect=fake_profile):
+            probe.profile_pair(Path("Scene112.exe"), Path("evidence"), Path("data"),
+                               "d3d12", "opengl3", primary_environment={},
+                               allow_angle_fallback=True, compatibility_first=False)
+        self.assertEqual([x[:2] for x in seen], [("forward_plus", "d3d12"), ("gl_compatibility", "opengl3")])
+        self.assertEqual(seen[1][2], {"allow_angle_fallback": True})
 
     def test_sampling_never_targets_other_executables(self):
         with tempfile.TemporaryDirectory() as directory:

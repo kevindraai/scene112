@@ -2,6 +2,8 @@
 config_version=5
 
 [application]
+
+run/flush_stdout_on_print=true
 config/name="Scene112"
 config/version="0.0.4-m2-street"
 run/main_scene="res://scenes/main.tscn"
