@@ -16,6 +16,7 @@ import shutil
 import struct
 import subprocess
 import tempfile
+import time
 import zipfile
 
 BACKEND_PREFIX = "SCENE112_GRAPHICS_BACKEND="
@@ -200,6 +201,97 @@ def invoke(
     return code, output
 
 
+def capture_host(output_dir: Path, target: str) -> dict:
+    evidence = output_dir / "host"
+    evidence.mkdir(parents=True, exist_ok=True)
+    if target == "macos":
+        command = [
+            "system_profiler",
+            "SPDisplaysDataType",
+            "SPHardwareDataType",
+            "-json",
+        ]
+    else:
+        command = [
+            "powershell.exe",
+            "-NoProfile",
+            "-Command",
+            "[Console]::OutputEncoding=[System.Text.UTF8Encoding]::new($false);$d=@{video=Get-CimInstance Win32_VideoController | Select-Object Name,VideoProcessor,DriverVersion,AdapterRAM;computer=Get-CimInstance Win32_ComputerSystem | Select-Object Manufacturer,Model,TotalPhysicalMemory;cpu=Get-CimInstance Win32_Processor | Select-Object Name,NumberOfCores,NumberOfLogicalProcessors};$d|ConvertTo-Json -Depth 5",
+        ]
+    code, output = invoke(
+        command, output_dir.resolve(), evidence / "system.txt", timeout=45
+    )
+    result = {
+        "command": command,
+        "returncode": code,
+        "scope": "host graphics/CPU capability inventory; not physical target acceptance",
+    }
+    try:
+        result["inventory"] = json_read(output)
+    except (ValueError, TypeError) as error:
+        result["parse_error"] = str(error)
+    json_write(evidence / "system.json", result)
+    return {"file": "host/system.json", "returncode": code}
+
+
+def capture_crashes(
+    evidence: Path, started: float, wait_for_report: bool = False
+) -> list[dict]:
+    if platform.system() != "Darwin":
+        return []
+    directory = Path.home() / "Library/Logs/DiagnosticReports"
+    candidates = []
+    capture_errors = []
+    deadline = time.monotonic() + (5.0 if wait_for_report else 0.0)
+    while True:
+        for suffix in ("ips", "crash"):
+            for path in directory.glob("Scene112*." + suffix):
+                try:
+                    info = path.stat()
+                    if info.st_mtime >= started - 1:
+                        with path.open("rb") as stream:
+                            header = stream.read(4096).decode("utf-8", errors="replace")
+                        if suffix == "ips":
+                            try:
+                                own = (
+                                    json_read(header.splitlines()[0]).get("app_name")
+                                    == "Scene112"
+                                )
+                            except (ValueError, AttributeError, IndexError):
+                                own = False
+                        else:
+                            own = bool(
+                                re.search(r"^Process:\s+Scene112\s*\[", header, re.M)
+                            )
+                        if own:
+                            candidates.append((info.st_mtime, path, info.st_size))
+                except OSError as error:
+                    capture_errors.append(
+                        {"file": path.name, "capture_error": str(error)}
+                    )
+        if candidates or time.monotonic() >= deadline:
+            break
+        time.sleep(0.2)
+    copied = capture_errors
+    for modified, path, size in sorted(candidates, reverse=True)[:5]:
+        item = {"file": path.name, "modified_epoch": modified, "bytes": size}
+        if size > 4 * 1024 * 1024:
+            item["copied"] = False
+            item["reason"] = "bounded crash report size exceeded"
+        else:
+            destination = evidence / "own-crashes" / path.name
+            destination.parent.mkdir(exist_ok=True)
+            try:
+                shutil.copyfile(path, destination)
+                item["copied"] = True
+                item["sha256"] = hashlib.sha256(destination.read_bytes()).hexdigest()
+            except OSError as error:
+                item["copied"] = False
+                item["capture_error"] = str(error)
+        copied.append(item)
+    return copied
+
+
 def profile(
     executable: Path,
     output_dir: Path,
@@ -234,7 +326,11 @@ def profile(
         "--",
         "--visual-playthrough",
     ]
-    code, output = invoke(command, executable.parent, evidence / "process.txt")
+    started = time.time()
+    code, output = invoke(
+        command, executable.parent, evidence / "process.txt",
+        timeout=480 if renderer == "forward_plus" else 240,
+    )
     if engine_log.is_file():
         output += "\n" + engine_log.read_text(encoding="utf-8", errors="replace")
     (evidence / "combined.txt").write_text(output, encoding="utf-8")
@@ -244,6 +340,19 @@ def profile(
         "returncode": code,
         "command": command,
         "scope": "exact standalone, actual graphical window and scripted gameplay; no human play/performance claim",
+        "wall_seconds": round(time.time() - started, 3),
+        "phase_log": [
+            line
+            for line in output.splitlines()
+            if line.startswith(
+                (
+                    "SCENE112_GRAPHICS_STAGE=",
+                    "SCENE112_GRAPHICS_BACKEND=",
+                    "SCENE112_BRAKE_DIAGNOSTICS=",
+                )
+            )
+        ],
+        "crash_reports": capture_crashes(evidence, started, wait_for_report=code < 0),
     }
     try:
         backend = backend_from_log(output)
@@ -411,6 +520,7 @@ def main() -> int:
         or provenance.get("sha256") != digest
     ):
         raise ValueError("Exact source-head/archive provenance mismatch")
+    host_information = capture_host(args.output_dir, args.platform)
     results = []
     with tempfile.TemporaryDirectory(prefix="scene112-native-graphics-") as directory:
         staging = Path(directory)
@@ -482,6 +592,7 @@ def main() -> int:
         "archive_sha256": digest,
         "platform": args.platform,
         "runner_architecture": platform.machine(),
+        "host_information": host_information,
         "results": results,
         "required_compatibility_passed": compatibility_passed(results, args.platform),
         "native_opengl_validated": results[1]["status"] == "passed"

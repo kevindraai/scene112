@@ -436,7 +436,7 @@ jobs:
     needs: [changes, native]
     if: needs.changes.outputs.gameplay == 'true' && needs.native.result == 'success'
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 15
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -484,7 +484,7 @@ jobs:
               "--provenance", "build/" + os.environ["TARGET_PLATFORM"] + "-provenance.json",
               "--source-head", os.environ["SOURCE_HEAD"], "--platform", os.environ["TARGET_PLATFORM"],
               "--output-dir", str(output)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-              text=True, encoding="utf-8", errors="replace", timeout=810)
+              text=True, encoding="utf-8", errors="replace", timeout=1100)
           (output / "probe.txt").write_text(result.stdout, encoding="utf-8")
           print(result.stdout)
           assert result.returncode == 0, "Native graphical tier/evidence gate failed; inspect explicit graphics-provenance.json"

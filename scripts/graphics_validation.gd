@@ -14,7 +14,7 @@ var report := {"scope": "integrated runtime; initial pose/equipment fixtures", "
 
 func run(root_app: Node3D) -> void:
 	app = root_app
-	app._test_timeout(240)
+	app._test_timeout(420)
 	_cleanup()
 	_stage("initial_draw")
 	await app._test_frames(2)
@@ -259,7 +259,7 @@ func _frontage_drive() -> bool:
 	if not await app._wait_for(func(): return car.global_position.x > 20, "actual >30m connected street route", 30): return false
 	_release()
 	Input.action_press("brake")
-	if not await app._wait_for(func(): return absf(car.speed) < 0.05, "brake on authored frontage", 8): return false
+	if not await _diagnose_frontage_brake(car): return false
 	_release()
 	report["frontage_drive_metres"] = car.global_position.distance_to(start)
 	if not _check(report.frontage_drive_metres > 30 and car.global_position.z < 40, "authored street is genuinely connected and drivable"): return false
@@ -397,3 +397,29 @@ func _release() -> void:
 func _cleanup() -> void:
 	for suffix: String in ["", ".bak", ".tmp"]:
 		if FileAccess.file_exists(SAVE + suffix): DirAccess.remove_absolute(SAVE + suffix)
+
+func _diagnose_frontage_brake(car: Node3D) -> bool:
+	# Observe the actual physics clock: max 14m/s and 13m/s² require <1.1s
+	# to stop. Two simulated seconds retain margin on slow software renderers.
+	# The final speed and a separate 60s wall watchdog remain mandatory.
+	var began := Time.get_ticks_msec()
+	var first_tick := Engine.get_physics_frames()
+	var samples: Array = []
+	var observed_tick := [-1]
+	var condition := func() -> bool:
+		var tick := Engine.get_physics_frames()
+		if tick != observed_tick[0] and samples.size() < 32:
+			observed_tick[0] = tick
+			samples.append({"wall_ms": Time.get_ticks_msec() - began,
+				"physics_ticks": tick - first_tick, "speed": car.speed,
+				"brake_held": Input.is_action_pressed("brake"), "enabled_input": car.enabled_input,
+				"position": [car.global_position.x, car.global_position.y, car.global_position.z]})
+		return absf(car.speed) < 0.05 or tick - first_tick >= Engine.physics_ticks_per_second * 2
+	var observed: bool = await app._wait_for(condition, "brake on authored frontage", 60)
+	var elapsed_wall := Time.get_ticks_msec() - began
+	var elapsed_physics := Engine.get_physics_frames() - first_tick
+	var ok: bool = observed and absf(car.speed) < 0.05 and elapsed_physics <= Engine.physics_ticks_per_second * 2 and elapsed_wall <= 60000
+	print("SCENE112_BRAKE_DIAGNOSTICS=", JSON.stringify({"wall_ms": elapsed_wall,
+		"physics_ticks": elapsed_physics, "final_speed": car.speed,
+		"passed": ok, "samples": samples}))
+	return _check(ok, "actual frontage brake stops within two simulated seconds")
