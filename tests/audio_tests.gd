@@ -91,8 +91,19 @@ func _run() -> void:
 	await create_timer(0.25).timeout
 	director._prune_oneshots()
 	check(director.status().oneshots == 0, "completed voices release their slots for subsequent cues")
+	var released_loop: WeakRef = weakref(director._streams.wind)
+	# Start positional voices immediately before quit to exercise their queued
+	# physics-frame start, including the native headless failure condition.
+	director._ambience.wind.play()
+	director._ambience.traffic.play()
+	director.cue("interaction", Vector3.ZERO)
 	await director.shutdown()
+	check(director.status().shutdown_synchronized and director.status().shutdown_mixes >= 2, "shutdown observes two real mixer transitions before completion")
+	check(released_loop.get_ref() == null, "queued positional loop and its AudioServer playback release their WAV")
 	check(not director.cue("ui") and not director.set_theme("urgency") and not director.begin_voice(1) and not director.set_siren(true, "police_car") and director.status().waves_loaded == 0, "shutdown refuses late events and leaves assets released")
+	var repeated_at := Time.get_ticks_msec()
+	await director.shutdown()
+	check(Time.get_ticks_msec() - repeated_at < 100, "completed shutdown can be called again without waiting for more mixes")
 	director.queue_free()
 	await process_frame
 	await process_frame

@@ -38,6 +38,9 @@ var _duck_db := 0.0
 var _step_clock := 0.0
 var _last_listener := Vector3.ZERO
 var _stopping := false
+var _shutdown_complete := false
+var _shutdown_mixes := 0
+var _shutdown_synchronized := false
 
 func _ready() -> void:
 	_create_buses()
@@ -343,7 +346,7 @@ func status() -> Dictionary:
 	return {"theme": _theme, "driver": AudioServer.get_driver_name(), "no_device": AudioServer.get_driver_name() == "Dummy",
 		"duck_db": _duck_db, "voice_seconds": _voice_seconds, "quiet_until": _quiet_until,
 		"oneshots": _oneshots.size(), "voice_cap": MAX_ONESHOTS, "waves_loaded": _streams.size(), "missing": _missing.duplicate(),
-		"settings": get_settings()}
+		"settings": get_settings(), "shutdown_mixes": _shutdown_mixes, "shutdown_synchronized": _shutdown_synchronized}
 
 func stop_all() -> void:
 	_stopping = true
@@ -355,12 +358,47 @@ func stop_all() -> void:
 	_streams.clear()
 
 func shutdown() -> void:
-	# AudioServer releases stopped playback references on its next mix. Keep
-	# the tree alive briefly instead of exiting with active WAV playbacks.
+	if _shutdown_complete: return
+	_stopping = true
+	set_process(false)
+	if not is_inside_tree():
+		stop_all()
+		_shutdown_complete = true
+		return
+	# AudioStreamPlayer3D can queue its start until the next physics frame.
+	# Freeze new cues, let those starts reach AudioServer, then stop them.
+	await get_tree().physics_frame
+	await get_tree().process_frame
+	await _wait_for_audio_mixes(1)
 	stop_all()
-	if is_inside_tree():
-		var settling := clampf(AudioServer.get_output_latency() * 2 + 0.05, 0.12, 0.5)
-		await get_tree().create_timer(settling).timeout
+	# Dummy reports zero output latency but mixes 4096 frames at a time.
+	# Observe real mixes instead of assuming a fixed delay is sufficient.
+	_shutdown_mixes = await _wait_for_audio_mixes(2)
+	_shutdown_synchronized = _shutdown_mixes >= 2
+	# Playback deletion is deferred from the audio thread to main-thread cleanup.
+	await get_tree().process_frame
+	await get_tree().process_frame
+	_shutdown_complete = true
+	print("SCENE112_AUDIO_STOP driver=", AudioServer.get_driver_name(), " mixes=", _shutdown_mixes, " synchronized=", _shutdown_synchronized)
+	if not _shutdown_synchronized: push_error("AUDIO_SHUTDOWN_TIMEOUT: audio mixer did not settle within bounded shutdown")
+
+func _wait_for_audio_mixes(wanted: int) -> int:
+	var observed := 0
+	var previous := _audio_mix_timestamp()
+	var deadline := Time.get_ticks_msec() + 1500
+	while observed < wanted and Time.get_ticks_msec() < deadline:
+		await get_tree().process_frame
+		var current := _audio_mix_timestamp()
+		# The timestamp is inferred from two clocks; tolerate microsecond rounding
+		# and call overhead instead of counting it as an audio-thread transition.
+		if current - previous > 2000:
+			observed += 1
+			previous = current
+	return observed
+
+func _audio_mix_timestamp() -> int:
+	var elapsed := AudioServer.get_time_since_last_mix()
+	return Time.get_ticks_usec() - int(elapsed * 1000000)
 
 func _exit_tree() -> void:
 	stop_all()
