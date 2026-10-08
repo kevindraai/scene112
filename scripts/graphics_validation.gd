@@ -79,14 +79,17 @@ func _inspect_models() -> bool:
 			meshes += 1
 			if child.skin != null and child.get_node_or_null(child.skeleton) is Skeleton3D: skin_meshes += 1
 			for surface in range(child.mesh.get_surface_count()):
-				var material := child.get_active_material(surface) as StandardMaterial3D
+				var active: Material = child.get_active_material(surface)
+				var material := app.district.atmosphere.source_material(child, surface) as StandardMaterial3D
+				if app.district.atmosphere.apple_software_basic and material != null:
+					if not _check(active is StandardMaterial3D and active != material and active.shading_mode in [BaseMaterial3D.SHADING_MODE_PER_VERTEX, BaseMaterial3D.SHADING_MODE_UNSHADED] and not active.normal_enabled and active.roughness_texture == null and active.albedo_texture == material.albedo_texture, "Apple vertex rendering retains actual source albedo: " + key): return false
 				if material == null or materials.has(material.get_instance_id()): continue
 				materials[material.get_instance_id()] = true
 				if material.albedo_texture == null or material.roughness_texture == null or not material.normal_enabled or material.normal_texture == null: continue
 				for texture: Texture2D in [material.albedo_texture, material.roughness_texture, material.normal_texture]:
 					if not _check(texture.get_width() >= 256 and texture.get_height() >= 256, "loaded usable PBR maps: " + key): return false
 				full_pbr += 1
-		if not _check(meshes > 0 and full_pbr >= MODEL_PBR[key], "actual albedo/normal/roughness material coverage: " + key): return false
+		if not _check(meshes > 0 and full_pbr >= MODEL_PBR[key], "loaded source albedo/normal/roughness material coverage: " + key): return false
 		if key.begins_with("characters/") and not _check(skin_meshes > 0, "mesh bound to actual skeleton: " + key): return false
 		report.models[key] = {"meshes": meshes, "materials": materials.size(), "full_pbr": full_pbr, "skin_meshes": skin_meshes}
 	for i in range(5):

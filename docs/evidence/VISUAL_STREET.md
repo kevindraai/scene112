@@ -106,3 +106,12 @@ Een uitsluitend op echte Apple Software Renderer actieve `software_basic`-kandid
 
 
 Native hercontrole op `637e7c5` (run `37834179823`) bevestigt Windows D3D12/Compatibility en Apple Silicon Metal/Compatibility met elk vier verse runtimebeelden, fysieke loop-/rijproeven en schone afsluiting. Intel Compatibility overschreed 240 seconden en blijft afgewezen; Mobile registreerde een GPU-timeout/device lost. Het laatste stdoutbericht bleek door exportbuffering geen betrouwbare stoplocatie. De volgende diagnose bewaart directe fase-uitvoer, meet uitsluitend de eigen runtime-PID op 60/180 seconden binnen dezelfde tijdgrens, en start de gekozen Intel Compatibility-tier vóór de afzonderlijke rendererexperimenten. Alle rendererresultaten en speelbaarheidspoorten blijven afzonderlijk en ongewijzigd; dit is geen native Intel-succesclaim.
+
+
+## Apple Software Renderer: fragmentkosten beperken
+
+Run [37841531608](https://github.com/kevindraai/scene112/actions/runs/37841531608) op `092c33a` start Intel Compatibility binnen 4,2 seconden. De echte loopproef strandt vervolgens bij het wachten op >10 m verplaatsing. Twee samples van de eigen runtime-PID tonen vrijwel uitsluitend Apples softwarematige fragmentinterpreter; RSS blijft ongeveer 640 MB. Windows en Apple Silicon voltooien hun grafische poorten. Dit onderscheidt de Intel-fout van een startprobleem of geheugengroei.
+
+De daaropvolgende uitsluitend Apple-softwarematige materiaalvariant gebruikt vertexbelichting en de oorspronkelijke albedotexturen. Normals, roughness/specular/clearcoat en sky-cubemapfragmentberekening vervallen in deze tier; grond gebruikt één world-XZ-textuursample. Geometrie, animatie, lichten en botsingen blijven aanwezig. Ook speler en later toegevoegde actors vallen onder het profiel. Eigen overrides houden de oorspronkelijke materialen vast en herstellen alleen wat ze zelf beheren. Andere adapters houden hun bestaande PBR-profiel.
+
+De [lokale geforceerde profielproef](apple-vertex/manifest.json) voltooit 294 checks met daadwerkelijke loop-/rijinput, vier verse beelden en schone audioafsluiting. De werkelijke adapter blijft Linux llvmpipe: dit bewijst de integratie en uitdrukkelijk geen native Intel-prestatie. De lage 320×180 interne 3D-buffer is een beperkte softwarefallback, geen professionele visuele kwaliteitsacceptatie. De native poort moet op deze nieuwe bronversie opnieuw slagen; deadlines en afstanden zijn ongewijzigd.

@@ -1,0 +1,34 @@
+{
+  "basis_head": "092c33a519cc84dc2017dd502f84b5cceea2eedf",
+  "scope": "Forced Apple profile, actual Linux llvmpipe; native Intel pending",
+  "sources": {
+    "scripts/apple_software_materials.gd": "3eeec3bdfb0938bc063fa8208dd4e20f66d01d68132adedb579e2f8d1522e075",
+    "scripts/apple_software_materials.gd.uid": "a600007fe4f443fc50e7058e0997049d9b02c848c4fa55e21428bf626fddb723",
+    "shaders/apple_software_ground.gdshader": "f341040b0222010e665bb240c4bd9b82ae844b88f5e94e8be43590d7d4b8f919",
+    "shaders/apple_software_ground.gdshader.uid": "c776e2da97539ffce96e7fec7dc0ae52637aabdc51ca23ca424cb331bea55026",
+    "scripts/street_atmosphere.gd": "0b41020f93a3dfb143ddb6398533cf423adc679c7729011870d5460f3936110b",
+    "scripts/graphics_validation.gd": "b9729914ae1614894abce4cc197423d7e009a521456dc3ac9410fce0c01bf6c0",
+    "tests/apple_material_tests.gd": "eddec48c67e3f1c47dbc27a69f22d9440bf1102e5d95dd1f0a4c16d35c8e676c",
+    "tests/apple_material_tests.gd.uid": "338191d334b6dea3d4b2747ab8bbce9ac179dc9fa2fc4b19335daa148280ca47",
+    "tests/apple_normal_profile_test.gd": "d7e1b0d61fa0b2dfab1f5c74c69b3bf96bcf6c9552a699bd559269ae39432f1d",
+    "tests/apple_normal_profile_test.gd.uid": "129430f43940eaacd531eda4e767342d3a7048cf1ff7fa7f1b52b71a22274af3",
+    "tests/apple_vertex_playthrough.gd": "d5b8d9e61d39a43105700606e1cf0ddf9a4dfd538c218d80ee0278d1164a912a",
+    "tests/apple_vertex_playthrough.gd.uid": "18ecd953535d5b20a8cfecbde877e949a5b5f2d2b4f14b7f9ff61054d238986c",
+    "tests/forced_vertex_atmosphere.gd": "353ad5f873aeac596735a8ad1b041f13bc681668194664413d340a5da506592f",
+    "tests/forced_vertex_atmosphere.gd.uid": "318bd17c0b405ebba6a52a1fdd055bbea345edf2715a3bcd8835bdd5bdba4b81"
+  },
+  "evidence": {
+    "forced-graphics-runtime.json": "d318a6ccca5659cbedb1fd6e22507ef5e7cc427ac66348c37ab0be744b26b415",
+    "visual-street-day.png": "a3cc74ac2aa473e8ea70637eed023194e1c9bad30b8603a1c151c531de801cde",
+    "profile-classification.log": "55b90e6dad9441e9d845930122dc6cf97cf7d4061d55f711c16f2e5f4ca058c2",
+    "forced-graphics-final.log": "620a2efd7b3e879537ea5f97bb9b3229dadcd841d92486d933fac08fd5afb863",
+    "README.md": "30d11da6878aceba3217eb3ed6f7c982bddd342a0355a5bb618bdec7c0e90e8f",
+    "visual-street-rain.png": "57949050dd7f5250108d45e4fadd079c9b2a658400af8119967f256596457325",
+    "visual-street-dusk.png": "2249c421a25a0057dbeacf2709ccae32d588f421958f82945f1b1c26c8a926ae",
+    "material-tests.log": "f81e83c48a598e8267b13bf3fca589030eb7e6318e702dc95caba14fd4d58b6b",
+    "visual-street-high-rain.png": "726d0ff72b0dbaca05d2f7eafc5e0e28dd9327b59b0175a9ca564c5ae2fe89b7",
+    "forced-graphics-no-reflection.log": "85f8219e0252dd9b28c2a61f7df6305da238b988f106cc008ea956e67e408a2c",
+    "material-tests-final.log": "c3851c5cf9e724d84358fefdd66ff552688ea593a3d0a767641f9bbb1fcaf77c",
+    "normal-material-profile.log": "84203e1eded24f3adc0a6359c5b71ea1e58de8e9226c4c401693446a40b90405"
+  }
+}

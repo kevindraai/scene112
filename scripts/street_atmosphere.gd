@@ -3,6 +3,7 @@ extends Node3D
 ## Bounded Dutch street lighting. Geometry/PBR assets remain the primary image.
 ## Attach after District._ready/assets; no gameplay input or mission state owned here.
 
+const AppleSoftwareMaterials = preload("res://scripts/apple_software_materials.gd")
 const WetPaving = preload("res://shaders/wet_paving.gdshader")
 const CONDITIONS := ["day", "dusk", "rain"]
 const QUALITIES := ["portable", "balanced", "high"]
@@ -34,6 +35,7 @@ var _original_environment: Environment
 var _original_sun: Dictionary = {}
 var _paused := false
 var _probe_revision := 0
+var _apple_materials: RefCounted
 
 
 func setup(district: Node3D) -> bool:
@@ -94,6 +96,10 @@ func setup(district: Node3D) -> bool:
 func apply_conditions(value: String) -> bool:
 	if value not in CONDITIONS or _environment == null: return false
 	conditions = value
+	# GLES3 still samples the sky cubemap with specular_disabled. The CPU
+	# interpreter uses solid ambient light and actual vertex lights instead.
+	_environment.reflected_light_source = Environment.REFLECTION_SOURCE_DISABLED if apple_software_basic else Environment.REFLECTION_SOURCE_SKY
+	_environment.ambient_light_sky_contribution = 0.0 if apple_software_basic else .35
 	effective_quality = "software_basic" if apple_software_basic else ("software_portable" if software_gl else quality)
 	var dusk := value == "dusk"
 	var rainy := value == "rain"
@@ -246,16 +252,22 @@ func diagnostics() -> Dictionary:
 		"reflection_probes":1 if is_instance_valid(_reflection) else 0,"probe_revision":_probe_revision,
 		"ssao":_environment.ssao_enabled if _environment else false,"glow":_environment.glow_enabled if _environment else false,
 		"ssr":_environment.ssr_enabled if _environment else false,"particles":_rain.amount if _rain and _rain.visible else 0,
+		"apple_materials":_apple_materials.diagnostics() if _apple_materials != null else {"enabled":false},
 		"particles_paused":_paused,"material_variants":_variants.size(),"managed_surfaces":_surfaces.size()}
 
 
 func restore_original() -> void:
+	if _apple_materials != null:
+		_apple_materials.restore()
+		_apple_materials = null
 	if software_gl and is_inside_tree():
 		get_viewport().scaling_3d_scale = _original_render_scale
 		get_viewport().scaling_3d_mode = _original_scaling_mode
 		get_viewport().mesh_lod_threshold = _original_mesh_lod_threshold
 	for entry: Dictionary in _surfaces:
 		if is_instance_valid(entry.mesh):
+			var current: Material = entry.mesh.material_override if entry.surface == -1 else entry.mesh.get_surface_override_material(entry.surface)
+			if current not in [_variants[entry.key].dry, _variants[entry.key].wet]: continue
 			if entry.surface == -1: entry.mesh.material_override = entry.original_override
 			else: entry.mesh.set_surface_override_material(entry.surface,entry.original_override)
 	if is_instance_valid(_world): _world.environment = _original_environment
@@ -300,7 +312,8 @@ func _wet_surface(original: StandardMaterial3D, glass: bool) -> StandardMaterial
 	return material
 
 
-func _wet_ground(original: StandardMaterial3D) -> ShaderMaterial:
+func _wet_ground(original: StandardMaterial3D) -> Material:
+	if apple_software_basic: return _wet_surface(original, false)
 	var material := ShaderMaterial.new()
 	material.shader = WetPaving
 	material.resource_name = original.resource_name + " · rain patches"
@@ -332,6 +345,20 @@ func _set_material_condition(wet: bool) -> void:
 		if is_instance_valid(entry.mesh):
 			if entry.surface == -1: entry.mesh.material_override = _variants[entry.key][key]
 			else: entry.mesh.set_surface_override_material(entry.surface,_variants[entry.key][key])
+
+	if apple_software_basic:
+		if _apple_materials == null:
+			_apple_materials = AppleSoftwareMaterials.new()
+			_apple_materials.setup(_district.get_parent() if _district.get_parent() is Node3D else _district)
+		else: _apple_materials.refresh()
+
+
+func source_material(mesh: MeshInstance3D, surface: int) -> Material:
+	return _apple_materials.original_material(mesh, surface) if _apple_materials != null else mesh.get_active_material(surface)
+
+
+func _exit_tree() -> void:
+	if _apple_materials != null: _apple_materials.restore()
 
 
 func _create_lamps() -> void:
@@ -405,10 +432,10 @@ func _create_rain() -> void:
 	_rain.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_rain.visibility_aabb = AABB(Vector3(-27,-8,-10),Vector3(54,10,20))
 	var streak := QuadMesh.new()
-	streak.size = Vector2(.008,.20)
+	streak.size = Vector2(.04,.32) if apple_software_basic else Vector2(.008,.20)
 	var material := StandardMaterial3D.new()
 	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	material.albedo_color = Color(.64,.78,.85,.23)
+	material.albedo_color = Color(.64,.78,.85,.35 if apple_software_basic else .23)
 	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	material.billboard_mode = BaseMaterial3D.BILLBOARD_FIXED_Y
 	material.cull_mode = BaseMaterial3D.CULL_DISABLED
