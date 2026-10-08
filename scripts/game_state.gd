@@ -1,7 +1,7 @@
 class_name GameState
 extends RefCounted
 
-const SCHEMA := 3
+const SCHEMA := 4
 const Police = preload("res://scripts/police_case.gd")
 const Ledger = preload("res://scripts/dispatch.gd")
 const SAVE_PATH := "user://dienst.json"
@@ -22,6 +22,8 @@ var police_draft: Array = []
 var police_practice := false
 var campaign_stage := 0
 var course_passes: Array = []
+var condition := "day"
+var graphics_quality := "portable"
 
 func to_dict() -> Dictionary:
 	return {"schema": SCHEMA, "equipment": equipment, "radio_checked": radio_checked,
@@ -30,13 +32,14 @@ func to_dict() -> Dictionary:
 		"sensitivity": sensitivity, "role": role, "occupied_vehicle": occupied_vehicle,
 		"vehicles": vehicles.duplicate(true), "dispatch": dispatch.duplicate(true), "police": police.duplicate(true), "police_campaign": police_campaign.duplicate(true),
 		"police_draft": police_draft.duplicate(true), "police_practice": police_practice,
-		"campaign_stage": campaign_stage, "course_passes": course_passes.duplicate()}
+		"campaign_stage": campaign_stage, "course_passes": course_passes.duplicate(),
+		"condition": condition, "graphics_quality": graphics_quality}
 
 func restore(data: Variant) -> bool:
 	if not data is Dictionary:
 		return false
 	var revision: Variant = data.get("schema")
-	if not (revision is int or revision is float) or (revision != 1 and revision != 2 and revision != SCHEMA):
+	if not (revision is int or revision is float) or not is_finite(float(revision)) or float(revision) != floorf(float(revision)) or int(revision) not in [1, 2, 3, SCHEMA]:
 		return false
 	var p: Variant = data.get("position")
 	if not p is Array or p.size() != 3:
@@ -117,12 +120,18 @@ func restore(data: Variant) -> bool:
 		if course not in ["basis", "intake", "fire"] or unique.has(course):
 			return false
 		unique[course] = true
+	var saved_condition: Variant = data.get("condition", "day")
+	var saved_quality: Variant = data.get("graphics_quality", "portable")
+	if saved_condition not in ["day", "dusk", "rain"] or saved_quality not in ["portable", "balanced", "high"]:
+		return false
 	police = police_save.duplicate(true)
 	police_campaign = campaign_save.duplicate(true)
 	police_draft = draft.duplicate(true)
 	police_practice = practice
 	campaign_stage = int(stage)
 	course_passes = courses.duplicate()
+	condition = saved_condition
+	graphics_quality = saved_quality
 	role = next_role
 	occupied_vehicle = seated
 	vehicles = saved_vehicles.duplicate(true)

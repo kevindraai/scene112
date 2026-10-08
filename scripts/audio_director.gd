@@ -59,6 +59,7 @@ func _ready() -> void:
 	_create_ambience("harbour", Vector3(42, 1, -32), "harbour", 18, 55, -9)
 	_create_ambience("bureau", Vector3(0, 1, -5), "room", 8, 18, -7)
 	_create_ambience("kazerne", Vector3(29, 1, -6), "room", 9, 20, -7)
+	_create_ambience("rain", Vector3(8, 3, 31), "rain", 12, 35, -17)
 	for id: String in ["police_car", "fire_truck"]:
 		_engines[id] = _spatial_loop("engine", "Vehicle", 12, 50, -22)
 		_sirens[id] = _spatial_loop("siren", "Vehicle", 22, 100, -4)
@@ -237,11 +238,22 @@ func _update_world(delta: float) -> void:
 		set_theme("surveillance_a" if tag == "surveillance" else tag)
 	var listener: Vector3 = _app._controlled_position()
 	var indoors := (absf(listener.x) < 10 and listener.z < 0 and listener.z > -10) or (listener.x > 18 and listener.x < 40 and listener.z < -1 and listener.z > -12)
+	var condition := str(_app.state.get("condition"))
 	for id: String in _ambience:
 		var player: AudioStreamPlayer3D = _ambience[id]
 		var wanted: bool = _app.active and not _app.paused
-		if id in ["bureau", "kazerne"]: wanted = wanted and indoors
-		else: wanted = wanted and not indoors
+		if id == "rain":
+			wanted = wanted and condition == "rain"
+			player.global_position = listener + Vector3(0, 3, 0)
+			player.set_meta("base_gain_db", -32 if indoors else -17)
+		elif id in ["bureau", "kazerne"]: wanted = wanted and indoors
+		else:
+			wanted = wanted and not indoors
+			if id == "birds":
+				wanted = wanted and condition != "rain"
+				player.set_meta("base_gain_db", -18 if condition == "dusk" else -8)
+			elif id == "wind":
+				player.set_meta("base_gain_db", -12 if condition == "rain" else -15)
 		_gate(player, wanted, delta)
 	for id: String in _engines:
 		var vehicle: Node3D = _app.district.objects[id]

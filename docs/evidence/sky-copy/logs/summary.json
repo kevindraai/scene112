@@ -1,0 +1,46 @@
+{
+  "scope": "Linux OpenGL software-renderer lifetime reproduction; not gameplay/performance acceptance",
+  "source_sha256": "fa2ee78da73f2a230eefbb3bbd430fc290fedb725b4c4f206590dfed7b2cffd4",
+  "results": [
+    {
+      "case": "deep",
+      "returncode": 0,
+      "command": [
+        "/tmp/scene112-tools/Godot_v4.7.2-stable_linux.x86_64",
+        "--path",
+        "/tmp/scene112-quality-evidence/sky-copy-evidence",
+        "--audio-driver",
+        "Dummy",
+        "--script",
+        "/tmp/scene112-quality-evidence/sky-copy-evidence/sky_copy.gd",
+        "--",
+        "deep"
+      ],
+      "rendered": true,
+      "errors": [
+        "ERROR: Texture with GL ID of 25: leaked 349524 bytes.",
+        "ERROR: Texture with GL ID of 26: leaked 349524 bytes."
+      ],
+      "log_sha256": "f2745282ea34c7ab5e9d67ceb7bdceba367c4dbb99957d086242d4dec03cae79"
+    },
+    {
+      "case": "shallow",
+      "returncode": 0,
+      "command": [
+        "/tmp/scene112-tools/Godot_v4.7.2-stable_linux.x86_64",
+        "--path",
+        "/tmp/scene112-quality-evidence/sky-copy-evidence",
+        "--audio-driver",
+        "Dummy",
+        "--script",
+        "/tmp/scene112-quality-evidence/sky-copy-evidence/sky_copy.gd",
+        "--",
+        "shallow"
+      ],
+      "rendered": true,
+      "errors": [],
+      "log_sha256": "159b4263900389d2ef79c1af45a0dabc0d32a72de2831307f89e540f5e977a38"
+    }
+  ],
+  "hypothesis_corroborated": true
+}

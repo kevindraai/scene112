@@ -1,0 +1,117 @@
+SCENE 112 pinned Windows graphics research and explicit ANGLE replay preparation
+
+Scope: downloads/inspection/preparation only under /tmp. No repository, Git,
+workflow, runner, graphics-driver installation, paid service or GH dispatch changes.
+No Windows executable has been run here; Linux inspection is not native proof.
+
+Pinned artifacts inspected:
+- Godot_v4.7.2-stable_win64.exe.zip, official release API SHA256:
+  731980f9608d61333e5baf54a2ef17210acc7a538446c0cb9969f002aca1e953
+  Contains only GUI engine EXE (180858888 bytes) and console wrapper (198152).
+- Godot_v4.7.2-stable_export_templates.tpz, SHA256:
+  f298490b8d44d934be425a5a65a51bf15f422428b229a06a6e11d9ffea248011
+  Contains Windows executable templates/wrappers, no separate graphics DLLs.
+- Actual extracted windows_release_x86_64.exe SHA256:
+  d34d36f3be1a6c49c56525ae86469b92e4f417ddf0b43cf00dd80c385c4b0562
+- Directly fetched tag points to source commit:
+  ed1daf0bf001b61586d9930840f2f1394092c079
+  Fresh raw-source hashes and PE import/code-string findings in verified-facts.json.
+  Some browse-rendered source excerpts differed from the direct pinned download;
+  the downloaded tag/commit and actual binary bytes are authoritative here.
+
+Finding and package recommendation:
+Keep the current official EXE+PCK package and portable Compatibility default for the
+first native probe. Missing libEGL.dll/libGLESv2.dll/Agility DLLs is NOT by itself a
+packaging error for these templates. Actual EXE code strings identify the ANGLE and
+D3D12 paths, while PE imports contain no required third-party graphics DLLs.
+The Windows build links ANGLE libraries statically with EGL_STATIC. ANGLE selects
+D3D11 and GLES3. The EGL dynamic-library loading path is excluded when EGL_STATIC.
+Do not graft random newer ANGLE DLLs or dxcompiler DLLs onto this matching engine.
+Official build-only ANGLE/NIR versions/digests are recorded for reproducibility,
+not required additional distributable DLLs.
+
+Primary build/runtime sources:
+https://github.com/godotengine/godot/blob/ed1daf0bf001b61586d9930840f2f1394092c079/platform/windows/detect.py
+https://github.com/godotengine/godot/blob/ed1daf0bf001b61586d9930840f2f1394092c079/drivers/egl/egl_manager.cpp
+https://github.com/godotengine/godot/blob/ed1daf0bf001b61586d9930840f2f1394092c079/platform/windows/gl_manager_windows_angle.cpp
+Godot MIT; ANGLE BSD-3-clause, documented in pinned COPYRIGHT.txt. Existing packaged
+Godot notices remain relevant; this task adds no new distributed ANGLE component.
+
+D3D12 / WARP:
+The engine loads system D3D12.dll and DXGI.dll. It tries an optional Agility 618
+CreateDeviceFactory in .\\x86_64, then .\\; if unavailable it uses system
+D3D12CreateDevice. Fresh pinned source DOES enumerate software adapters and marks
+those DEVICE_TYPE_CPU. The earlier message saying they were skipped was corrected.
+Whether a hosted Windows VM's software/runtime stack can complete this workload
+must be measured; no missing GPU or WARP capability is inferred solely from DLL inventory.
+A successful WARP/Microsoft Basic Render Driver run is software evidence, not physical
+GPU acceptance. Shader/device/late functional failures stay fatal under the probe.
+https://github.com/godotengine/godot/blob/ed1daf0bf001b61586d9930840f2f1394092c079/drivers/d3d12/rendering_context_driver_d3d12.cpp
+https://github.com/godotengine/godot/blob/ed1daf0bf001b61586d9930840f2f1394092c079/drivers/d3d12/rendering_device_driver_d3d12.cpp
+
+Optional matching Agility package only if actual runtime evidence justifies it:
+Microsoft.Direct3D.D3D12 1.618.5 is the pinned installer version, matching project
+agility_sdk_version=618. Official NuGet package downloaded (not installed):
+https://www.nuget.org/packages/Microsoft.Direct3D.D3D12/1.618.5
+https://api.nuget.org/v3-flatcontainer/microsoft.direct3d.d3d12/1.618.5/microsoft.direct3d.d3d12.1.618.5.nupkg
+Observed official-download SHA256:
+0027fc24f947c48dbded13ada7d280be221eb651644e23a8a476f0f1f0a079dd
+x64 D3D12Core.dll SHA256:
+560f9574372a52ab66ad95ee1222f1eb4c9f6161d8f6b7b025d89f684b07246c
+x64 d3d12SDKLayers.dll SHA256 (debug/validation layer, not ordinary release need):
+bcec9e1315fb4dbc767371926fb5eb8281de1b3ab1fb530a636b3c193a9a2bbd
+LICENSE.txt applies to binaries under build/native/bin; LICENSE-CODE.txt applies to
+headers. The runtime uses Microsoft's DirectX redistribution terms, not the MIT
+header license. Both original license files and metadata are stored here.
+This hash is measured from an HTTPS official NuGet download, not a GitHub release
+asset digest; the NuGet signature exists but was not cryptographically verified here.
+
+If chosen after evidence, stage D3D12Core.x86_64.dll (and optional
+ d3d12SDKLayers.x86_64.dll) next to the verified export template before exporting.
+Set application/export_d3d12=1 and application/d3d12_agility_sdk_multiarch=true.
+Exporter places them at x86_64/D3D12Core.dll and x86_64/d3d12SDKLayers.dll in the game.
+Include the original Microsoft runtime license with the distributable, retain hashes,
+and re-test the exact newly packaged archive. No need to change the default renderer.
+Export option 0 is Auto; with default GL Compatibility it does not export D3D12 extras.
+Option 1 requests copying available files; it does not download missing dependencies.
+application/export_angle=1 is unnecessary for this statically linked official build.
+https://github.com/godotengine/godot/blob/ed1daf0bf001b61586d9930840f2f1394092c079/platform/windows/export/export_plugin.cpp
+https://github.com/godotengine/godot/blob/ed1daf0bf001b61586d9930840f2f1394092c079/misc/scripts/install_d3d12_sdk_windows.py
+
+Prepared minimal tool patch:
+windows-angle-replay.patch against current root tools/probe_native_graphics.py SHA256
+ab5c04453f700891dc5f290eb2776bfa3aaef1bfaee7c4481d0a0aa0ee1f746d
+Full future tool: tools/probe_native_graphics.py SHA256
+4ed161f89eef1d4f1f94acabd1813169eb91f3342ba95c0e042f2ffa27083f39
+
+Windows can automatically change opengl3 to opengl3_angle when native OpenGL <3.3.
+The actual driver is explicitly reported as opengl3_angle. The patch recognizes this
+only when renderer remains GL Compatibility, exit is 0, no ERROR exists, the visual
+completion marker exists, gameplay JSON matches and all four fresh PNGs validate.
+It labels that first run clean_angle_fallback_detected, never native OpenGL passed.
+Then a THIRD standalone run explicitly requests gl_compatibility/opengl3_angle on the
+same freshly extracted artifact. That must independently match the requested driver
+and all strict evidence. The gate can use this proven Compatibility path; it never
+changes the Forward+ primary status. The initial functional/shader/late failure cannot
+be repaired by another profile. Missing evidence is fatal. Mac behavior is unchanged.
+
+The third run is conditional on a fully clean detected Windows fallback, avoiding an
+unnecessary workload on systems already passing native OpenGL. Four current PNG names
+include visual-street-high-rain.png; exact source-head/archive SHA/signing checks and
+fresh file cleanup are retained. New fields explicitly expose native_opengl_validated,
+automatic_angle_fallback_detected and explicit_angle_validated. CPU/WARP provenance and
+physical_target_gpu_acceptance=false remain intact.
+
+Actual standalone commands, run from the extracted game's directory, without editor,
+source --path, --script, --headless or a replacement application:
+Scene112.exe --windowed --resolution 1280x720 --audio-driver Dummy --log-file d3d12.txt --rendering-method forward_plus --rendering-driver d3d12 -- --visual-playthrough
+Scene112.exe --windowed --resolution 1280x720 --audio-driver Dummy --log-file opengl.txt --rendering-method gl_compatibility --rendering-driver opengl3 -- --visual-playthrough
+Scene112.exe --windowed --resolution 1280x720 --audio-driver Dummy --log-file angle.txt --rendering-method gl_compatibility --rendering-driver opengl3_angle -- --visual-playthrough
+Prefer the helper: it cleans and archives per-profile runtime JSON/4 screenshots,
+records actual backend JSON/API/adapter, matches archive SHA/head, and rejects late
+errors rather than relying on exit code or an engine banner alone.
+
+Validation of this preparation: Ruff and py_compile green. 20 tool tests pass (11 old,
+9 new). They use clearly labelled synthetic parser/classification fixtures and are
+not fabricated native evidence. The patch reconstructs its target exactly when applied
+in /tmp. Root has not been modified. Actual native/GPU results remain pending.

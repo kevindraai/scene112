@@ -15,13 +15,17 @@ var _pivot: Node3D
 var _camera_pitch := -0.24
 var _home := Vector3.ZERO
 var _home_yaw := PI
+var imported_model: Node3D
+var named_wheels: Dictionary = {}
+var _steering_pivots: Array[Node3D] = []
+var _wheel_spin := 0.0
 
 
 func setup(id: String, is_fire: bool) -> void:
 	vehicle_id = id
 	fire = is_fire
-	body_width = 2.15 if fire else 1.75
-	body_length = 5.2 if fire else 4.25
+	body_width = 2.78 if fire else 2.16
+	body_length = 6.29 if fire else 4.47
 
 
 func _ready() -> void:
@@ -30,7 +34,7 @@ func _ready() -> void:
 	floor_snap_length = 0.35
 	safe_margin = 0.015
 	var shape := BoxShape3D.new()
-	var height := 2.2 if fire else 1.7
+	var height := 3.2 if fire else 1.72
 	shape.size = Vector3(body_width + 0.3, height, body_length)
 	_collision = CollisionShape3D.new()
 	_collision.name = "VehicleCollision"
@@ -39,13 +43,14 @@ func _ready() -> void:
 	add_child(_collision)
 	_pivot = Node3D.new()
 	_pivot.name = "ChasePivot"
-	_pivot.position = Vector3(0, 2.3 if fire else 1.8, 0)
+	_pivot.position = Vector3(0, 3.6 if fire else 2.1, 0)
 	_pivot.rotation.x = _camera_pitch
 	add_child(_pivot)
 	var arm := SpringArm3D.new()
 	arm.name = "ChaseArm"
 	arm.spring_length = 9.0 if fire else 7.5
 	arm.margin = 0.22
+	arm.collision_mask = 3
 	var camera_shape := SphereShape3D.new()
 	camera_shape.radius = 0.24
 	arm.shape = camera_shape
@@ -57,6 +62,7 @@ func _ready() -> void:
 	camera.far = 190
 	camera.current = false
 	arm.add_child(camera)
+	_load_authored_model()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -98,6 +104,9 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 	# A wall removes momentum; holding W cannot build up hidden speed.
 	speed = Vector2(velocity.x, velocity.z).dot(Vector2(forward.x, forward.z))
+	_wheel_spin = wrapf(_wheel_spin - speed * delta / (0.54 if fire else 0.39), -PI, PI)
+	for wheel: Node3D in named_wheels.values(): wheel.rotation.x = _wheel_spin
+	for pivot in _steering_pivots: pivot.rotation.y = -steering * 0.40 if enabled_input else 0.0
 	if global_position.y < -8:
 		global_position = _home
 		rotation.y = _home_yaw
@@ -153,3 +162,26 @@ func get_exit_position() -> Variant:
 func stop() -> void:
 	speed = 0.0
 	velocity = Vector3.ZERO
+
+func _load_authored_model() -> void:
+	var path := "res://assets/models/vehicles/fire_truck.glb" if fire else "res://assets/models/vehicles/police_car.glb"
+	var packed := load(path) as PackedScene
+	if packed == null:
+		push_error("AUTHORED_VEHICLE_MISSING: " + path)
+		return
+	imported_model = packed.instantiate()
+	add_child(imported_model)
+	for id: String in ["Wheel_LF", "Wheel_RF", "Wheel_LR", "Wheel_RR"]:
+		var wheel := imported_model.find_child(id, true, false) as Node3D
+		if wheel == null:
+			push_error("AUTHORED_VEHICLE_AXLE_MISSING: " + id)
+			continue
+		named_wheels[id] = wheel
+		if id.ends_with("F"):
+			var parent := wheel.get_parent()
+			var steering_pivot := Node3D.new()
+			steering_pivot.name = id + "_Steering"
+			steering_pivot.transform = wheel.transform
+			parent.add_child(steering_pivot)
+			wheel.reparent(steering_pivot, true)
+			_steering_pivots.append(steering_pivot)

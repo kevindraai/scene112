@@ -62,7 +62,22 @@ func _initialize() -> void:
 	schema_two.schema = 2
 	for key in ["police", "police_campaign", "police_draft", "police_practice", "campaign_stage", "course_passes"]: schema_two.erase(key)
 	var upgrade := State.new()
-	check(upgrade.restore(schema_two) and upgrade.police.is_empty(), "M1 save migrates to schema 3 without phantom case")
+	check(upgrade.restore(schema_two) and upgrade.police.is_empty(), "M1 save migrates to current schema without phantom case")
+	var schema_three := state.to_dict()
+	schema_three.schema = 3
+	schema_three.erase("condition")
+	schema_three.erase("graphics_quality")
+	check(upgrade.restore(schema_three) and upgrade.condition == "day" and upgrade.graphics_quality == "portable", "M2 save migrates with deterministic portable day settings")
+	var visual_state := state.to_dict()
+	visual_state.condition = "rain"
+	visual_state.graphics_quality = "high"
+	check(upgrade.restore(visual_state) and upgrade.condition == "rain" and upgrade.graphics_quality == "high", "world conditions and quality restore with gameplay")
+	var visual_before := upgrade.to_dict()
+	visual_state.condition = "invalid"
+	check(not upgrade.restore(visual_state) and upgrade.to_dict() == visual_before, "unknown condition rejected atomically")
+	visual_state.condition = "day"
+	visual_state.graphics_quality = "invalid"
+	check(not upgrade.restore(visual_state) and upgrade.to_dict() == visual_before, "unknown quality rejected atomically")
 	var case_model := preload("res://scripts/police_case.gd").new()
 	case_model.begin("campaign")
 	for action in ["equipment", "radio", "enter", "drive", "exit"]:

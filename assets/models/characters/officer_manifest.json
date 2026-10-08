@@ -1,0 +1,73 @@
+{
+  "asset": "officer",
+  "author": "SCENE112 original authoring",
+  "blender": "4.3.2",
+  "meshes": 1,
+  "triangles": 39896,
+  "animations": [
+    "carry",
+    "idle",
+    "run",
+    "walk"
+  ],
+  "coordinate_convention": "Blender +Y forward, +Z up; glTF/Godot -Z forward, +Y up",
+  "license": "SCENE112 original private/proprietary project content; docs/LICENSES.md",
+  "source_blend": "source/3d/characters/officer.blend",
+  "source_builder": "source/3d/characters/build_characters.py",
+  "source_helper": "source/3d/vehicles/assetkit.py",
+  "texture_directory": "assets/textures/characters",
+  "runtime_glb": "assets/models/characters/officer.glb",
+  "glb_sha256": "a394d3faabc18e49e79fef417e2bbfb5feab0586745b1c49b8a8c77ec6320990",
+  "packed_editable_images": true,
+  "preview_rendered": false,
+  "source_validation": {
+    "asset": "officer",
+    "accepted_glb_sha256": "a394d3faabc18e49e79fef417e2bbfb5feab0586745b1c49b8a8c77ec6320990",
+    "rebuild_glb_sha256": "dd9e283508c0ec6e90be744967d6267c5222511e4867bc95d1c10a2efc53d747",
+    "byte_identical": false,
+    "json_identical": true,
+    "embedded_images_identical": true,
+    "positions_uv_weights_animations_identical": true,
+    "equivalent_geometry": true,
+    "allowed_evaluation_deltas": [
+      {
+        "buffer_view": 23,
+        "kind": "oriented triangle ordering only"
+      },
+      {
+        "buffer_view": 53,
+        "kind": "oriented triangle ordering only"
+      },
+      {
+        "buffer_view": 62,
+        "kind": "oriented triangle ordering only"
+      },
+      {
+        "buffer_view": 68,
+        "kind": "oriented triangle ordering only"
+      },
+      {
+        "buffer_view": 74,
+        "kind": "oriented triangle ordering only"
+      },
+      {
+        "buffer_view": 80,
+        "kind": "oriented triangle ordering only"
+      },
+      {
+        "buffer_view": 86,
+        "kind": "oriented triangle ordering only"
+      },
+      {
+        "buffer_view": 92,
+        "kind": "oriented triangle ordering only"
+      }
+    ],
+    "packed_images": 15,
+    "external_textures_present": false,
+    "reexported": true,
+    "render_calls": 0,
+    "source_layout": "final repository source/3d + assets/models + assets/textures",
+    "runtime_asset_replaced": false
+  }
+}

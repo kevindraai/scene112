@@ -12,8 +12,10 @@ parser.add_argument("godot")
 parser.add_argument("--project", default=".")
 parser.add_argument("--runtime-script", help="Optional integration driver scene-tree script")
 parser.add_argument("--timeout", type=int, default=90)
+parser.add_argument("--rendering-method", choices=("gl_compatibility", "mobile", "forward_plus"))
+parser.add_argument("--rendering-driver", help="Explicit Godot driver for renderer research")
 parser.add_argument(
-    "--scenario", choices=("--playthrough", "--duty-playthrough", "--police-playthrough"), default="--playthrough",
+    "--scenario", choices=("--playthrough", "--duty-playthrough", "--police-playthrough", "--visual-playthrough"), default="--playthrough",
     help="Use --scenario=--police-playthrough for the M2 police integration",
 )
 args = parser.parse_args()
@@ -37,6 +39,10 @@ with tempfile.TemporaryDirectory(prefix="scene112-display-") as directory:
             environment = os.environ.copy()
             environment["DISPLAY"] = ":" + display
             command = [args.godot, "--path", args.project, "--audio-driver", "Dummy"]
+            if args.rendering_method:
+                command += ["--rendering-method", args.rendering_method]
+            if args.rendering_driver:
+                command += ["--rendering-driver", args.rendering_driver]
             if args.runtime_script:
                 command += ["--script", args.runtime_script]
             else:

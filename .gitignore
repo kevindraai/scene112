@@ -6,3 +6,5 @@ build/
 *.tmp
 __pycache__/
 *.import
+# Godot extracts embedded GLB images beside models; editable maps live in textures/.
+assets/models/**/*.png

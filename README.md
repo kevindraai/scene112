@@ -25,16 +25,16 @@ In de intakeles leg je de fictieve oefengrond, zwijgrecht en rechtsbijstand vast
 | M / Esc | Wijkhulp / pauze |
 | F5 / F9 | Dienst opslaan / laatste opslag laden |
 
-Een save wordt pas vervangen wanneer je opslaat. Nieuwe dienst maakt geen bestaande opslag leeg. Opslag staat in de platformcorrecte gebruikersmap `Scene112`. M0/M1-saves worden gemigreerd naar schema 3. Corrupte of onbekende saveversies worden geweigerd en behouden; een gevalideerde vorige opslag wordt als herstelkopie gebruikt. Audio-instellingen worden afzonderlijk bewaard en blijven ook bij een nieuwe campagne gelden.
+Een save wordt pas vervangen wanneer je opslaat. Nieuwe dienst maakt geen bestaande opslag leeg. Opslag staat in de platformcorrecte gebruikersmap `Scene112`. M0/M1/M2-saves worden gemigreerd naar schema 4. Corrupte of onbekende saveversies worden geweigerd en behouden; een gevalideerde vorige opslag wordt als herstelkopie gebruikt. Audio-instellingen worden afzonderlijk bewaard en blijven ook bij een nieuwe campagne gelden. Instellingen bieden overdag, schemer en lichte regen, plus drie beeldprofielen; deze wereldkeuzes worden met je dienst opgeslagen.
 
-De 3D-wijk is momenteel een gameplayblockout. De geautoriseerde [visuele kwaliteitsrichtlijn](https://github.com/kevindraai/scene112/issues/1#issuecomment-6059218603) vereist als volgende kwaliteitsmijlpaal een hoogwaardige speelbare straat met echte 3D-assets, PBR-materialen, animatie en dag-/avondbelichting. Menu-art en functionele native builds gelden niet als bewijs dat de volledige wereld visueel is afgewerkt.
+De eerste bestaande straat krijgt nu echte Nederlandse Blender/GLB-gevels, politieauto en tankautospuit, gerigde personages, straatmeubilair en eigen PBR-texturen. De bestaande gameplay gebruikt dezelfde besturing, botsingen en saves; belichting, reflecties, regen en passende omgevingsaudio reageren op de gekozen omstandigheden. Het overige stadsdeel bevat nog blockoutdelen; M3–M5 werken die verder af. De [visuele kwaliteitsrichtlijn](https://github.com/kevindraai/scene112/issues/1#issuecomment-6059218603) blijft leidend: echte runtimebeelden en metingen, met afzonderlijke native teststatus, vormen het bewijs.
 
 ## Ontwikkelen en bewijs
 
 Godot **4.7.2 stable**, standard + GDScript, Compatibility-renderer. Open `project.godot`, of gebruik de geverifieerde taakgebonden toolchain in [BUILDING](docs/BUILDING.md). Geen plugins of betaalde assets nodig.
 
 - [Uitvoeringsplan M0–M5](docs/EXECUTION_PLAN.md)
-- [M0-platformbewijs](docs/evidence/M0.md) · [M1-gameplaybewijs](docs/evidence/M1.md) · [M2-gameplaybewijs](docs/evidence/M2.md)
+- [M0-platformbewijs](docs/evidence/M0.md) · [M1-gameplaybewijs](docs/evidence/M1.md) · [M2-gameplaybewijs](docs/evidence/M2.md) · [Straatbeelden/video en metingen](docs/evidence/VISUAL_STREET.md)
 - [Assetherkomst/licenties](docs/LICENSES.md)
 
 CI importeert en test de exacte PR-head, exporteert native macOS/Windows-distributies, controleert structuur/architectuur en start de verpakte runtime op native runners. Een export of headless starttest bewijst geen menselijke grafische playthrough op macOS/Windows; die status wordt apart vastgelegd. Per speelbaar ijkpunt blijven beide platformen verplicht.

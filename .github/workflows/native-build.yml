@@ -91,6 +91,8 @@ jobs:
           python -m pip install ruff==0.15.22 2>&1 | tee build/logs/python-tooling.txt
           python -m compileall -q tools
           ruff check tools 2>&1 | tee build/logs/lint.txt
+          python tools/art/validate_assets.py 2>&1 | tee build/logs/art-provenance.txt
+          python -m unittest discover -s tests -p 'test_*probe.py' 2>&1 | tee build/logs/graphics-probe-tool-tests.txt
       - name: Import, deterministic tests and application smoke
         shell: python
         run: |
@@ -104,10 +106,12 @@ jobs:
               ("vehicle-tests", ["--headless", "--path", ".", "--script", "tests/vehicle_tests.gd"], "SCENE112_VEHICLE_TESTS_OK"),
               ("police-case-tests", ["--headless", "--path", ".", "--script", "tests/police_case_tests.gd"], "SCENE112_POLICE_CASE_TESTS_OK"),
               ("audio-tests", ["--headless", "--path", ".", "--script", "tests/audio_tests.gd"], "SCENE112_AUDIO_TESTS_OK"),
+              ("weather-audio-tests", ["--headless", "--path", ".", "--script", "tests/weather_audio_tests.gd"], "SCENE112_WEATHER_AUDIO_TESTS_OK"),
               ("smoke", ["--headless", "--path", ".", "--", "--smoke-test"], "SMOKE_OK"),
               ("playthrough", ["--headless", "--path", ".", "--", "--playthrough"], "SCENE112_PLAYTHROUGH_OK"),
               ("duty-playthrough", ["--headless", "--path", ".", "--", "--duty-playthrough"], "SCENE112_DUTY_OK"),
               ("police-playthrough", ["--headless", "--path", ".", "--", "--police-playthrough"], "SCENE112_POLICE_OK"),
+              ("visual-playthrough", ["--headless", "--path", ".", "--", "--visual-playthrough"], "SCENE112_VISUAL_OK"),
           ]
           for name, arguments, marker in commands:
               try:
@@ -123,7 +127,7 @@ jobs:
               assert "SCRIPT ERROR:" not in result.stdout and "ERROR:" not in result.stdout, f"{name} emitted errors"
               if marker:
                   assert marker in result.stdout, f"{name} did not complete its assertions"
-      - name: Automated graphical M0, M1 and M2 playthroughs on isolated Linux displays
+      - name: Automated graphical M0, M1, M2 and street playthroughs on isolated Linux displays
         env:
           LIBGL_ALWAYS_SOFTWARE: "1"
         shell: python
@@ -163,6 +167,18 @@ jobs:
               if milestone == "m2":
                   assert main_menu.is_file() and main_menu.stat().st_size > 1024, "Missing rendered M2 main menu screenshot"
                   shutil.copyfile(main_menu, "build/logs/m2-main-menu.png")
+          result = subprocess.run([sys.executable, "tools/graphical_playthrough.py",
+              os.environ["GODOT_BIN"], "--scenario=--visual-playthrough", "--timeout=240"],
+              stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+              text=True, encoding="utf-8", errors="replace", timeout=270)
+          Path("build/logs/graphical-street.txt").write_text(result.stdout, encoding="utf-8")
+          print(result.stdout)
+          assert result.returncode == 0 and "SCENE112_VISUAL_OK" in result.stdout
+          assert "SCRIPT ERROR:" not in result.stdout and "ERROR:" not in result.stdout
+          for filename in ("visual-runtime.json", "visual-street-day.png", "visual-street-dusk.png", "visual-street-rain.png", "visual-street-high-rain.png"):
+              evidence = Path(os.environ["XDG_DATA_HOME"]) / "Scene112" / filename
+              assert evidence.is_file() and evidence.stat().st_size > 100, f"Missing street evidence: {filename}"
+              shutil.copyfile(evidence, "build/logs/" + filename)
       - name: Preserve Linux logs
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -300,6 +316,7 @@ jobs:
           run("native-playthrough", [executable.resolve(), "--headless", "--", "--playthrough"], "SCENE112_PLAYTHROUGH_OK", executable.parent.resolve())
           run("native-duty-playthrough", [executable.resolve(), "--headless", "--", "--duty-playthrough"], "SCENE112_DUTY_OK", executable.parent.resolve())
           run("native-police-playthrough", [executable.resolve(), "--headless", "--", "--police-playthrough"], "SCENE112_POLICE_OK", executable.parent.resolve())
+          run("native-visual-playthrough", [executable.resolve(), "--headless", "--", "--visual-playthrough"], "SCENE112_VISUAL_OK", executable.parent.resolve())
           provenance = {
               "head": os.environ["GITHUB_SHA"],
               "source_head": os.environ.get("SOURCE_HEAD", os.environ["GITHUB_SHA"]),
@@ -396,6 +413,7 @@ jobs:
           run("intel-playthrough", [executable.resolve(), "--headless", "--", "--playthrough"], "SCENE112_PLAYTHROUGH_OK", executable.parent.resolve())
           run("intel-duty-playthrough", [executable.resolve(), "--headless", "--", "--duty-playthrough"], "SCENE112_DUTY_OK", executable.parent.resolve())
           run("intel-police-playthrough", [executable.resolve(), "--headless", "--", "--police-playthrough"], "SCENE112_POLICE_OK", executable.parent.resolve())
+          run("intel-visual-playthrough", [executable.resolve(), "--headless", "--", "--visual-playthrough"], "SCENE112_VISUAL_OK", executable.parent.resolve())
           (logs / "provenance.json").write_text(json.dumps({
               "source_head": provenance["source_head"], "sha256": provenance["sha256"],
               "runner_architecture": platform.machine(),
@@ -413,10 +431,76 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
+  native-graphics:
+    name: Graphical standalone ${{ matrix.platform }}/${{ matrix.arch }}
+    needs: [changes, native]
+    if: needs.changes.outputs.gameplay == 'true' && needs.native.result == 'success'
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-15
+            platform: macos
+            arch: arm64
+            archive: Scene112-macOS-universal.zip
+          - os: macos-15-intel
+            platform: macos
+            arch: x86_64
+            archive: Scene112-macOS-universal.zip
+          - os: windows-2022
+            platform: windows
+            arch: x86_64
+            archive: Scene112-Windows-x64.zip
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+      - name: Download exact validated native distribution
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: ${{ matrix.platform }}-native-${{ github.event.pull_request.head.sha || github.sha }}
+          path: build
+      - name: Run graphical primary research and required Compatibility fallback
+        env:
+          SOURCE_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+          TARGET_PLATFORM: ${{ matrix.platform }}
+          TARGET_ARCHIVE: ${{ matrix.archive }}
+        shell: python
+        run: |
+          import os
+          from pathlib import Path
+          import subprocess
+          import sys
+          output = Path("build/graphics")
+          output.mkdir(parents=True, exist_ok=True)
+          result = subprocess.run([sys.executable, "tools/probe_native_graphics.py",
+              "--archive", "build/" + os.environ["TARGET_ARCHIVE"],
+              "--provenance", "build/" + os.environ["TARGET_PLATFORM"] + "-provenance.json",
+              "--source-head", os.environ["SOURCE_HEAD"], "--platform", os.environ["TARGET_PLATFORM"],
+              "--output-dir", str(output)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+              text=True, encoding="utf-8", errors="replace", timeout=810)
+          (output / "probe.txt").write_text(result.stdout, encoding="utf-8")
+          print(result.stdout)
+          assert result.returncode == 0, "Native graphical tier/evidence gate failed; inspect explicit graphics-provenance.json"
+      - name: Preserve actual native graphics evidence including failures
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: graphics-${{ matrix.platform }}-${{ matrix.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: build/graphics/
+          if-no-files-found: warn
+          retention-days: 14
+
   gate:
     name: Required native build gate
     if: always()
-    needs: [changes, linux, native, macos-intel]
+    needs: [changes, linux, native, macos-intel, native-graphics]
     runs-on: ubuntu-24.04
     timeout-minutes: 2
     steps:
@@ -427,6 +511,7 @@ jobs:
           LINUX_RESULT: ${{ needs.linux.result }}
           NATIVE_RESULT: ${{ needs.native.result }}
           INTEL_RESULT: ${{ needs.macos-intel.result }}
+          GRAPHICS_RESULT: ${{ needs.native-graphics.result }}
         shell: python
         run: |
           import os
@@ -435,8 +520,9 @@ jobs:
               assert os.environ["LINUX_RESULT"] == "success", "Linux import/tests/smoke failed"
               assert os.environ["NATIVE_RESULT"] == "success", "A required native export/launch failed"
               assert os.environ["INTEL_RESULT"] == "success", "Intel Mac native launch failed"
+              assert os.environ["GRAPHICS_RESULT"] == "success", "Native graphical Compatibility/primary research gate failed"
               print("Exact source head passed Linux and both native distribution checks.")
           else:
               assert os.environ["GAMEPLAY"] == "false", "Missing scope result"
-              assert all(os.environ[key] == "skipped" for key in ("LINUX_RESULT", "NATIVE_RESULT", "INTEL_RESULT"))
+              assert all(os.environ[key] == "skipped" for key in ("LINUX_RESULT", "NATIVE_RESULT", "INTEL_RESULT", "GRAPHICS_RESULT"))
               print("Documentation-only change validated; heavy native work skipped.")

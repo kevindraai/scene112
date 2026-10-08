@@ -97,8 +97,8 @@ func set_mode(mode: String) -> void:
 func set_simulation_active(active: bool) -> void:
 	_simulation_active = active and _mode in ["basis", "campaign"]
 	for person in _people:
-		person.set_physics_process(_simulation_active)
-	if is_instance_valid(_trainee): _trainee.set_physics_process(active and _mode == "intake")
+		person.set_simulation_active(_simulation_active)
+	if is_instance_valid(_trainee): _trainee.set_simulation_active(active and _mode == "intake")
 
 
 func show_guidance(enabled: bool) -> void:

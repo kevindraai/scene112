@@ -8,6 +8,7 @@ const Police = preload("res://scripts/police_case.gd")
 const PoliceSiteScript = preload("res://scripts/police_site.gd")
 const PoliceUI = preload("res://scripts/police_controller.gd")
 const PoliceValidation = preload("res://scripts/police_validation.gd")
+const GraphicsValidation = preload("res://scripts/graphics_validation.gd")
 const Audio = preload("res://scripts/audio_director.gd")
 var state := State.new()
 var ledger := Ledger.new()
@@ -64,7 +65,7 @@ func _ready() -> void:
 	audio.setup(self)
 	_show_main()
 	var args := OS.get_cmdline_user_args()
-	test_mode = "--smoke-test" in args or "--playthrough" in args or "--duty-playthrough" in args or "--police-playthrough" in args
+	test_mode = "--smoke-test" in args or "--playthrough" in args or "--duty-playthrough" in args or "--police-playthrough" in args or "--visual-playthrough" in args
 	if "--smoke-test" in args:
 		_smoke_test.call_deferred()
 	elif "--playthrough" in args:
@@ -73,6 +74,8 @@ func _ready() -> void:
 		_duty_playthrough.call_deferred()
 	elif "--police-playthrough" in args:
 		_police_playthrough.call_deferred()
+	elif "--visual-playthrough" in args:
+		_graphics_playthrough.call_deferred()
 
 func _bind_inputs() -> void:
 	var keys := {"move_forward": KEY_W, "move_back": KEY_S, "move_left": KEY_A,
@@ -86,6 +89,10 @@ func _bind_inputs() -> void:
 		var event := InputEventKey.new()
 		event.physical_keycode = keys[action]
 		InputMap.action_add_event(action, event)
+
+func _graphics_playthrough() -> void:
+	var validation = GraphicsValidation.new()
+	await validation.run(self)
 
 func _build_ui() -> void:
 	canvas = CanvasLayer.new()
@@ -205,6 +212,8 @@ func _button(title: String, action: Callable, disabled: bool = false) -> Button:
 func _show_main() -> void:
 	_freeze()
 	active = false
+	district.hide()
+	officer.hide()
 	hud.hide()
 	menu_art.show()
 	_clear_menu("SCÈNE 112", "Een nieuwe dienst begint aan de Noorderkade.\n%s · Nederlandstalig · 14+" % ProjectSettings.get_setting("application/config/version"))
@@ -230,7 +239,12 @@ func _show_main() -> void:
 
 func start_new(role: String = "police") -> void:
 	_freeze()
+	var preferred_condition := state.condition
+	var preferred_quality := state.graphics_quality
 	state = State.new()
+	state.condition = preferred_condition
+	state.graphics_quality = preferred_quality
+	_apply_visual_settings()
 	state.role = role
 	state.player_position = Vector3(28, 0.1, 0) if role == "fire" else Vector3(0, 0.1, 6)
 	ledger = Ledger.new()
@@ -248,7 +262,7 @@ func _freeze() -> void:
 	paused = true
 	if is_instance_valid(hud): hud.hide()
 	officer.enable_input = false
-	officer.set_physics_process(false)
+	officer.set_simulation_active(false)
 	district.set_simulation_active(false)
 	if is_instance_valid(police_site): police_site.set_simulation_active(false)
 	for id in ["police_car", "fire_truck"]:
@@ -258,6 +272,7 @@ func _resume() -> void:
 	if not active:
 		return
 	paused = false
+	district.show()
 	menu.hide()
 	menu_art.hide()
 	hud.show()
@@ -268,11 +283,11 @@ func _resume() -> void:
 		district.objects[id].camera.current = false
 	if state.occupied_vehicle.is_empty():
 		officer.enable_input = true
-		officer.set_physics_process(true)
+		officer.set_simulation_active(true)
 		officer.camera.current = true
 	else:
 		officer.enable_input = false
-		officer.set_physics_process(false)
+		officer.set_simulation_active(false)
 		officer.camera.current = false
 		district.objects[state.occupied_vehicle].camera.current = true
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -324,6 +339,22 @@ func show_settings() -> void:
 		for id in ["police_car", "fire_truck"]:
 			district.objects[id].sensitivity = value)
 	options.add_child(slider)
+	options.add_child(_label("Omstandigheden in de wijk", 17))
+	var conditions := OptionButton.new()
+	for value in ["Overdag", "Schemer", "Lichte regen"]: conditions.add_item(value)
+	conditions.select(["day", "dusk", "rain"].find(state.condition))
+	conditions.item_selected.connect(func(index):
+		state.condition = ["day", "dusk", "rain"][index]
+		_apply_visual_settings())
+	options.add_child(conditions)
+	options.add_child(_label("Grafische kwaliteit", 17))
+	var quality := OptionButton.new()
+	for value in ["Draagbaar", "Standaard", "Hoog"]: quality.add_item(value)
+	quality.select(["portable", "balanced", "high"].find(state.graphics_quality))
+	quality.item_selected.connect(func(index):
+		state.graphics_quality = ["portable", "balanced", "high"][index]
+		_apply_visual_settings())
+	options.add_child(quality)
 	var settings: Dictionary = audio.get_settings()
 	var names := {"Master": "Totaal", "Music": "Muziek", "Ambience": "Omgeving", "SFX": "Handelingen", "Vehicle": "Voertuigen", "Radio": "Radio", "Voice": "Stemmen", "UI": "Menu"}
 	for bus: String in names:
@@ -479,6 +510,7 @@ func load_game(path: String = State.SAVE_PATH) -> void:
 		return
 	_freeze()
 	state = loaded
+	_apply_visual_settings()
 	ledger = Ledger.new()
 	if state.dispatch.is_empty(): ledger.start(112)
 	else: ledger.restore(state.dispatch)
@@ -517,7 +549,7 @@ func _restore_on_foot(at: Vector3) -> void:
 	officer.collision_layer = 1
 	officer.collision_mask = 1
 	officer.enable_input = false
-	officer.set_physics_process(false)
+	officer.set_simulation_active(false)
 	officer.camera.current = true
 
 func _enter_vehicle(id: String, restoring: bool = false) -> void:
@@ -538,7 +570,7 @@ func _enter_vehicle(id: String, restoring: bool = false) -> void:
 	officer.collision_layer = 0
 	officer.collision_mask = 0
 	officer.velocity = Vector3.ZERO
-	officer.set_physics_process(false)
+	officer.set_simulation_active(false)
 	officer.global_position = vehicle.global_position
 	officer.camera.current = false
 	vehicle.camera.current = true
@@ -937,6 +969,11 @@ func quit_game(code: int = 0) -> void:
 	_quitting = true
 	if is_instance_valid(audio): await audio.shutdown()
 	get_tree().quit(code)
+
+func _apply_visual_settings() -> void:
+	if is_instance_valid(district) and is_instance_valid(district.atmosphere):
+		district.atmosphere.set_quality(state.graphics_quality)
+		district.atmosphere.apply_conditions(state.condition)
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_CLOSE_REQUEST: quit_game()
