@@ -13,8 +13,8 @@ parser.add_argument("--project", default=".")
 parser.add_argument("--runtime-script", help="Optional integration driver scene-tree script")
 parser.add_argument("--timeout", type=int, default=90)
 parser.add_argument(
-    "--scenario", choices=("--playthrough", "--duty-playthrough"), default="--playthrough",
-    help="Use --scenario=--duty-playthrough for the M1 duty automation",
+    "--scenario", choices=("--playthrough", "--duty-playthrough", "--police-playthrough"), default="--playthrough",
+    help="Use --scenario=--police-playthrough for the M2 police integration",
 )
 args = parser.parse_args()
 with tempfile.TemporaryDirectory(prefix="scene112-display-") as directory:

@@ -4,13 +4,23 @@ const State = preload("res://scripts/game_state.gd")
 const World = preload("res://scripts/world.gd")
 const Player = preload("res://scripts/player.gd")
 const Ledger = preload("res://scripts/dispatch.gd")
+const Police = preload("res://scripts/police_case.gd")
+const PoliceSiteScript = preload("res://scripts/police_site.gd")
+const PoliceUI = preload("res://scripts/police_controller.gd")
+const PoliceValidation = preload("res://scripts/police_validation.gd")
+const Audio = preload("res://scripts/audio_director.gd")
 var state := State.new()
 var ledger := Ledger.new()
+var police_model := Police.new()
+var police_ui := PoliceUI.new()
+var police_site: Node3D
+var audio: Node
 var district: Node3D
 var officer: CharacterBody3D
 var canvas: CanvasLayer
 var menu: PanelContainer
 var menu_items: VBoxContainer
+var menu_art: TextureRect
 var hud: Control
 var objective: Label
 var prompt: Label
@@ -24,12 +34,16 @@ var current_target := {}
 var notice_time := 0.0
 var test_mode := false
 var _test_finished := false
+var _quitting := false
 
 func _ready() -> void:
 	DisplayServer.window_set_title("SCÈNE 112")
+	get_tree().auto_accept_quit = false
 	_bind_inputs()
 	district = World.new()
 	add_child(district)
+	police_site = PoliceSiteScript.new()
+	police_site.attach_to(district)
 	officer = Player.new()
 	add_child(officer)
 	officer.position = state.player_position
@@ -43,21 +57,29 @@ func _ready() -> void:
 	incident_marker.hide()
 	add_child(incident_marker)
 	_build_ui()
+	police_ui.setup(self, police_model, police_site)
+	police_ui.completed.connect(_police_completed)
+	audio = Audio.new()
+	add_child(audio)
+	audio.setup(self)
 	_show_main()
 	var args := OS.get_cmdline_user_args()
-	test_mode = "--smoke-test" in args or "--playthrough" in args or "--duty-playthrough" in args
+	test_mode = "--smoke-test" in args or "--playthrough" in args or "--duty-playthrough" in args or "--police-playthrough" in args
 	if "--smoke-test" in args:
 		_smoke_test.call_deferred()
 	elif "--playthrough" in args:
 		_playthrough.call_deferred()
 	elif "--duty-playthrough" in args:
 		_duty_playthrough.call_deferred()
+	elif "--police-playthrough" in args:
+		_police_playthrough.call_deferred()
 
 func _bind_inputs() -> void:
 	var keys := {"move_forward": KEY_W, "move_back": KEY_S, "move_left": KEY_A,
 		"move_right": KEY_D, "sprint": KEY_SHIFT, "interact": KEY_E, "pause": KEY_ESCAPE,
 		"save_game": KEY_F5, "load_game": KEY_F9, "map": KEY_M,
-		"brake": KEY_SPACE, "radio": KEY_R}
+		"brake": KEY_SPACE, "radio": KEY_R, "place_cone": KEY_Q}
+	keys["siren"] = KEY_H
 	for action in keys:
 		if not InputMap.has_action(action):
 			InputMap.add_action(action)
@@ -68,6 +90,13 @@ func _bind_inputs() -> void:
 func _build_ui() -> void:
 	canvas = CanvasLayer.new()
 	add_child(canvas)
+	menu_art = TextureRect.new()
+	menu_art.texture = load("res://design/visual-identity-v1/key-art/main-menu.svg")
+	menu_art.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	menu_art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	menu_art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	menu_art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	canvas.add_child(menu_art)
 	hud = Control.new()
 	hud.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	hud.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -94,7 +123,7 @@ func _build_ui() -> void:
 	prompt.size = Vector2(600, 50)
 	prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	hud.add_child(prompt)
-	var controls := _label("WASD  lopen/rijden  ·  Shift  sprint  ·  Spatie  rem  ·  E  handelen/in-uit  ·  R  radio  ·  M  kaart  ·  Esc  pauze", 16)
+	var controls := _label("WASD  lopen/rijden  ·  Shift  sprint  ·  Spatie  rem  ·  E  handelen/in-uit  ·  R  radio  ·  H  sirene  ·  M  kaart  ·  Esc  pauze", 16)
 	controls.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
 	controls.position = Vector2(24, -40)
 	hud.add_child(controls)
@@ -138,7 +167,22 @@ func _clear_menu(title: String, subtitle: String) -> void:
 	for child in menu_items.get_children():
 		menu_items.remove_child(child)
 		child.queue_free()
-	menu_items.add_child(_label(title, 38, Color(0.42, 0.87, 0.83)))
+	menu_items.add_theme_constant_override("separation", 11)
+	if title == "SCÈNE 112":
+		var heading := _label(title, 38, Color("5cd6d1"))
+		heading.custom_minimum_size.y = 52
+		var mark := TextureRect.new()
+		mark.texture = load("res://design/visual-identity-v1/brand/mark.svg")
+		mark.custom_minimum_size = Vector2(52, 52)
+		mark.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		mark.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		mark.position = Vector2(350, 0)
+		mark.size = Vector2(52, 52)
+		mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		heading.add_child(mark)
+		menu_items.add_child(heading)
+	else:
+		menu_items.add_child(_label(title, 38, Color("5cd6d1")))
 	var label := _label(subtitle, 18)
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.custom_minimum_size = Vector2(420, 72)
@@ -152,6 +196,8 @@ func _button(title: String, action: Callable, disabled: bool = false) -> Button:
 	button.custom_minimum_size.y = 43
 	button.add_theme_font_size_override("font_size", 19)
 	button.disabled = disabled
+	button.pressed.connect(func():
+		if is_instance_valid(audio): audio.cue("ui"))
 	button.pressed.connect(action)
 	menu_items.add_child(button)
 	return button
@@ -160,15 +206,27 @@ func _show_main() -> void:
 	_freeze()
 	active = false
 	hud.hide()
-	_clear_menu("SCÈNE 112", "Een nieuwe dienst begint aan de Noorderkade.\nVrije dienst · Ontwikkelbuild M1 · Nederlandstalig · 14+")
+	menu_art.show()
+	_clear_menu("SCÈNE 112", "Een nieuwe dienst begint aan de Noorderkade.\n%s · Nederlandstalig · 14+" % ProjectSettings.get_setting("application/config/version"))
+	menu_items.add_theme_constant_override("separation", 7)
+	menu_items.get_child(1).custom_minimum_size.y = 48
 	var candidate := State.new()
 	_button("Doorgaan", load_game, not candidate.load_from())
-	_button("Vrije politiedienst", start_new.bind("police")).grab_focus()
-	_button("Vrije brandweerdienst", start_new.bind("fire"))
+	_button("Nieuwe campagne · De eerste dienst", police_ui.start_campaign)
+	_button("Academie · lessen", police_ui.show_academy)
+	_button("Vrije politiedienst", start_training.bind("police")).grab_focus()
+	_button("Vrije brandweerdienst", start_training.bind("fire"))
 	_button("Bediening en wijkkaart", show_help)
 	_button("Instellingen", show_settings)
 	_button("Licenties", show_credits)
-	_button("Afsluiten", func(): get_tree().quit())
+	_button("Afsluiten", func(): quit_game())
+	var icons := {"Nieuwe campagne · De eerste dienst": "police", "Academie · lessen": "academy", "Vrije politiedienst": "police", "Vrije brandweerdienst": "fire", "Bediening en wijkkaart": "map"}
+	for child in menu_items.get_children():
+		if child is Button:
+			child.custom_minimum_size.y = 39
+			if icons.has(child.text):
+				child.icon = load("res://design/visual-identity-v1/ui/%s.svg" % icons[child.text])
+				child.add_theme_constant_override("icon_max_width", 25)
 
 func start_new(role: String = "police") -> void:
 	_freeze()
@@ -177,6 +235,8 @@ func start_new(role: String = "police") -> void:
 	state.player_position = Vector3(28, 0.1, 0) if role == "fire" else Vector3(0, 0.1, 6)
 	ledger = Ledger.new()
 	ledger.start(112)
+	police_model.begin("none")
+	police_ui.setup(self, police_model, police_site)
 	_restore_vehicles()
 	_restore_on_foot(state.player_position)
 	officer.sensitivity = state.sensitivity
@@ -186,9 +246,11 @@ func start_new(role: String = "police") -> void:
 
 func _freeze() -> void:
 	paused = true
+	if is_instance_valid(hud): hud.hide()
 	officer.enable_input = false
 	officer.set_physics_process(false)
 	district.set_simulation_active(false)
+	if is_instance_valid(police_site): police_site.set_simulation_active(false)
 	for id in ["police_car", "fire_truck"]:
 		district.objects[id].enabled_input = false
 
@@ -197,8 +259,10 @@ func _resume() -> void:
 		return
 	paused = false
 	menu.hide()
+	menu_art.hide()
 	hud.show()
 	district.set_simulation_active(true)
+	police_site.set_simulation_active(true)
 	for id in ["police_car", "fire_truck"]:
 		district.objects[id].enabled_input = id == state.occupied_vehicle
 		district.objects[id].camera.current = false
@@ -229,7 +293,7 @@ func show_help() -> void:
 	_freeze()
 	_clear_menu("Noorderkade", "WASD: lopen/rijden · Muis: kijken · Spatie: rem\nE: handelen/in-uit · R: radio · F5/F9: opslaan/laden")
 	var map := Control.new()
-	map.custom_minimum_size = Vector2(420, 230)
+	map.custom_minimum_size = Vector2(420, 190)
 	map.draw.connect(func(): _draw_map(map))
 	menu_items.add_child(map)
 	var text := _label(_navigation_text() + "\n\nNeem uitrusting en radio mee. Meldingen neem je aan met R. Parkeer veilig, stap uit en handel ter plaatse. Na afloop vervolg je de dienst.", 18)
@@ -240,8 +304,15 @@ func show_help() -> void:
 
 func show_settings() -> void:
 	_freeze()
-	_clear_menu("Instellingen", "Pas het cameragevoel aan. De instelling wordt met je dienst opgeslagen.")
-	menu_items.add_child(_label("Muisgevoeligheid"))
+	_clear_menu("Instellingen", "Camera en audiomix. Audio wordt direct bewaard, ook voor een nieuwe dienst.")
+	var scroll := ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(420, 230)
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	menu_items.add_child(scroll)
+	var options := VBoxContainer.new()
+	options.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(options)
+	options.add_child(_label("Muisgevoeligheid"))
 	var slider := HSlider.new()
 	slider.min_value = 0.001
 	slider.max_value = 0.008
@@ -252,7 +323,24 @@ func show_settings() -> void:
 		officer.sensitivity = value
 		for id in ["police_car", "fire_truck"]:
 			district.objects[id].sensitivity = value)
-	menu_items.add_child(slider)
+	options.add_child(slider)
+	var settings: Dictionary = audio.get_settings()
+	var names := {"Master": "Totaal", "Music": "Muziek", "Ambience": "Omgeving", "SFX": "Handelingen", "Vehicle": "Voertuigen", "Radio": "Radio", "Voice": "Stemmen", "UI": "Menu"}
+	for bus: String in names:
+		options.add_child(_label(names[bus], 17))
+		var volume := HSlider.new()
+		volume.min_value = 0
+		volume.max_value = 1
+		volume.step = 0.05
+		volume.value = settings.volumes[bus]
+		volume.tooltip_text = names[bus] + " · 0 is stil"
+		volume.value_changed.connect(func(value): audio.set_volume(bus, value))
+		options.add_child(volume)
+	var mute := CheckButton.new()
+	mute.text = "Alle audio dempen"
+	mute.button_pressed = settings.muted
+	mute.toggled.connect(func(value): audio.set_muted(value))
+	menu_items.add_child(mute)
 	_button("Volledig scherm aan/uit", func():
 		var mode := DisplayServer.window_get_mode()
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED if mode == DisplayServer.WINDOW_MODE_FULLSCREEN else DisplayServer.WINDOW_MODE_FULLSCREEN))
@@ -273,6 +361,9 @@ func _back() -> void:
 	else: _show_main()
 
 func _unhandled_input(event: InputEvent) -> void:
+	if police_ui.handle_input(event):
+		get_viewport().set_input_as_handled()
+		return
 	if event.is_action_pressed("pause"):
 		if active:
 			if paused: _resume()
@@ -290,12 +381,20 @@ func _unhandled_input(event: InputEvent) -> void:
 				else: district.interact(current_target.id)
 		elif event.is_action_pressed("map"): show_help()
 		elif event.is_action_pressed("radio"): show_radio()
+		elif event.is_action_pressed("siren") and not state.occupied_vehicle.is_empty():
+			var id: String = state.occupied_vehicle
+			audio.set_siren(not audio._siren_enabled[id], id)
+			_notify("Sirene " + ("aan" if audio._siren_enabled[id] else "uit") + ". Rijd beheerst; overige verkeer heeft geen automatische voorrangstaak.")
 
 func _process(delta: float) -> void:
 	if not active or paused:
+		police_ui.tick(delta)
 		return
-	if state.radio_checked and ledger.tick(delta):
+	if state.radio_checked and police_model.mode == "none" and ledger.tick(delta):
 		_notify(str(ledger.messages.back()))
+		if not ledger.incident.is_empty() and ledger.incident.phase == "offered":
+			audio.cue("radio_call")
+			audio.set_theme("urgency")
 	if not state.occupied_vehicle.is_empty():
 		var vehicle: Node3D = district.objects[state.occupied_vehicle]
 		officer.global_position = vehicle.global_position
@@ -307,11 +406,16 @@ func _process(delta: float) -> void:
 			current_target = {"id": "incident_response", "title": "Melding ter plaatse afhandelen"}
 		prompt.text = "[E] " + str(current_target.title) if not current_target.is_empty() else ""
 	_update_objective()
+	police_ui.tick(delta)
 	if notice_time > 0:
 		notice_time -= delta
 		if notice_time <= 0: notice.text = ""
 
 func _interact(id: String) -> void:
+	audio.cue("interaction", officer.global_position)
+	if id == "academy":
+		state.academy_visits += 1 if state.radio_checked else 0
+	if police_ui.on_interact(id): return
 	match id:
 		"equipment", "fire_equipment":
 			if (id == "fire_equipment") != (state.role == "fire"):
@@ -359,6 +463,9 @@ func _update_objective() -> void:
 func _notify(message: String) -> void:
 	notice.text = message
 	notice_time = 9.0
+	if is_instance_valid(audio) and (message.begins_with("Meldkamer:") or message.begins_with("Eenheid")):
+		audio.cue("radio_crackle")
+		audio.begin_voice(2.0)
 
 func save_game(path: String = State.SAVE_PATH) -> void:
 	_capture_state()
@@ -375,6 +482,12 @@ func load_game(path: String = State.SAVE_PATH) -> void:
 	ledger = Ledger.new()
 	if state.dispatch.is_empty(): ledger.start(112)
 	else: ledger.restore(state.dispatch)
+	police_model.begin("none")
+	if not state.police.is_empty(): police_model.restore(state.police)
+	police_ui.setup(self, police_model, police_site)
+	police_ui._practice = state.police_practice
+	police_ui.restore_draft(state.police_draft)
+	police_site.show_guidance(police_model.mode == "basis" and not state.police_practice)
 	var seated: String = state.occupied_vehicle
 	_restore_vehicles()
 	_restore_on_foot(state.player_position)
@@ -391,6 +504,7 @@ func _restore_vehicles() -> void:
 		vehicle.position = Vector3(float(pose.position[0]), float(pose.position[1]), float(pose.position[2]))
 		vehicle.rotation.y = float(pose.yaw)
 		vehicle.stop()
+		if is_instance_valid(audio): audio.set_siren(false, id)
 		vehicle.enabled_input = false
 		vehicle.sensitivity = state.sensitivity
 		vehicle.camera.current = false
@@ -438,6 +552,7 @@ func _exit_vehicle() -> void:
 		_notify("Kom eerst tot stilstand en zorg voor een vrije uitstapruimte.")
 		return
 	vehicle.stop()
+	audio.set_siren(false, state.occupied_vehicle)
 	vehicle.enabled_input = false
 	vehicle.camera.current = false
 	_restore_on_foot(exit)
@@ -450,6 +565,10 @@ func _capture_state() -> void:
 		var vehicle: Node3D = district.objects[id]
 		state.vehicles[id] = {"position": [vehicle.position.x, vehicle.position.y, vehicle.position.z], "yaw": vehicle.rotation.y}
 	state.dispatch = ledger.to_dict()
+	state.police = police_model.to_dict()
+	state.police_draft = police_ui.capture_draft()
+	state.police_practice = police_ui._practice
+	if police_model.mode == "campaign": state.police_campaign = state.police.duplicate(true)
 
 func _controlled_position() -> Vector3:
 	return officer.global_position if state.occupied_vehicle.is_empty() else district.objects[state.occupied_vehicle].global_position
@@ -465,6 +584,10 @@ func _at_incident() -> bool:
 	return _accepted_incident() and state.occupied_vehicle.is_empty() and officer.global_position.distance_to(_incident_position()) < 4.0
 
 func _navigation_text() -> String:
+	if police_model.mode in ["basis", "campaign"]:
+		var distance := _controlled_position().distance_to(Vector3(-20, 0, 17))
+		return "GPS  Kruising Stationslaan · %.0f m · Q: afzetten" % distance
+	if police_model.mode == "intake": return "Bureau · Registratie en intake in de academieruimte"
 	if not _accepted_incident(): return "Geen actieve route  ·  R meldkamer  ·  M wijkkaart"
 	var offset := _incident_position() - _controlled_position()
 	var north_south := "noord" if offset.z < 0 else "zuid"
@@ -475,9 +598,9 @@ func _navigation_text() -> String:
 	return "GPS  %.0f m · %s  |  Nog %.0f s" % [Vector2(offset.x, offset.z).length(), direction, maxf(0, float(ledger.incident.deadline) - ledger.duty_time)]
 
 func _draw_map(map: Control) -> void:
-	var center := Vector2(210, 115)
-	var scale := 2.1
-	map.draw_rect(Rect2(0, 0, 420, 230), Color("24413d"))
+	var center := Vector2(210, 95)
+	var scale := 1.7
+	map.draw_rect(Rect2(0, 0, 420, 190), Color("24413d"))
 	map.draw_line(center + Vector2(-145, 17 * scale), center + Vector2(145, 17 * scale), Color("596670"), 18)
 	map.draw_line(center + Vector2(-20 * scale, -110), center + Vector2(-20 * scale, 110), Color("596670"), 16)
 	map.draw_line(center + Vector2(-20 * scale, -28 * scale), center + Vector2(49 * scale, -28 * scale), Color("596670"), 12)
@@ -491,6 +614,8 @@ func _draw_map(map: Control) -> void:
 	if _accepted_incident():
 		var target := _incident_position()
 		map.draw_circle(center + Vector2(target.x, target.z) * scale, 6, Color("f4bf65"))
+	elif police_model.mode in ["basis", "campaign"]:
+		map.draw_circle(center + Vector2(-20, 17) * scale, 6, Color("f4bf65"))
 	map.draw_string(ThemeDB.fallback_font, Vector2(14, 22), "N ↑   Turkoois: jij   Geel: aangenomen melding", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color("ede7d9"))
 
 func show_radio() -> void:
@@ -520,6 +645,7 @@ func _phase_title(phase: String) -> String:
 
 func _accept_call() -> void:
 	if ledger.accept(): _notify("Melding aangenomen. Volg de GPS-route; stap ter plaatse veilig uit.")
+	audio.cue("radio_call")
 	_resume()
 
 func _hand_over_call() -> void:
@@ -549,6 +675,7 @@ func _resolve_call(quality: int) -> void:
 		_resume()
 		return
 	if ledger.resolve(quality):
+		audio.cue("success" if quality >= 80 else "partial")
 		_notify("Afgehandeld · zorgvuldigheid %d/100. %s" % [quality, "Rust en veiligheid zijn behouden. Je kunt verder surveilleren." if quality >= 80 else "Je aanpak liet risico's of onduidelijkheid bestaan. Neem volgende keer tijd voor luisteren en veiligheid."])
 	_resume()
 
@@ -556,13 +683,15 @@ func _smoke_test() -> void:
 	_test_timeout(30)
 	start_new()
 	for i in range(12): await get_tree().physics_frame
+	var sound: Dictionary = audio.status()
+	if not _check(sound.missing.is_empty() and sound.waves_loaded == Audio.FILES.size(), "all packaged audio resources initialize"): return
 	if not is_instance_valid(officer.camera) or district.objects.size() < 5:
 		push_error("SMOKE_FAIL world/player initialization")
-		get_tree().quit(1)
+		quit_game(1)
 		return
 	print("SCENE112_SMOKE_OK engine=", Engine.get_version_info().string, " objects=", district.objects.size())
 	_test_finished = true
-	get_tree().quit(0)
+	quit_game(0)
 
 func _playthrough() -> void:
 	_test_timeout(40)
@@ -574,7 +703,7 @@ func _playthrough() -> void:
 	Input.action_release("move_forward")
 	if officer.position.distance_to(start_position) < 1.0:
 		push_error("PLAYTHROUGH_FAIL movement")
-		get_tree().quit(1)
+		quit_game(1)
 		return
 	for id in ["equipment", "radio", "academy"]:
 		var point: Node3D = district.objects[id]
@@ -583,18 +712,18 @@ func _playthrough() -> void:
 		var target: Dictionary = district.get_interaction(officer.position)
 		if target.get("id", "") != id:
 			push_error("PLAYTHROUGH_FAIL proximity: " + id)
-			get_tree().quit(1)
+			quit_game(1)
 			return
 		district.interact(id)
 	var test_path := "user://playthrough-test.json"
 	state.player_position = officer.position
 	if not state.save_to(test_path):
-		get_tree().quit(1)
+		quit_game(1)
 		return
 	var resumed := State.new()
 	if not resumed.load_from(test_path) or not resumed.equipment or not resumed.radio_checked or resumed.academy_visits != 1:
 		push_error("PLAYTHROUGH_FAIL save/load")
-		get_tree().quit(1)
+		quit_game(1)
 		return
 	officer.position = Vector3(0, 0.1, 6)
 	for i in range(5): await get_tree().process_frame
@@ -605,19 +734,19 @@ func _playthrough() -> void:
 	DirAccess.remove_absolute(test_path + ".bak")
 	print("SCENE112_PLAYTHROUGH_OK walking, proximity, equipment, radio, academy, save/load; screenshot=", OS.get_user_data_dir())
 	_test_finished = true
-	get_tree().quit(0)
+	quit_game(0)
 
 func _test_timeout(seconds: float) -> void:
 	get_tree().create_timer(seconds).timeout.connect(func():
 		if not _test_finished:
 			push_error("SCENE112_TEST_TIMEOUT")
-			get_tree().quit(1))
+			quit_game(1))
 
 func _check(condition: bool, description: String) -> bool:
 	if condition: return true
 	_test_finished = true
 	push_error("DUTY_FAIL " + description)
-	get_tree().quit(1)
+	quit_game(1)
 	return false
 
 func _press_menu(title: String) -> bool:
@@ -698,6 +827,7 @@ func _duty_playthrough() -> void:
 	if not await _test_station("equipment"): return
 	if not await _test_station("radio"): return
 	if not await _test_station("academy"): return
+	if not _press_menu("Terug naar mijn dienst"): return
 	var npc_start: Vector3 = district.objects.npc_0.global_position
 	if not await _test_vehicle("police_car"): return
 	if not _check(district.objects.npc_0.global_position.distance_to(npc_start) > 0.5, "civilian movement"): return
@@ -778,4 +908,35 @@ func _duty_playthrough() -> void:
 	DirAccess.remove_absolute(test_path + ".bak")
 	print("SCENE112_DUTY_OK both duty menus, driving/braking, enter/exit, seated save/load+backup, NPC movement/pause, dispatch accept/resolve/repeat/handover/expire; automated_duty_seconds=", automated_seconds)
 	_test_finished = true
-	get_tree().quit(0)
+	quit_game(0)
+
+func start_training(role: String = "police") -> void:
+	var old_stage := state.campaign_stage
+	var old_courses: Array = state.course_passes.duplicate()
+	var old_campaign: Dictionary = state.police_campaign.duplicate(true)
+	if police_model.mode == "campaign": old_campaign = police_model.to_dict()
+	start_new(role)
+	state.campaign_stage = old_stage
+	state.course_passes = old_courses
+	state.police_campaign = old_campaign
+
+func _police_completed(mode: String, _score: Dictionary) -> void:
+	audio.cue("success")
+	if mode == "campaign":
+		state.campaign_stage = maxi(state.campaign_stage, 1)
+		state.police_campaign = police_model.to_dict()
+	elif mode in ["basis", "intake"] and mode not in state.course_passes:
+		state.course_passes.append(mode)
+
+func _police_playthrough() -> void:
+	var validation := PoliceValidation.new()
+	await validation.run(self)
+
+func quit_game(code: int = 0) -> void:
+	if _quitting: return
+	_quitting = true
+	if is_instance_valid(audio): await audio.shutdown()
+	get_tree().quit(code)
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_CLOSE_REQUEST: quit_game()
