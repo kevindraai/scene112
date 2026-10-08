@@ -1,0 +1,25 @@
+accepted incident=1 kind=noise
+wall_seconds=30.1 duty_seconds=32.2 completed=0 missed=0 position=(-17.25433, -0.009161, -28.03075)
+resolved incident=1 quality=90
+wall_seconds=60.2 duty_seconds=62.0 completed=1 missed=0 position=(13.8741, -0.017398, 21.96359)
+accepted incident=2 kind=traffic
+resolved incident=2 quality=95
+wall_seconds=90.3 duty_seconds=90.4 completed=2 missed=0 position=(14.1759, -0.009155, 24.6617)
+accepted incident=3 kind=noise
+wall_seconds=120.5 duty_seconds=120.5 completed=2 missed=0 position=(-12.50202, -0.009161, -27.7091)
+resolved incident=3 quality=90
+wall_seconds=150.5 duty_seconds=150.6 completed=3 missed=0 position=(13.93532, -0.009161, 29.48)
+accepted incident=4 kind=traffic
+resolved incident=4 quality=95
+wall_seconds=180.6 duty_seconds=180.5 completed=4 missed=0 position=(13.93964, -0.009155, 27.6738)
+accepted incident=5 kind=noise
+resolved incident=5 quality=90
+wall_seconds=210.7 duty_seconds=210.5 completed=5 missed=0 position=(-10.15127, -0.009161, -28.16406)
+accepted incident=6 kind=traffic
+resolved incident=6 quality=95
+wall_seconds=240.8 duty_seconds=240.5 completed=6 missed=0 position=(13.90284, -0.009161, 27.64362)
+accepted incident=7 kind=noise
+resolved incident=7 quality=90
+wall_seconds=270.9 duty_seconds=270.4 completed=7 missed=0 position=(14.15058, -0.009155, 21.8054)
+accepted incident=8 kind=traffic
+SCENE112_REALTIME_OK wall_seconds=300.0 completed=7; initial gear/car setup placed, subsequent walking/navigation/radio/responses in realtime

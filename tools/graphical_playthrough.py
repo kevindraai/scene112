@@ -10,6 +10,12 @@ import time
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("godot")
 parser.add_argument("--project", default=".")
+parser.add_argument("--runtime-script", help="Optional integration driver scene-tree script")
+parser.add_argument("--timeout", type=int, default=90)
+parser.add_argument(
+    "--scenario", choices=("--playthrough", "--duty-playthrough"), default="--playthrough",
+    help="Use --scenario=--duty-playthrough for the M1 duty automation",
+)
 args = parser.parse_args()
 with tempfile.TemporaryDirectory(prefix="scene112-display-") as directory:
     display_file = Path(directory) / "display"
@@ -30,10 +36,12 @@ with tempfile.TemporaryDirectory(prefix="scene112-display-") as directory:
                 raise RuntimeError("Xvfb display timeout")
             environment = os.environ.copy()
             environment["DISPLAY"] = ":" + display
-            result = subprocess.run(
-                [args.godot, "--path", args.project, "--audio-driver", "Dummy", "--", "--playthrough"],
-                env=environment, timeout=90,
-            )
+            command = [args.godot, "--path", args.project, "--audio-driver", "Dummy"]
+            if args.runtime_script:
+                command += ["--script", args.runtime_script]
+            else:
+                command += ["--", args.scenario]
+            result = subprocess.run(command, env=environment, timeout=args.timeout)
             raise SystemExit(result.returncode)
         finally:
             server.terminate()
