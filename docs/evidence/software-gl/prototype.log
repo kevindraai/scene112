@@ -1,0 +1,25 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:372)
+OpenGL API 4.5 (Core Profile) Mesa 25.0.7-2+deb13u1 - Compatibility - Using Device: Mesa - llvmpipe (LLVM 19.1.7, 256 bits)
+
+SCENE112_GRAPHICS_STAGE=world_begin elapsed_ms=1459
+SCENE112_GRAPHICS_STAGE=world_ready elapsed_ms=2353
+SCENE112_GRAPHICS_STAGE=actor_ready elapsed_ms=2444
+SCENE112_GRAPHICS_STAGE=menu_and_audio_ready elapsed_ms=2514
+SCENE112_GRAPHICS_STAGE=initial_draw elapsed_ms=2538 checks=0
+SCENE112_GRAPHICS_BACKEND={"adapter":"llvmpipe (LLVM 19.1.7, 256 bits)","adapter_type":0,"api":"4.5 (Core Profile) Mesa 25.0.7-2+deb13u1","display":"X11","driver":"opengl3","renderer":"gl_compatibility","user_data_dir":"/tmp/scene112-software-gl-prep/data-prototype/Scene112","vendor":"Mesa"}
+SCENE112_GRAPHICS_STAGE=start_new elapsed_ms=2539 checks=0
+SCENE112_GRAPHICS_STAGE=models_and_rigs elapsed_ms=2542 checks=2
+SCENE112_GRAPHICS_STAGE=roof_camera elapsed_ms=2545 checks=148
+SCENE112_GRAPHICS_STAGE=walk_and_pause elapsed_ms=8893 checks=150
+SCENE112_GRAPHICS_STAGE=vehicle elapsed_ms=15205 checks=167
+SCENE112_GRAPHICS_STAGE=connected_street elapsed_ms=20330 checks=173
+SCENE112_BRAKE_DIAGNOSTICS={"final_speed":0.0,"passed":true,"physics_ticks":67,"samples":[{"brake_held":true,"enabled_input":true,"physics_ticks":0,"position":[20.7617645263672,0.00589820463210344,38.2190628051758],"speed":13.9999675750732,"wall_ms":0},{"brake_held":true,"enabled_input":true,"physics_ticks":6,"position":[22.0848407745361,0.00589634198695421,38.2724761962891],"speed":12.6997814178467,"wall_ms":94},{"brake_held":true,"enabled_input":true,"physics_ticks":11,"position":[23.0881633758545,0.0142267029732466,38.3129920959473],"speed":11.6163082122803,"wall_ms":184},{"brake_held":true,"enabled_input":true,"physics_ticks":17,"position":[24.1730651855469,0.0142225893214345,38.3567886352539],"speed":10.3161554336548,"wall_ms":276},{"brake_held":true,"enabled_input":true,"physics_ticks":22,"position":[24.977912902832,0.00588558800518513,38.3892822265625],"speed":9.23270988464355,"wall_ms":368},{"brake_held":true,"enabled_input":true,"physics_ticks":27,"position":[25.6925487518311,0.014210800640285,38.4181327819824],"speed":8.14927673339844,"wall_ms":453},{"brake_held":true,"enabled_input":true,"physics_ticks":33,"position":[26.4310321807861,0.0141977751627564,38.4479446411133],"speed":6.84917306900024,"wall_ms":546},{"brake_held":true,"enabled_input":true,"physics_ticks":38,"position":[26.9471950531006,0.00585107691586018,38.4687843322754],"speed":5.76576662063599,"wall_ms":640},{"brake_held":true,"enabled_input":true,"physics_ticks":44,"position":[27.4475116729736,0.0142422169446945,38.4889831542969],"speed":4.46569776535034,"wall_ms":735},{"brake_held":true,"enabled_input":true,"physics_ticks":49,"position":[27.7652244567871,0.0140639580786228,38.5018081665039],"speed":3.382319688797,"wall_ms":827},{"brake_held":true,"enabled_input":true,"physics_ticks":55,"position":[28.027400970459,0.0137875573709607,38.5123977661133],"speed":2.08228278160095,"wall_ms":921},{"brake_held":true,"enabled_input":true,"physics_ticks":61,"position":[28.1596794128418,0.0142359407618642,38.5177459716797],"speed":0.782264173030853,"wall_ms":1037},{"brake_held":true,"enabled_input":true,"physics_ticks":67,"position":[28.1771087646484,0.00900118425488472,38.5184516906738],"speed":0.0,"wall_ms":1133}],"wall_ms":1133}
+SCENE112_GRAPHICS_STAGE=conditions_and_save elapsed_ms=28858 checks=178
+SCENE112_GRAPHICS_STAGE=condition_day elapsed_ms=28858 checks=178
+SCENE112_GRAPHICS_STAGE=condition_dusk elapsed_ms=30008 checks=182
+SCENE112_GRAPHICS_STAGE=condition_rain elapsed_ms=35538 checks=186
+SCENE112_GRAPHICS_STAGE=high_rain elapsed_ms=43052 checks=193
+SCENE112_VISUAL_OK checks=200 renderer=gl_compatibility driver=opengl3 adapter=llvmpipe (LLVM 19.1.7, 256 bits) screenshots=true fixtures=initial positions and equipment; actual walk>10m drive>20m reverse/steering/brake/exit, imported PBR/rig/wheel/camera/pause, conditions and root save/load
+SCENE112_AUDIO_STOP driver=Dummy mixes=2 synchronized=true

@@ -1,0 +1,18 @@
+[
+  {
+    "path": "drivers/gles3/rasterizer_scene_gles3.cpp",
+    "url": "https://raw.githubusercontent.com/godotengine/godot/4.7.2-stable/drivers/gles3/rasterizer_scene_gles3.cpp",
+    "sha256": "6d0719c9cd2caf685a9825028183bdf058081d7bc92d4b27ed2587f39b081221",
+    "bytes": 212186
+  },
+  {
+    "path": "drivers/gles3/effects/cubemap_filter.cpp",
+    "url": "https://raw.githubusercontent.com/godotengine/godot/4.7.2-stable/drivers/gles3/effects/cubemap_filter.cpp",
+    "sha256": "684c00bea8bed311b46dcdc190143deb1ef4db0d4904ba678a6ce912ff4b69d9",
+    "bytes": 8455
+  },
+  {
+    "path": "drivers/gles3/shaders/cubemap_filter.glsl",
+    "error": "HTTP Error 404: Not Found"
+  }
+]

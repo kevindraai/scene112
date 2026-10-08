@@ -11,6 +11,11 @@ const LAMP_POINTS := [Vector3(-5,4.30,40.2),Vector3(7,4.30,40.2),Vector3(19,4.30
 var conditions := "day"
 var quality := "balanced"
 var renderer := ""
+var software_gl := false
+var adapter := ""
+var effective_quality := "balanced"
+var _original_render_scale := 1.0
+var _original_scaling_mode := Viewport.SCALING_3D_MODE_BILINEAR
 var _district: Node3D
 var _world: WorldEnvironment
 var _environment: Environment
@@ -41,6 +46,14 @@ func setup(district: Node3D) -> bool:
 	_sun = _find_sun(district)
 	if _world == null or _sun == null or _world.environment == null: return false
 	_district = district
+	renderer = str(RenderingServer.get_current_rendering_method())
+	adapter = RenderingServer.get_video_adapter_name()
+	software_gl = is_software_gl(renderer, adapter) and DisplayServer.get_name() != "headless"
+	if software_gl:
+		_original_render_scale = district.get_viewport().scaling_3d_scale
+		_original_scaling_mode = district.get_viewport().scaling_3d_mode
+		district.get_viewport().scaling_3d_mode = Viewport.SCALING_3D_MODE_BILINEAR
+		district.get_viewport().scaling_3d_scale = .5
 	name = "StreetAtmosphere"
 	process_priority = 20 # Legacy District sun drift runs first; selected condition stays stable.
 	if get_parent() == null: district.add_child(self)
@@ -53,7 +66,7 @@ func setup(district: Node3D) -> bool:
 	_world.environment = _environment
 	var sky := Sky.new()
 	sky.process_mode = Sky.PROCESS_MODE_INCREMENTAL
-	sky.radiance_size = Sky.RADIANCE_SIZE_128
+	sky.radiance_size = Sky.RADIANCE_SIZE_32 if software_gl else Sky.RADIANCE_SIZE_128
 	_sky = ProceduralSkyMaterial.new()
 	sky.sky_material = _sky
 	_environment.sky = sky
@@ -68,7 +81,6 @@ func setup(district: Node3D) -> bool:
 	_environment.volumetric_fog_enabled = false
 	_environment.sdfgi_enabled = false
 	_environment.ssil_enabled = false
-	renderer = str(RenderingServer.get_current_rendering_method())
 	_create_lamps()
 	_create_reflection()
 	_create_rain()
@@ -79,13 +91,14 @@ func setup(district: Node3D) -> bool:
 func apply_conditions(value: String) -> bool:
 	if value not in CONDITIONS or _environment == null: return false
 	conditions = value
+	effective_quality = "software_portable" if software_gl else quality
 	var dusk := value == "dusk"
 	var rainy := value == "rain"
 	_sun_pose = Vector3(-9,-55,0) if dusk else Vector3(-48,-28,0)
 	_sun.rotation_degrees = _sun_pose
 	_sun.light_color = Color("ffc792") if dusk else (Color("dce7ee") if rainy else Color("fff1dd"))
 	_sun.light_energy = .24 if dusk else (.42 if rainy else 1.05)
-	_sun.shadow_enabled = true
+	_sun.shadow_enabled = not software_gl
 	_sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS if quality == "portable" else DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS
 	_sun.directional_shadow_max_distance = 75.0 if quality == "portable" else 95.0
 	_sky.sky_top_color = Color("344e70") if dusk else (Color("81939f") if rainy else Color("658fad"))
@@ -101,24 +114,24 @@ func apply_conditions(value: String) -> bool:
 	_environment.fog_light_color = Color("9a95a0") if dusk else (Color("a9bbc4") if rainy else Color("b9cbd5"))
 	_environment.fog_density = .003 if dusk else (.0042 if rainy else .0013)
 	_environment.fog_sky_affect = .12
-	_environment.glow_enabled = quality != "portable" and dusk
+	_environment.glow_enabled = not software_gl and quality != "portable" and dusk
 	_environment.glow_intensity = .12
 	_environment.glow_bloom = 0.0
 	_environment.glow_hdr_threshold = 1.25
-	_environment.ssao_enabled = quality != "portable" and renderer in ["gl_compatibility","forward_plus"]
+	_environment.ssao_enabled = not software_gl and quality != "portable" and renderer in ["gl_compatibility","forward_plus"]
 	_environment.ssao_radius = .65
 	_environment.ssao_intensity = .65
 	_environment.ssao_power = 1.35
 	_environment.ssao_light_affect = .1
-	_environment.ssr_enabled = quality == "high" and renderer == "forward_plus" and rainy
+	_environment.ssr_enabled = not software_gl and quality == "high" and renderer == "forward_plus" and rainy
 	_environment.ssr_max_steps = 32
 	_environment.ssr_depth_tolerance = .15
 	for i in range(_lamps.size()):
 		var lamp := _lamps[i]
 		lamp.visible = dusk or rainy
 		lamp.light_energy = 2.2 if dusk else .55
-		lamp.shadow_enabled = quality != "portable" and i in [0,2]
-		if quality == "portable" and i in [1,3]: lamp.visible = false
+		lamp.shadow_enabled = not software_gl and quality != "portable" and i in [0,2]
+		if (quality == "portable" or software_gl) and i in [1,3]: lamp.visible = false
 	_set_material_condition(rainy)
 	_rain.visible = rainy
 	_rain.emitting = rainy
@@ -223,7 +236,9 @@ func diagnostics() -> Dictionary:
 		if lamp.visible:
 			enabled += 1
 			if lamp.shadow_enabled: shadows += 1
-	return {"conditions":conditions,"quality":quality,"renderer":renderer,"lamps":enabled,"local_shadows":shadows,
+	return {"conditions":conditions,"quality":quality,"requested_quality":quality,"effective_quality":effective_quality,
+		"software_gl":software_gl,"adapter":adapter,"render_scale":get_viewport().scaling_3d_scale,
+		"sky_radiance_size":32 << int(_environment.sky.radiance_size),"sun_shadows":_sun.shadow_enabled,"renderer":renderer,"lamps":enabled,"local_shadows":shadows,
 		"reflection_probes":1 if is_instance_valid(_reflection) else 0,"probe_revision":_probe_revision,
 		"ssao":_environment.ssao_enabled if _environment else false,"glow":_environment.glow_enabled if _environment else false,
 		"ssr":_environment.ssr_enabled if _environment else false,"particles":_rain.amount if _rain and _rain.visible else 0,
@@ -231,6 +246,9 @@ func diagnostics() -> Dictionary:
 
 
 func restore_original() -> void:
+	if software_gl and is_inside_tree():
+		get_viewport().scaling_3d_scale = _original_render_scale
+		get_viewport().scaling_3d_mode = _original_scaling_mode
 	for entry: Dictionary in _surfaces:
 		if is_instance_valid(entry.mesh):
 			if entry.surface == -1: entry.mesh.material_override = entry.original_override
@@ -341,6 +359,7 @@ func set_lamp_positions(points: Array[Vector3]) -> bool:
 
 
 func _create_reflection() -> void:
+	if software_gl: return # Sky32 retains bounded environment reflections; omit local cube capture.
 	_reflection = ReflectionProbe.new()
 	_reflection.name = "NoorderkadeStreetReflection"
 	_reflection.position = Vector3(12,4,40)
@@ -365,7 +384,7 @@ func _create_rain() -> void:
 	_rain = CPUParticles3D.new()
 	_rain.name = "LightStreetRain"
 	_rain.position = Vector3(12,7,35)
-	_rain.amount = 280
+	_rain.amount = 72 if software_gl else 280
 	_rain.lifetime = .70
 	_rain.preprocess = .7
 	_rain.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX
@@ -424,3 +443,9 @@ func _contains_any(value: String, tags: Array) -> bool:
 	for tag: String in tags:
 		if value.contains(tag): return true
 	return false
+
+
+static func is_software_gl(method: String, device_name: String) -> bool:
+	if method != "gl_compatibility": return false
+	var actual := device_name.to_lower()
+	return actual.contains("apple software renderer") or actual.begins_with("llvmpipe") or actual.begins_with("softpipe")

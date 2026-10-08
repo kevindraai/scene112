@@ -365,6 +365,11 @@ func show_settings() -> void:
 		state.graphics_quality = ["portable", "balanced", "high"][index]
 		_apply_visual_settings())
 	options.add_child(quality)
+	if district.atmosphere.software_gl:
+		var fallback := _label("Lichte weergave actief op dit systeem. Je beeldvoorkeur blijft bewaard.", 16)
+		fallback.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		fallback.custom_minimum_size.x = 400
+		options.add_child(fallback)
 	var settings: Dictionary = audio.get_settings()
 	var names := {"Master": "Totaal", "Music": "Muziek", "Ambience": "Omgeving", "SFX": "Handelingen", "Vehicle": "Voertuigen", "Radio": "Radio", "Voice": "Stemmen", "UI": "Menu"}
 	for bus: String in names:

@@ -276,7 +276,11 @@ func _conditions_and_save() -> bool:
 		await app._test_frames(2)
 		var atmosphere: Node3D = app.district.atmosphere
 		var info: Dictionary = atmosphere.diagnostics()
-		if not _check(info.conditions == condition and info.quality == "balanced" and info.lamps <= 4 and info.local_shadows <= 2 and info.reflection_probes == 1 and info.particles <= 280, "bounded root scene condition: " + condition): return false
+		if not _check(info.conditions == condition and info.quality == "balanced" and info.lamps <= 4 and info.local_shadows <= 2 and info.reflection_probes == (0 if info.software_gl else 1) and info.particles <= 280, "bounded root scene condition: " + condition): return false
+		if info.software_gl:
+			if not _check(info.requested_quality == "balanced" and info.effective_quality == "software_portable" and info.render_scale == .5 and info.sky_radiance_size == 32 and not info.ssao and not info.glow and not info.ssr and not info.sun_shadows and info.local_shadows == 0, "actual software-only fallback is explicit and bounded"): return false
+		else:
+			if not _check(info.effective_quality == "balanced", "hardware quality remains unchanged"): return false
 		if not _check(info.managed_surfaces > 35 and info.material_variants > 10, "condition manages actual authored surfaces"): return false
 		if condition == "rain":
 			if not _check(info.particles > 0 and atmosphere._rain.emitting, "actual outdoor rain particles active"): return false
@@ -300,10 +304,13 @@ func _conditions_and_save() -> bool:
 	app.state.graphics_quality = "high"
 	app._apply_visual_settings()
 	var high: Dictionary = app.district.atmosphere.diagnostics()
-	if not _check(high.ssr == (high.renderer == "forward_plus"), "rain SSR only active on high Forward+"): return false
+	if not _check(high.ssr == (high.renderer == "forward_plus" and not high.software_gl), "rain SSR only active on high Forward+"): return false
+	report["high_rain"] = high
+	if high.software_gl:
+		if not _check(high.requested_quality == "high" and high.effective_quality == "software_portable" and not high.ssao and not high.glow and not high.ssr and high.local_shadows == 0, "requested high is truthfully reported as software fallback"): return false
 	if DisplayServer.get_name() != "headless":
 		for frame in range(4): await RenderingServer.frame_post_draw
-		if not _check(app.get_viewport().get_texture().get_image().save_png("user://visual-street-high-rain.png") == OK, "actual high-quality rain shader rendering"): return false
+		if not _check(app.get_viewport().get_texture().get_image().save_png("user://visual-street-high-rain.png") == OK, "actual rain shader rendering with effective profile recorded"): return false
 	app.save_game(SAVE)
 	app.state.condition = "day"
 	app.state.graphics_quality = "portable"

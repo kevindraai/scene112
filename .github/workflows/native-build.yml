@@ -107,6 +107,7 @@ jobs:
               ("police-case-tests", ["--headless", "--path", ".", "--script", "tests/police_case_tests.gd"], "SCENE112_POLICE_CASE_TESTS_OK"),
               ("audio-tests", ["--headless", "--path", ".", "--script", "tests/audio_tests.gd"], "SCENE112_AUDIO_TESTS_OK"),
               ("weather-audio-tests", ["--headless", "--path", ".", "--script", "tests/weather_audio_tests.gd"], "SCENE112_WEATHER_AUDIO_TESTS_OK"),
+              ("software-graphics-tests", ["--headless", "--path", ".", "--script", "tests/software_gl_tests.gd"], "SCENE112_SOFTWARE_CLASSIFICATION_OK"),
               ("smoke", ["--headless", "--path", ".", "--", "--smoke-test"], "SMOKE_OK"),
               ("playthrough", ["--headless", "--path", ".", "--", "--playthrough"], "SCENE112_PLAYTHROUGH_OK"),
               ("duty-playthrough", ["--headless", "--path", ".", "--", "--duty-playthrough"], "SCENE112_DUTY_OK"),

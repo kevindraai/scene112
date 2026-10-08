@@ -1,0 +1,35 @@
+C bounded software-GL fallback handoff
+
+Frozen patch: software-gl-fallback.patch SHA6f8504820413ea2282e7a32b7c480485429b9fdf018911c02efb8cf8eb9da3a6. Module8d00b37d05b7340add87795fed0aa47aeada0b66eef5f37e8dfa542dc5c00196; validator9a4f198855a5dfb3376e9617744f35c6d19947fa37dc1e1c5c9cd32e7960cb90. Base module895a7c53ff1527edd6175f95c0d4b90fe104993e3ce5e2218985734ada168684. Parent applies sequentially; canonical source untouched by C.
+
+Observed bottleneck
+Actual Intel own-PID7140 sample shows696/696 main-thread samples in glDrawElements/Apple GLRendererFloat fragment interpretation. It cannot identify the exact app draw. Wet shader is inactive during the initial dry scene, so there is no evidence to replace its PBR/noise shader for startup. Full engine log completes audio; this is not an audio lock. The pinned Godot sky/reflection implementation also performs6cube views and GGX filtering; incremental sky first update is rebuilt fully in one frame. Its cubemap filter uses glDrawArrays, whereas the captured main draw uses glDrawElements, so that sample alone does not prove sky filtering is the specific stall.
+
+Proposed fallback
+Only actual gl_compatibility adapter names Apple Software Renderer, llvmpipe prefix, or softpipe prefix activate it; headless, Forward+, hardware GPU names, ANGLE/Apple Paravirtual and unknown names do not.16classification fixtures cover these boundaries.
+Keep all original GLB geometry, collision, rigs, per-fragment albedo/normal/roughness/metallic materials and wet shader. Only3D output uses bilinear scale0.5;2DUI remains full resolution. Sky radiance32 retains environment reflections. Skip local scene cubemap capture; disable SSAO/glow/sun/local shadows; use2visible weather lamps and72rain streaks. Restore_original restores prior viewport mode/scale. Good-GPU and Forward+ paths retain original features. No vertex lighting or reduced PBR shader is introduced.
+
+Truthful quality/report contract
+Existing quality remains the requested saved value. Add requested_quality/effective_quality/ software_gl/actual adapter/render_scale/sky_radiance_size/sun_shadows. Sky size is obtained from the actual resource enum:32 << int(_environment.sky.radiance_size). Software effective_quality is software_portable even if high was requested. Condition checks explicitly verify disabled expensive effects; high-rain metadata is saved separately in report.high_rain and never claims effective fullhigh. All4fresh screenshots, physical movement/vehicle/brake/exit checks, PBR/rig checks, source/backend provenance and strict error/cleanup gates remain. Parent should display the effective automatic profile alongside requested settings for players.
+
+Actual local graphical evidence
+Identical isolated source snapshot on real Linux llvmpipe (Mesa25.0.7/LLVM19.1.7), engine4.7.2. Baseline105.509s/196checks; first prototype44.843s/200checks. Final exact source passed again46.173s/200checks, with source hashes recorded before/after unchanged,4fresh1280x720PNG, realwalk10.27m/drive>31m, full scenario and2audio mixes synchronized. Both snapshots already included initial district/officer hide; no duplicate app change is delivered.
+Baseline draw calls day/dusk/rain238/401/399; prototype101/101/102. Baseline video allocation about508.8MB versus228.6MB. Counters include dropped shadow/cube passes and do not imply geometry deletion. Original388asset files and all shader files verified byte-identical; wet shader SHA3dd3896530f4a36fb94d5a61fb59a0bf1dccff128c6ead3690103193d1307ef2.
+Screenshots inspected: same authored house/bicycle/lamp/officer/road and wet roughness highlights persist;3Dsoftening and removed shadows are visible,2Dtext stays sharp. This proves software fallback behavior on llvmpipe only. It does not establish Apple Software Renderer sub240s, physical target GPU quality, or human play acceptance. The next exact native Intel profile must supply that evidence; no timeout/error waiver.
+
+Files
+- prototype/scripts/street_atmosphere.gd and graphics_validation.gd are ready modules.
+- software-gl-fallback.patch contains only these2files.
+- software_gl_tests.gd uses res:// preload and can be copied to project tests;16pure classification checks.
+- evidence/{baseline,prototype,final}: actual screenshots/runtimeJSON.
+- final-process.json: actual source hashes/return0/wall time.
+- evidence-manifest.json: per-file SHA and image dimensions.
+- baseline.log, prototype.log, final.log: full logs, all no ERROR/DUTY_FAIL/leak.
+- source/manifest.json: exact pinned Godot GL filter source hashes.
+
+Primary sources
+https://github.com/godotengine/godot/blob/4.7.2-stable/drivers/gles3/rasterizer_scene_gles3.cpp
+https://github.com/godotengine/godot/blob/4.7.2-stable/drivers/gles3/effects/cubemap_filter.cpp
+https://docs.godotengine.org/en/stable/classes/class_viewport.html
+
+Next work: parent/D review and sequential integration, then exact native proof. No new workflow/PR/service or native build was launched by C. Local GPU slot released to B after final pass.

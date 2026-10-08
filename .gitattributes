@@ -1,3 +1,4 @@
 # Preserve original recorder bytes/SHA256, including CSV CRLF and log spacing.
 docs/evidence/visual-street/**/*.csv -text -diff
 docs/evidence/visual-street/**/*.log -text -diff
+docs/evidence/software-gl/**/*.log -text -diff
