@@ -564,7 +564,16 @@ func _restore_vehicles() -> void:
 func _restore_on_foot(at: Vector3) -> void:
 	state.occupied_vehicle = ""
 	officer.show()
+	# Godot queues kinematic transforms until integration. Flush this teleport
+	# while static, so re-enabling the capsule never exposes its old seat pose.
+	var previous_process_mode: int = officer.process_mode
+	var previous_disable_mode: int = officer.disable_mode
+	officer.disable_mode = CollisionObject3D.DISABLE_MODE_MAKE_STATIC
+	officer.process_mode = Node.PROCESS_MODE_DISABLED
 	officer.position = at
+	officer.force_update_transform()
+	officer.process_mode = previous_process_mode
+	officer.disable_mode = previous_disable_mode
 	officer.velocity = Vector3.ZERO
 	officer.collision_layer = 1
 	officer.collision_mask = 1

@@ -109,6 +109,7 @@ jobs:
               ("weather-audio-tests", ["--headless", "--path", ".", "--script", "tests/weather_audio_tests.gd"], "SCENE112_WEATHER_AUDIO_TESTS_OK"),
               ("apple-material-ownership", ["--headless", "--path", ".", "--script", "tests/apple_material_tests.gd"], "SCENE112_APPLE_MATERIAL_TESTS_OK"),
               ("normal-material-profile", ["--headless", "--path", ".", "--script", "tests/apple_normal_profile_test.gd"], "SCENE112_NORMAL_MATERIAL_PROFILE_OK"),
+              ("vehicle-exit-regression", ["--headless", "--path", ".", "--script", "tests/vehicle_exit_regression.gd"], "SCENE112_VEHICLE_EXIT_OK"),
               ("software-graphics-tests", ["--headless", "--path", ".", "--script", "tests/software_gl_tests.gd"], "SCENE112_SOFTWARE_CLASSIFICATION_OK"),
               ("apple-software-tests", ["--headless", "--path", ".", "--script", "tests/apple_profile_tests.gd"], "SCENE112_APPLE_PROFILE_CLASSIFICATION_OK"),
               ("smoke", ["--headless", "--path", ".", "--", "--smoke-test"], "SMOKE_OK"),
