@@ -487,7 +487,7 @@ jobs:
               "--source-head", os.environ["SOURCE_HEAD"], "--platform", os.environ["TARGET_PLATFORM"],
               "--output-dir", str(output)]
           if os.environ["TARGET_PLATFORM"] == "macos" and os.environ["TARGET_ARCH"] == "x86_64":
-              command.append("--intel-no-argument-buffers")
+              command.extend(["--intel-no-argument-buffers", "--intel-mobile-fallback"])
           result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
               text=True, encoding="utf-8", errors="replace", timeout=1100)
           (output / "probe.txt").write_text(result.stdout, encoding="utf-8")

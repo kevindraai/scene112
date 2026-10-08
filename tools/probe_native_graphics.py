@@ -586,6 +586,44 @@ def profile_drivers(target: str, architecture: str) -> tuple[str, str]:
     raise ValueError("Unsupported native macOS runner architecture")
 
 
+def intel_mobile_candidate(target: str, architecture: str, result: dict, output: str) -> bool:
+    """A separate quality tier, never a reclassification of the failed run."""
+    return (
+        target == "macos"
+        and architecture.lower() in ("x86_64", "amd64")
+        and result.get("status") == "failed_before_backend_report"
+        and result.get("returncode") == -6
+        and result.get("actual_backend") is None
+        and result.get("phase_log") == []
+        and "MoltenVK version 1.4.1" in output
+        and "Apple - Apple Paravirtual device" in output
+        and "Render Pipeline Descriptor Validation\nNo valid pixelFormats set." in output
+        and "ERROR:" not in output
+        and "SCRIPT ERROR:" not in output
+        and "SCENE112_GRAPHICS_BACKEND=" not in output
+        and "SCENE112_GRAPHICS_STAGE=" not in output
+    )
+
+
+def quality_tier(results: list[dict]) -> str | None:
+    if results[0]["status"] == "passed":
+        return "forward_plus"
+    if results[0].get("mobile_fallback_candidate_verified") is not True:
+        return None
+    for result in results[2:]:
+        backend = result.get("actual_backend")
+        if (
+            result.get("requested_renderer") == "mobile"
+            and result.get("requested_driver") == "vulkan"
+            and result.get("status") == "passed"
+            and isinstance(backend, dict)
+            and backend.get("renderer") == "mobile"
+            and backend.get("driver") == "vulkan"
+        ):
+            return "mobile"
+    return None
+
+
 def intel_probe_environment(
     target: str, architecture: str, enabled: bool
 ) -> dict[str, str]:
@@ -675,11 +713,18 @@ def main() -> int:
         action="store_true",
         help="Explicit Intel-only MoltenVK argument-buffer diagnostic",
     )
+    parser.add_argument(
+        "--intel-mobile-fallback",
+        action="store_true",
+        help="Require an additional Mobile/Vulkan quality proof for the known Intel host cluster-PSO failure",
+    )
     args = parser.parse_args()
     args.output_dir.mkdir(parents=True, exist_ok=True)
     primary_environment = intel_probe_environment(
         args.platform, platform.machine(), args.intel_no_argument_buffers
     )
+    if args.intel_mobile_fallback and not primary_environment:
+        raise ValueError("Intel Mobile research requires the explicit Intel-only configuration")
     provenance = json_read(args.provenance.read_text(encoding="utf-8"))
     digest = hashlib.sha256(args.archive.read_bytes()).hexdigest()
     if (
@@ -761,9 +806,26 @@ def main() -> int:
                     "opengl3_angle",
                 )
             )
-    passed = compatibility_passed(results, args.platform) and results[0]["status"] in (
-        "passed",
-        "environment_unavailable",
+        if args.intel_mobile_fallback and intel_mobile_candidate(
+            args.platform,
+            platform.machine(),
+            results[0],
+            (args.output_dir / "forward_plus-vulkan/combined.txt").read_text(encoding="utf-8"),
+        ):
+            results[0]["mobile_fallback_candidate_verified"] = True
+            results.append(
+                profile(
+                    executable.resolve(),
+                    args.output_dir,
+                    user_directory(args.platform),
+                    "mobile",
+                    "vulkan",
+                    environment=primary_environment,
+                )
+            )
+    accepted_quality = quality_tier(results)
+    passed = compatibility_passed(results, args.platform) and (
+        accepted_quality is not None or results[0]["status"] == "environment_unavailable"
     )
     report = {
         "source_head": args.source_head,
@@ -783,9 +845,11 @@ def main() -> int:
             for result in results
         ),
         "primary_forward_plus_validated": results[0]["status"] == "passed",
+        "validated_quality_tier": accepted_quality,
+        "mobile_quality_fallback_validated": accepted_quality == "mobile",
         "gate_passed": passed,
         "default_renderer_changed": False,
-        "limits": "Research unavailability is explicit; source/asset/shader/late errors are fatal. Software/hosted adapters are not physical target acceptance.",
+        "limits": "Forward+ failure is retained; separately verified Mobile is an authorized quality tier. Every selected Mobile/Compatibility error remains fatal. Software/hosted adapters are not physical target acceptance.",
     }
     json_write(args.output_dir / "graphics-provenance.json", report)
     print(json.dumps(report, indent=2))

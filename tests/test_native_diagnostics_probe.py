@@ -19,6 +19,42 @@ spec.loader.exec_module(probe)
 
 
 class NativeDiagnostics(unittest.TestCase):
+    def test_known_intel_cluster_abort_can_request_separate_mobile_proof(self):
+        result = {"status": "failed_before_backend_report", "returncode": -6,
+                  "actual_backend": None, "phase_log": []}
+        output = "MoltenVK version 1.4.1\nApple - Apple Paravirtual device\nRender Pipeline Descriptor Validation\nNo valid pixelFormats set."
+        self.assertTrue(probe.intel_mobile_candidate("macos", "x86_64", result, output))
+        self.assertFalse(probe.intel_mobile_candidate("windows", "AMD64", result, output))
+        self.assertFalse(probe.intel_mobile_candidate("macos", "arm64", result, output))
+        for replacement in ("Apple M4", "Intel Iris Pro", "Unknown"):
+            self.assertFalse(probe.intel_mobile_candidate("macos", "x86_64", result, output.replace("Apple - Apple Paravirtual device", replacement)))
+        self.assertEqual(result["status"], "failed_before_backend_report")
+
+    def test_other_primary_errors_and_late_failures_never_select_mobile(self):
+        result = {"status": "failed_before_backend_report", "returncode": -6,
+                  "actual_backend": None, "phase_log": []}
+        output = "MoltenVK version 1.4.1\nApple - Apple Paravirtual device\nRender Pipeline Descriptor Validation\nNo valid pixelFormats set."
+        for key, value in (("returncode", 124), ("status", "invalid_evidence"),
+                           ("actual_backend", {"renderer": "forward_plus"}),
+                           ("phase_log", ["SCENE112_GRAPHICS_STAGE=world_begin"])):
+            self.assertFalse(probe.intel_mobile_candidate("macos", "x86_64", {**result, key: value}, output))
+        for bad in (output + "\nERROR: shader failure", output.replace("No valid pixelFormats set.", "Unknown crash"),
+                    output + "\nSCENE112_GRAPHICS_BACKEND=malformed", output + "\nSCENE112_GRAPHICS_STAGE=world_begin"):
+            self.assertFalse(probe.intel_mobile_candidate("macos", "x86_64", result, bad))
+
+    def test_mobile_quality_requires_separate_passed_actual_mobile_vulkan(self):
+        failed = {"status": "failed_before_backend_report", "mobile_fallback_candidate_verified": True}
+        compatibility = {"status": "passed"}
+        mobile = {"requested_renderer": "mobile", "requested_driver": "vulkan",
+                  "status": "passed", "actual_backend": {"renderer": "mobile", "driver": "vulkan"}}
+        self.assertEqual(probe.quality_tier([failed, compatibility, mobile]), "mobile")
+        self.assertEqual(failed["status"], "failed_before_backend_report")
+        self.assertIsNone(probe.quality_tier([{"status": "failed_before_backend_report"}, compatibility, mobile]))
+        for key, value in (("status", "invalid_evidence"), ("status", "timed_out"),
+                           ("actual_backend", None), ("actual_backend", {"renderer": "gl_compatibility", "driver": "opengl3"})):
+            self.assertIsNone(probe.quality_tier([failed, compatibility, {**mobile, key: value}]))
+        self.assertEqual(probe.quality_tier([{"status": "passed"}, compatibility]), "forward_plus")
+
     def test_host_stderr_preamble_does_not_contaminate_json_stdout(self):
         with tempfile.TemporaryDirectory() as directory:
             base = Path(directory)
