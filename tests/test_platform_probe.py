@@ -14,7 +14,7 @@ spec.loader.exec_module(probe)
 class PlatformProvenance(unittest.TestCase):
     def test_pinned_architectures_use_available_driver(self):
         self.assertEqual(
-            probe.profile_drivers("macos", "x86_64"), ("vulkan", "opengl3_angle")
+            probe.profile_drivers("macos", "x86_64"), ("vulkan", "opengl3")
         )
         self.assertEqual(probe.profile_drivers("macos", "arm64"), ("metal", "opengl3"))
         self.assertEqual(

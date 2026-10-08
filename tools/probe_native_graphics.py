@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+from datetime import datetime
 import hashlib
 import json
 import math
@@ -174,31 +175,103 @@ def user_directory(target: str) -> Path:
 
 
 def invoke(
-    command: list[str], cwd: Path, log: Path, timeout: int = 240
+    command: list[str],
+    cwd: Path,
+    log: Path,
+    timeout: int = 240,
+    *,
+    separate_stderr: bool = False,
+    sample_own_process: bool = False,
+    environment: dict[str, str] | None = None,
 ) -> tuple[int, str]:
+    started = time.monotonic()
+    diagnostics = {
+        "timeout_seconds": timeout,
+        "environment_overrides": environment or {},
+    }
+    stderr = ""
     try:
-        result = subprocess.run(
+        with subprocess.Popen(
             command,
             cwd=cwd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE if separate_stderr else subprocess.STDOUT,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            env={**os.environ, **environment} if environment else None,
+        ) as process:
+            diagnostics["pid"] = process.pid
+            # Reserve the last five seconds of the existing budget for a stack
+            # sample of this exact child. Never sample any other application.
+            sampling = (
+                sample_own_process
+                and platform.system() == "Darwin"
+                and Path(command[0]).name == "Scene112"
+                and timeout > 5
+            )
+            try:
+                output, stderr = process.communicate(
+                    timeout=timeout - 5 if sampling else timeout
+                )
+            except subprocess.TimeoutExpired:
+                if sampling:
+                    diagnostics["live_sample"] = sample_child(process.pid, log.parent)
+                remaining = max(0.001, timeout - (time.monotonic() - started))
+                try:
+                    output, stderr = process.communicate(timeout=remaining)
+                except subprocess.TimeoutExpired:
+                    process.kill()
+                    output, stderr = process.communicate()
+                    output += (
+                        "\nPROBE_TIMEOUT: graphical process exceeded bounded timeout\n"
+                    )
+                    diagnostics["timed_out"] = True
+            code = 124 if diagnostics.get("timed_out") else process.returncode
+    except OSError as error:
+        output, code = "PROBE_LAUNCH_ERROR: " + str(error), 126
+    diagnostics["returncode"] = code
+    diagnostics["wall_seconds"] = round(time.monotonic() - started, 3)
+    log.write_text(output, encoding="utf-8")
+    if separate_stderr:
+        log.with_name(log.stem + "-stderr" + log.suffix).write_text(
+            stderr or "", encoding="utf-8"
+        )
+    json_write(log.with_suffix(".invoke.json"), diagnostics)
+    return code, output
+
+
+def sample_child(pid: int, evidence: Path) -> dict:
+    command = [
+        "sample",
+        str(pid),
+        "1",
+        "1",
+        "-file",
+        str((evidence / "live-process-sample.txt").resolve()),
+    ]
+    result = {
+        "pid": pid,
+        "command": command,
+        "scope": "own child stack sampled before bounded timeout",
+    }
+    try:
+        sampled = subprocess.run(
+            command,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
             encoding="utf-8",
             errors="replace",
-            timeout=timeout,
+            timeout=3,
         )
-        output, code = result.stdout, result.returncode
-    except subprocess.TimeoutExpired as error:
-        raw = error.output or b""
-        output = (
-            raw.decode("utf-8", errors="replace") if isinstance(raw, bytes) else raw
+        (evidence / "live-sample-command.txt").write_text(
+            sampled.stdout, encoding="utf-8"
         )
-        output += "\nPROBE_TIMEOUT: graphical process exceeded bounded timeout\n"
-        code = 124
-    except OSError as error:
-        output, code = "PROBE_LAUNCH_ERROR: " + str(error), 126
-    log.write_text(output, encoding="utf-8")
-    return code, output
+        result["returncode"] = sampled.returncode
+    except (OSError, subprocess.TimeoutExpired) as error:
+        result["capture_error"] = str(error)
+    return result
 
 
 def capture_host(output_dir: Path, target: str) -> dict:
@@ -219,11 +292,16 @@ def capture_host(output_dir: Path, target: str) -> dict:
             "[Console]::OutputEncoding=[System.Text.UTF8Encoding]::new($false);$d=@{video=Get-CimInstance Win32_VideoController | Select-Object Name,VideoProcessor,DriverVersion,AdapterRAM;computer=Get-CimInstance Win32_ComputerSystem | Select-Object Manufacturer,Model,TotalPhysicalMemory;cpu=Get-CimInstance Win32_Processor | Select-Object Name,NumberOfCores,NumberOfLogicalProcessors};$d|ConvertTo-Json -Depth 5",
         ]
     code, output = invoke(
-        command, output_dir.resolve(), evidence / "system.txt", timeout=45
+        command,
+        output_dir.resolve(),
+        evidence / "system.txt",
+        timeout=45,
+        separate_stderr=True,
     )
     result = {
         "command": command,
         "returncode": code,
+        "stderr_file": "host/system-stderr.txt",
         "scope": "host graphics/CPU capability inventory; not physical target acceptance",
     }
     try:
@@ -235,7 +313,10 @@ def capture_host(output_dir: Path, target: str) -> dict:
 
 
 def capture_crashes(
-    evidence: Path, started: float, wait_for_report: bool = False
+    evidence: Path,
+    started: float,
+    wait_for_report: bool = False,
+    expected_pid: int | None = None,
 ) -> list[dict]:
     if platform.system() != "Darwin":
         return []
@@ -285,11 +366,54 @@ def capture_crashes(
                 shutil.copyfile(path, destination)
                 item["copied"] = True
                 item["sha256"] = hashlib.sha256(destination.read_bytes()).hexdigest()
+                item.update(
+                    crash_origin(
+                        destination.read_text(encoding="utf-8", errors="replace"),
+                        expected_pid,
+                    )
+                )
             except OSError as error:
                 item["copied"] = False
                 item["capture_error"] = str(error)
         copied.append(item)
     return copied
+
+
+def crash_origin(text: str, expected_pid: int | None) -> dict:
+    """Publication time only determines capture eligibility, never process origin."""
+    result = {"expected_pid": expected_pid, "origin": "unknown"}
+    try:
+        if text.startswith("{"):
+            header, body = text.split("\n", 1)
+            report = json_read(body)
+            pid = report.get("pid")
+            for field in ("procLaunch", "captureTime"):
+                value = report.get(field)
+                if isinstance(value, str):
+                    result[field] = value
+                    for format_string in (
+                        "%Y-%m-%d %H:%M:%S.%f %z",
+                        "%Y-%m-%d %H:%M:%S %z",
+                    ):
+                        try:
+                            result[field + "_epoch"] = datetime.strptime(
+                                value, format_string
+                            ).timestamp()
+                            break
+                        except ValueError:
+                            continue
+        else:
+            match = re.search(r"^Process:\s+Scene112\s*\[(\d+)\]", text, re.M)
+            pid = int(match.group(1)) if match else None
+        if isinstance(pid, int) and not isinstance(pid, bool) and pid > 0:
+            result["reported_pid"] = pid
+            if expected_pid is not None:
+                result["origin"] = (
+                    "current_process" if pid == expected_pid else "other_own_process"
+                )
+    except (ValueError, TypeError, AttributeError):
+        pass
+    return result
 
 
 def profile(
@@ -299,6 +423,7 @@ def profile(
     renderer: str,
     driver: str,
     allow_angle_fallback: bool = False,
+    environment: dict[str, str] | None = None,
 ) -> dict:
     name = renderer + "-" + driver
     evidence = output_dir / name
@@ -327,9 +452,21 @@ def profile(
         "--visual-playthrough",
     ]
     started = time.time()
+    invoke_options = (
+        {"sample_own_process": True} if platform.system() == "Darwin" else {}
+    )
+    if environment:
+        invoke_options["environment"] = environment
     code, output = invoke(
-        command, executable.parent, evidence / "process.txt",
+        command,
+        executable.parent,
+        evidence / "process.txt",
         timeout=480 if renderer == "forward_plus" else 240,
+        **invoke_options,
+    )
+    invocation_file = evidence / "process.invoke.json"
+    invocation = (
+        json_read(invocation_file.read_text()) if invocation_file.is_file() else {}
     )
     if engine_log.is_file():
         output += "\n" + engine_log.read_text(encoding="utf-8", errors="replace")
@@ -339,6 +476,7 @@ def profile(
         "requested_driver": driver,
         "returncode": code,
         "command": command,
+        "invocation": invocation,
         "scope": "exact standalone, actual graphical window and scripted gameplay; no human play/performance claim",
         "wall_seconds": round(time.time() - started, 3),
         "phase_log": [
@@ -352,7 +490,12 @@ def profile(
                 )
             )
         ],
-        "crash_reports": capture_crashes(evidence, started, wait_for_report=code < 0),
+        "crash_reports": capture_crashes(
+            evidence,
+            started,
+            wait_for_report=code < 0,
+            expected_pid=invocation.get("pid"),
+        ),
     }
     try:
         backend = backend_from_log(output)
@@ -434,12 +577,26 @@ def profile_drivers(target: str, architecture: str) -> tuple[str, str]:
     if target == "windows":
         return "d3d12", "opengl3"
     # The pinned official x86_64 template disables Metal; its registered RD
-    # driver is Vulkan. Explicit ANGLE avoids the observed blank native-GL hang.
+    # driver is Vulkan. ANGLE EGL initialization failed on the observed hosted
+    # Intel adapter; explicitly test the initialized native GL implementation.
     if architecture.lower() in ("x86_64", "amd64"):
-        return "vulkan", "opengl3_angle"
+        return "vulkan", "opengl3"
     if architecture.lower() in ("arm64", "aarch64"):
         return "metal", "opengl3"
     raise ValueError("Unsupported native macOS runner architecture")
+
+
+def intel_probe_environment(
+    target: str, architecture: str, enabled: bool
+) -> dict[str, str]:
+    if not enabled:
+        return {}
+    if target != "macos" or architecture.lower() not in ("x86_64", "amd64"):
+        raise ValueError("Argument-buffer diagnostic is limited to macOS Intel")
+    # MoltenVK1.4.1 initMTLDevice otherwise calls the argument encoder that
+    # aborted on the hosted Intel Apple Paravirtual Metal2 adapter. This is an
+    # explicit per-process diagnostic; all actual backend/gameplay gates apply.
+    return {"MVK_CONFIG_USE_METAL_ARGUMENT_BUFFERS": "0"}
 
 
 def implementation_details(backend: dict) -> dict:
@@ -511,8 +668,16 @@ def main() -> int:
     parser.add_argument("--source-head", required=True)
     parser.add_argument("--platform", required=True, choices=("macos", "windows"))
     parser.add_argument("--output-dir", required=True, type=Path)
+    parser.add_argument(
+        "--intel-no-argument-buffers",
+        action="store_true",
+        help="Explicit Intel-only MoltenVK argument-buffer diagnostic",
+    )
     args = parser.parse_args()
     args.output_dir.mkdir(parents=True, exist_ok=True)
+    primary_environment = intel_probe_environment(
+        args.platform, platform.machine(), args.intel_no_argument_buffers
+    )
     provenance = json_read(args.provenance.read_text(encoding="utf-8"))
     digest = hashlib.sha256(args.archive.read_bytes()).hexdigest()
     if (
@@ -558,6 +723,7 @@ def main() -> int:
                 user_directory(args.platform),
                 "forward_plus",
                 primary,
+                environment=primary_environment,
             )
         )
         results.append(
