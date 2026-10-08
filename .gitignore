@@ -1,0 +1,8 @@
+.godot/
+builds/
+build/
+.godot-tools/
+.toolchain/
+*.tmp
+__pycache__/
+*.import
