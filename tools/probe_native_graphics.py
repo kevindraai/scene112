@@ -596,7 +596,9 @@ def intel_probe_environment(
     # MoltenVK1.4.1 initMTLDevice otherwise calls the argument encoder that
     # aborted on the hosted Intel Apple Paravirtual Metal2 adapter. This is an
     # explicit per-process diagnostic; all actual backend/gameplay gates apply.
-    return {"MVK_CONFIG_USE_METAL_ARGUMENT_BUFFERS": "0"}
+    # Bypass placement-heap size queries for coherent Shared staging buffers.
+    # Real initialization/render/gameplay evidence remains mandatory.
+    return {"MVK_CONFIG_USE_METAL_ARGUMENT_BUFFERS": "0", "MVK_CONFIG_USE_MTLHEAP": "0"}
 
 
 def implementation_details(backend: dict) -> dict:
@@ -686,6 +688,16 @@ def main() -> int:
     ):
         raise ValueError("Exact source-head/archive provenance mismatch")
     host_information = capture_host(args.output_dir, args.platform)
+    if primary_environment:
+        diagnostic = Path(__file__).with_name("probe_metal_allocation.swift")
+        code, _ = invoke(
+            ["xcrun", "swift", str(diagnostic.resolve())],
+            args.output_dir.resolve(),
+            args.output_dir / "host/metal-allocation.txt",
+            timeout=45,
+            separate_stderr=True,
+        )
+        host_information["metal_allocation_probe_returncode"] = code
     results = []
     with tempfile.TemporaryDirectory(prefix="scene112-native-graphics-") as directory:
         staging = Path(directory)

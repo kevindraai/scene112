@@ -43,11 +43,13 @@ func _ready() -> void:
 	_bind_inputs()
 	_trace_graphics_stage("world_begin")
 	district = World.new()
+	district.hide()
 	add_child(district)
 	_trace_graphics_stage("world_ready")
 	police_site = PoliceSiteScript.new()
 	police_site.attach_to(district)
 	officer = Player.new()
+	officer.hide()
 	add_child(officer)
 	officer.position = state.player_position
 	officer.enable_input = false

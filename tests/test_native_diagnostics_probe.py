@@ -203,7 +203,10 @@ class NativeDiagnostics(unittest.TestCase):
         self.assertEqual(probe.intel_probe_environment("macos", "x86_64", False), {})
         self.assertEqual(
             probe.intel_probe_environment("macos", "x86_64", True),
-            {"MVK_CONFIG_USE_METAL_ARGUMENT_BUFFERS": "0"},
+            {
+                "MVK_CONFIG_USE_METAL_ARGUMENT_BUFFERS": "0",
+                "MVK_CONFIG_USE_MTLHEAP": "0",
+            },
         )
         for target, arch in (("macos", "arm64"), ("windows", "AMD64")):
             with self.assertRaises(ValueError):
