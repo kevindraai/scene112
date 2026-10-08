@@ -234,12 +234,27 @@ jobs:
           if target == "macos":
               run("export", [godot, "--headless", "--path", ".", "--export-release", "macOS", archive.resolve()])
               run("validate", [sys.executable, "tools/validate_artifacts.py", target, archive])
-              extracted = Path("build/native-smoke")
-              run("unpack", ["ditto", "-xk", archive, extracted])
-              apps = list(extracted.glob("*.app"))
+              staging = Path("build/native-signing")
+              run("unpack-for-signing", ["ditto", "-xk", archive, staging])
+              apps = list(staging.glob("*.app"))
               assert len(apps) == 1, "Missing standalone application"
               app = apps[0]
-              run("signature", ["codesign", "--verify", "--deep", "--strict", app])
+              # Seal the final bundle using Apple's native signing implementation.
+              # The private build uses no paid identity or notarization service.
+              run("sign", ["codesign", "--force", "--sign", "-", "--timestamp=none",
+                  "--preserve-metadata=identifier,entitlements,flags", "--verbose=2", app])
+              run("signature-before-pack", ["codesign", "--verify", "--deep", "--strict", "--verbose=4", app])
+              signed_archive = archive.with_name(archive.stem + ".signed.zip")
+              run("pack-signed", ["ditto", "-c", "-k", "--keepParent", "--sequesterRsrc", app, signed_archive])
+              signed_archive.replace(archive)
+              run("validate-signed", [sys.executable, "tools/validate_artifacts.py", target, archive])
+              # Validate and launch a fresh extraction of the exact uploaded ZIP.
+              extracted = Path("build/native-smoke")
+              run("unpack-final", ["ditto", "-xk", archive, extracted])
+              apps = list(extracted.glob("*.app"))
+              assert len(apps) == 1, "Missing signed standalone application"
+              app = apps[0]
+              run("signature", ["codesign", "--verify", "--deep", "--strict", "--verbose=4", app])
               import plistlib
               info = plistlib.loads((app / "Contents/Info.plist").read_bytes())
               executable = app / "Contents/MacOS" / info["CFBundleExecutable"]
@@ -266,6 +281,7 @@ jobs:
               "archive": archive.name,
               "sha256": hashlib.sha256(archive.read_bytes()).hexdigest(),
               "validation": "structure + architecture + native headless smoke and physical playthrough assertions",
+              "signing": "native macOS ad-hoc codesign; strict verification before and after ZIP roundtrip" if target == "macos" else "unsigned private Windows build",
               "graphical_playthrough": "requires separate desktop evidence",
           }
           Path(f"build/{target}-provenance.json").write_text(json.dumps(provenance, indent=2) + "\n")

@@ -6,7 +6,7 @@ Nederlandstalige 3D-singleplayergame over politie, brandweer, recherche en brand
 
 ## Spelen
 
-Download de twee private testbuilds uit de artifacts van een succesvolle [Native builds](../../actions/workflows/native-build.yml)-run. Uitpakken: Windows `Scene112.exe`; macOS `Scene112.app`. Er is geen engine-installatie nodig. macOS is Universal 2 en ad-hoc gesigneerd; nog niet genotariseerd. [Installatie, buildinstructies en testgrenzen](docs/BUILDING.md).
+Download de twee private testbuilds uit de artifacts van een succesvolle [Native builds](../../actions/workflows/native-build.yml)-run. Uitpakken: Windows `Scene112.exe`; macOS `SCÈNE 112.app`. Er is geen engine-installatie nodig. macOS is Universal 2 en ad-hoc gesigneerd; nog niet genotariseerd. [Installatie, buildinstructies en testgrenzen](docs/BUILDING.md).
 
 Kies **Nieuwe dienst**, loop door de ingang van het bureau naar **Uitrusting**, meld je bij de **Radio** en bezoek de **Academie** op het voorplein. Verken daarna de wijk. Sla op, verplaats je en laad om je dienst te hervatten.
 
