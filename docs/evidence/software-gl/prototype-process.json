@@ -1,0 +1,14 @@
+{
+  "command": [
+    "python3",
+    "tools/graphical_playthrough.py",
+    "/tmp/scene112-tools/Godot_v4.7.2-stable_linux.x86_64",
+    "--project",
+    "/tmp/scene112-software-gl-prep/prototype",
+    "--scenario=--visual-playthrough",
+    "--timeout=240"
+  ],
+  "returncode": 0,
+  "wall_seconds": 44.8428567689989,
+  "scope": "isolated source on actual Linux llvmpipe; no Apple Software Renderer proof"
+}

@@ -1,0 +1,95 @@
+{
+  "units": "metres",
+  "up": "+Y",
+  "front": "+Z",
+  "no_exported_physics": true,
+  "bureau": {
+    "root": "BureauShell",
+    "world_origin": [
+      0,
+      0,
+      -4.5
+    ],
+    "wall_centres_footprint": [
+      19,
+      9
+    ],
+    "front_z": 4.5,
+    "entrance_clear_x": [
+      -2.3,
+      2.3
+    ],
+    "entrance_clear_height": 2.9,
+    "old_roof_envelope": [
+      19.5,
+      9.5
+    ],
+    "signs_preserved_world": [
+      [
+        0,
+        4,
+        0.24
+      ],
+      [
+        0,
+        3.3,
+        0.25
+      ]
+    ],
+    "meshes": [
+      "BureauFacadeSurface",
+      "BureauRoofSurface"
+    ]
+  },
+  "kazerne": {
+    "root": "KazerneShell",
+    "world_origin": [
+      29,
+      0,
+      -6.4
+    ],
+    "wall_centres_footprint": [
+      20,
+      10.2
+    ],
+    "front_z": 4.9,
+    "columns_x": [
+      -10,
+      -3,
+      4,
+      10
+    ],
+    "column_width": 0.45,
+    "bay_clear_height": 4.3,
+    "bay_clear_x": [
+      [
+        -9.775,
+        -3.225
+      ],
+      [
+        -2.775,
+        3.775
+      ],
+      [
+        4.225,
+        9.775
+      ]
+    ],
+    "old_roof_envelope": [
+      21,
+      11
+    ],
+    "signs_preserved_world": [
+      [
+        29,
+        5.05,
+        -1.25
+      ]
+    ],
+    "meshes": [
+      "KazerneFacadeSurface",
+      "KazerneRoofSurface",
+      "GarageMechanismSurface"
+    ]
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "front": "-Z",
+  "up": "+Y",
+  "units": "metres",
+  "wheel_spin_axis": "local X",
+  "wheel_radius_m": 0.315,
+  "nodes": [
+    "Wheel_LF",
+    "Wheel_RF",
+    "Wheel_LR",
+    "Wheel_RR"
+  ],
+  "front_axle_godot_z": -1.09,
+  "rear_axle_godot_z": 1.12,
+  "half_track_m": 0.755,
+  "physics": "No exported colliders; root owns bounded traffic body and avoidance",
+  "lod": "Separate explicitly lower-segment mesh GLB, same axle API; no decimation tie decisions, automatic LOD/core patch or hardwareperformanceclaim"
+}

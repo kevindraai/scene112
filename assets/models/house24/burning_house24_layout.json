@@ -1,0 +1,67 @@
+{
+  "world_origin": [
+    -2,
+    0,
+    48
+  ],
+  "footprint_m": [
+    6.8,
+    7.0
+  ],
+  "floor_top_y_m": 0.02,
+  "door_clear_width_m": 1.215,
+  "door_clear_height_m": 2.24,
+  "door_pivot": [
+    -0.59,
+    0,
+    -3.555
+  ],
+  "door_open_godot_y_radians": -1.5707963267948966,
+  "interior_ceiling_bottom_y_m": 2.755,
+  "outer_walls": {
+    "west": [
+      -3.25,
+      2.7,
+      0,
+      0.3,
+      5.4,
+      7
+    ],
+    "east": [
+      3.25,
+      2.7,
+      0,
+      0.3,
+      5.4,
+      7
+    ],
+    "rear": [
+      0,
+      2.7,
+      3.35,
+      6.8,
+      5.4,
+      0.3
+    ]
+  },
+  "nodes": [
+    "DoorPivot",
+    "DoorLeaf",
+    "WindowPivot",
+    "WindowLeaf",
+    "GroundFloor",
+    "WalkableFloor",
+    "FuelFront",
+    "FuelOrigin",
+    "FuelSide",
+    "OriginOutlet",
+    "CellFrontAnchor",
+    "CellOriginAnchor",
+    "CellSideAnchor",
+    "VictimAnchor",
+    "EntranceAnchor"
+  ],
+  "no_collision_or_vfx": true,
+  "physical_owner": "Root FireSite",
+  "cause_verdict_authored": false
+}

@@ -1,0 +1,12 @@
+extends RefCounted
+const VARIANTS := [
+	{"title": "Ruzie bij het plein", "activity": "Naast een fiets praten twee volwassenen door elkaar. Je ziet geen acuut gevaar.", "access": "Twee mensen staan dicht bij elkaar; aan weerszijden is ruimte om afstand te nemen.",
+	"reporter": {"name": "Mira", "open": "Ik werk hiernaast. Het overleg over die fiets werd steeds luider. Ik wil gewoon kunnen werken.", "agree": "Als we rustig kunnen spreken, neem ik afstand aan deze kant.", "accuse": "U luistert niet naar wat ik zelf meemaak."},
+	"participant": {"name": "Raf", "open": "Ik help met een fietsreparatie voor de buurt. Ik wist niet dat het gesprek daar zo hard klonk.", "agree": "Ik praat rustig verder en neem aan de andere kant afstand.", "accuse": "U heeft al besloten dat ik fout zit. Zo komen we nergens."}},
+	{"title": "Onrust bij de kruising", "activity": "Een volwassen bezorger en een bewoner discussiëren over waar fietsen geparkeerd staan.", "access": "Een fiets staat bij de stoep; het zebrapad zelf blijft vrij.",
+	"reporter": {"name": "Sanne", "open": "Eerder kon ik lastig langs de fiets. Ik heb niemand bedreigd; ik wil ruimte op de stoep.", "agree": "De fiets staat nu aan de kant. Ik neem afstand en houd de doorgang vrij.", "accuse": "U wijst schuld aan zonder de ruimte te bekijken."},
+	"participant": {"name": "Kees", "open": "Ik stond kort stil voor een bestelling. De fiets staat inmiddels aan de kant; ik wil hier op mijn klant wachten.", "agree": "Ik maak ruimte en wacht daar bij de fiets op mijn klant.", "accuse": "Ik wil juist een praktische afspraak, geen ruzie."}},
+	{"title": "Geluidsoverlast bij de werkplaats", "activity": "Een bewoner en een medewerker spreken door elkaar bij de werkplaats. Je neemt nu geen draaiende machine waar.", "access": "De openbare looproute is vrij; de discussie speelt bij de ingang.",
+	"reporter": {"name": "Iman", "open": "Ik hoorde de test steeds opnieuw. Ik weet niet hoelang het nog duurt.", "agree": "Een eindtijd helpt. Ik wacht op afstand bij het pad.", "accuse": "U vraagt niet wat ik heb gehoord."},
+	"participant": {"name": "Joost", "open": "We hebben een machine getest. Die staat nu uit. Ik stel voor vandaag te stoppen en morgen vooraf een tijd af te spreken.", "agree": "Vandaag blijft de machine uit. Ik neem afstand en bespreek morgen eerst een tijd met de buren.", "accuse": "Ik wil het oplossen, maar niet met een vooraf ingevuld oordeel."}},
+]

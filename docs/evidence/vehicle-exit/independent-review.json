@@ -1,0 +1,16 @@
+{
+  "status": "Approve, scoped source review",
+  "reviewer": "graphics agent, independently from quality author and root implementer",
+  "app_sha256": "dea6c8adfcf076fe805e240522044ad6ed5c66e265db6de95e27fc6d528fe840",
+  "regression_sha256": "451e38f4e53d625a1d28d206d86b683ee509a095647cec06363ba2c300b4499c",
+  "scope": "Nine lifecycle statements in _restore_on_foot and actual two-vehicle exit regression; no collisions masks weakened",
+  "review": [
+    "Godot4.7.2 CollisionObject3D::_apply_disabled/_apply_enabled publicly switches MAKE_STATIC to STATIC then restores stored body_mode; force_update_transform therefore reaches the static immediate transform branch.",
+    "GodotBody3D::set_state(BODY_STATE_TRANSFORM) queues normal kinematic destinations, while STATIC calls _set_transform and _set_inv_transform immediately. Transform reaches server before layer1 is restored.",
+    "Original process_mode and disable_mode are restored in proper order, and existing velocity/input/camera handling follows. No engine-internal direct state change, asynchronous timing workaround, save mutation or collision exclusions.",
+    "Regression covers public menu/equipment/radio/E/W/brake/E for both real service vehicles; physical server pose, capsule overlap, stationary grounded parked vehicles, resumed walking and spring arm after exit. Initial clear-lane and later foot relocation are disclosed fixtures.",
+    "Quality A/B: baseline3 failures, force-update-only3, remove-lifecycle3, MAKE_STATIC0; both service vehicles18 checks0 failures. Root independently reran18. Logs and exact source read; this scoped reviewer did not claim another redundant runtime execution."
+  ],
+  "findings": [],
+  "limit": "Native/export exact-head CI remains root gate. Review does not claim unexecuted native target results."
+}

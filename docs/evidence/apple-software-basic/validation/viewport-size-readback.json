@@ -1,0 +1,50 @@
+[
+  {
+    "actual_adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+    "actual_renderer": "gl_compatibility",
+    "black_reference": 0.0,
+    "output_texture_size": [
+      1280,
+      720
+    ],
+    "scale_getter": 1.0,
+    "scope": "independent binary shader VIEWPORT_SIZE readback; real backend",
+    "shader_viewport_size": [
+      1280,
+      720
+    ],
+    "white_reference": 1.0
+  },
+  {
+    "actual_adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+    "actual_renderer": "gl_compatibility",
+    "black_reference": 0.0,
+    "output_texture_size": [
+      1280,
+      720
+    ],
+    "scale_getter": 0.5,
+    "scope": "independent binary shader VIEWPORT_SIZE readback; real backend",
+    "shader_viewport_size": [
+      640,
+      360
+    ],
+    "white_reference": 1.0
+  },
+  {
+    "actual_adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+    "actual_renderer": "gl_compatibility",
+    "black_reference": 0.0,
+    "output_texture_size": [
+      1280,
+      720
+    ],
+    "scale_getter": 0.25,
+    "scope": "independent binary shader VIEWPORT_SIZE readback; real backend",
+    "shader_viewport_size": [
+      320,
+      180
+    ],
+    "white_reference": 1.0
+  }
+]

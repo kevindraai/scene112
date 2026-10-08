@@ -1,0 +1,103 @@
+{
+  "condition_requested": "day",
+  "tag": "BEFORE M2 same route",
+  "created_utc": "2026-10-08T14:58:09Z",
+  "source_revision": "4cd053bdd1fa6950ea94aa19e99bc4d8caba605d",
+  "source_status_before": "plain read-only git archive snapshot",
+  "source_revision_after": "4cd053bdd1fa6950ea94aa19e99bc4d8caba605d",
+  "source_status_after": "plain read-only git archive snapshot",
+  "source_hashes": {
+    "project.godot": "24c451ae4a0eb95de5897e2fd256f420699f06c51da89aa031b067cb939cc5f0",
+    "scenes/main.tscn": "2bc57a36ee4a8f583a8e3333079845279f2459c400b08237b47cd63e3f541323",
+    "scripts/app.gd": "ae8be6f3c005b7cc9d577638b9fa00c9f33155aeaf01bf10e45df1f4b46d8253",
+    "scripts/world.gd": "7c2c2abe1eecb08c03c05baddafe07c9ed095927c79442dfd097bc0f27648995",
+    "scripts/player.gd": "c5642ee321ac658bf5d698719dc898161f02a92790fcdffafd037ec8c3b32642",
+    "scripts/vehicle.gd": "808e081c490d9e631dc495d4241153d953c7a1aca5ad24b589c32e325f718b87"
+  },
+  "driver_sha256": "d1b90dc89019cf71a02a6734b84fc99ca79b7c78de247a0931052c2938db0bd5",
+  "capture_tool_sha256": "707917a035a9cb9fd2c19141eccfefa265c166571d0e1339b22d90c1c965ec25",
+  "host": "Linux-7.0.14-22-pve-x86_64-with-glibc2.41",
+  "cpu_count": 8,
+  "godot_command": [
+    "/tmp/scene112-tools/Godot_v4.7.2-stable_linux.x86_64",
+    "--path",
+    "/tmp/scene112-quality-evidence/before-source-4cd",
+    "--audio-driver",
+    "Dummy",
+    "--resolution",
+    "1280x720",
+    "--position",
+    "0,0",
+    "--script",
+    "/tmp/scene112-quality-evidence/quality_route_comparison.gd"
+  ],
+  "ffmpeg_command": [
+    "/tmp/scene112-tools/visual/root/usr/bin/ffmpeg",
+    "-hide_banner",
+    "-nostats",
+    "-y",
+    "-f",
+    "x11grab",
+    "-framerate",
+    "30",
+    "-video_size",
+    "1280x720",
+    "-i",
+    ":0.0+0,0",
+    "-an",
+    "-c:v",
+    "libx264",
+    "-threads",
+    "2",
+    "-preset",
+    "ultrafast",
+    "-crf",
+    "18",
+    "-pix_fmt",
+    "yuv420p",
+    "-movflags",
+    "+faststart",
+    "-progress",
+    "pipe:1",
+    "/tmp/scene112-quality-evidence/before-adaptive-day/runtime.mp4"
+  ],
+  "ffmpeg_version": "ffmpeg version 7.1.5-0+deb13u1 Copyright (c) 2000-2026 the FFmpeg developers",
+  "encoded_media": {
+    "programs": [],
+    "stream_groups": [],
+    "streams": [
+      {
+        "codec_name": "h264",
+        "width": 1280,
+        "height": 720,
+        "avg_frame_rate": "30/1",
+        "nb_frames": "723"
+      }
+    ],
+    "format": {
+      "duration": "24.100000",
+      "size": "5455411"
+    }
+  },
+  "launch_to_capture_ready_seconds": 6.743389165989356,
+  "recording_prefix_seconds_approx": 0.7719978160021128,
+  "runtime_renderer_log": [
+    "OpenGL API 4.5 (Core Profile) Mesa 25.0.7-2+deb13u1 - Compatibility - Using Device: Mesa - llvmpipe (LLVM 19.1.7, 256 bits)"
+  ],
+  "artifacts_sha256": {
+    "frames.csv": "4da6c6d9813001b0ea4010c7a4aa90b38cb780954e397a416d5f3551784d2759",
+    "done.json": "dbc7154b770a997acfcfd4b3e27f384ee7777efacaeea1ca1340ddfa6b6bd7ba",
+    "final.png": "0b20ae6c458758c618eb859b848d50e244f4bc81778139173184db55372602f4",
+    "metrics.json": "cd2eeda12ecd78d29a6e9d3442cb4b871af7ae6299458ba701f6163fb08ce875",
+    "street-15.png": "8a8c729f3fe874d45d3583795979cf02b1bf9d658fb0f599fe65454cfae9c964",
+    "street-12.png": "7b6b79cc564072947be57dec209013f5e88cca54266cbae3d5bfd9dae712302b",
+    "runtime.mp4": "42d1975d082f1cfa89b29ad4aead5abff72d5da20bb2bbabdd4dabd862e8f099",
+    "ready.json": "c144879a50f3865b637c8dce92e8e0bbe01929dcc94709d95f226176277c74e5",
+    "anchor.png": "3ea033428aeefbe3dd8ba7bb040e580c371912cdd52a82230ccdc03153a3838e",
+    "ffmpeg-progress.log": "3251dbf71b624d3f982709ab61242c2986e1012ac82a1d34eeb18b18b8d3b9c1",
+    "ffmpeg.log": "532d687bb9ffafed5db0e7a0d330832b964908ae3ee8a6760c22e2b1cff07df3",
+    "runtime.log": "24da54a3c4f569ed6d111ce09d86d6ae863f3d989ca6e543b9b4f4a3a1123d47",
+    "xvfb.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "limits": "Actual runtime X11 frames recorded in wall time. 30fps is encoded video cadence, not engine performance. Software renderer with simultaneous recorder, no audible output (Dummy), no target desktop/GPU claim. Initial on-foot and car fixtures disclosed in driver."
+}

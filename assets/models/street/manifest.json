@@ -1,0 +1,54 @@
+[
+  {
+    "name": "dutch_terrace",
+    "materials": 11,
+    "triangles": 9314,
+    "source": "tools/art/author_street_models.py",
+    "editable": "source/3d/street/dutch_terrace.blend",
+    "runtime": "assets/models/street/dutch_terrace.glb",
+    "license": "Original SC\u00c8NE 112 project asset; private/proprietary; no third-party geometry",
+    "author": "SCENE112 original Blender authoring",
+    "blender": "4.3.2",
+    "glb_sha256": "22edc54ffa929a3d0cbaf03e93fb1395e0576b1c3853b12eb5b2678dc7917cac",
+    "packed_images": true
+  },
+  {
+    "name": "street_bench",
+    "materials": 2,
+    "triangles": 1188,
+    "source": "tools/art/author_street_models.py",
+    "editable": "source/3d/street/street_bench.blend",
+    "runtime": "assets/models/street/street_bench.glb",
+    "license": "Original SC\u00c8NE 112 project asset; private/proprietary; no third-party geometry",
+    "author": "SCENE112 original Blender authoring",
+    "blender": "4.3.2",
+    "glb_sha256": "7168b07e6eb7fdb4d3069ef356ed72af25646bedf75be18f66ff580884cb67f4",
+    "packed_images": true
+  },
+  {
+    "name": "street_lamp",
+    "materials": 3,
+    "triangles": 348,
+    "source": "tools/art/author_street_models.py",
+    "editable": "source/3d/street/street_lamp.blend",
+    "runtime": "assets/models/street/street_lamp.glb",
+    "license": "Original SC\u00c8NE 112 project asset; private/proprietary; no third-party geometry",
+    "author": "SCENE112 original Blender authoring",
+    "blender": "4.3.2",
+    "glb_sha256": "842764e95fdd5167e6818f636a9acf14972416bb1395530b64abd776b349dd72",
+    "packed_images": true
+  },
+  {
+    "name": "dutch_bicycle",
+    "materials": 3,
+    "triangles": 2052,
+    "source": "tools/art/author_street_models.py",
+    "editable": "source/3d/street/dutch_bicycle.blend",
+    "runtime": "assets/models/street/dutch_bicycle.glb",
+    "license": "Original SC\u00c8NE 112 project asset; private/proprietary; no third-party geometry",
+    "author": "SCENE112 original Blender authoring",
+    "blender": "4.3.2",
+    "glb_sha256": "2e1ab40a0e6965097cb30144ebddb73f86531471e8a97fdfca049fa79b374ae0",
+    "packed_images": true
+  }
+]

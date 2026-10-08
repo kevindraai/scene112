@@ -1,0 +1,39 @@
+{
+  "schema": 1,
+  "milestone": "M5",
+  "source_seed": 5112,
+  "generator_sha256": "2fcb487f24272e1d153b785893d8154d3b714638a9a27367d11af51ffcdc770c",
+  "helper_sha256": "df077ecb2acc541748511dd127280513c22add4e3dd291df0e2ad99785f86ebb",
+  "no_speech_recording_or_synthesis": true,
+  "no_music_added": true,
+  "files": [
+    {
+      "file": "street_murmur.wav",
+      "source": "tools/compose_free_audio.py",
+      "creator": "SCENE 112 original procedural free-duty environment audio",
+      "license": "Original SCENE 112 project asset; private/proprietary project license. No third-party samples.",
+      "third_party_samples": false,
+      "sha256": "f48a573b7a5dbece8b51a68e24ca3745671dc85a7954d88bcb5dca0513abd3b5",
+      "sample_rate": 22050,
+      "channels": 1,
+      "seconds": 6.0,
+      "loop": true,
+      "peak": 0.02182,
+      "rms": 0.00198
+    },
+    {
+      "file": "civilian_passby.wav",
+      "source": "tools/compose_free_audio.py",
+      "creator": "SCENE 112 original procedural free-duty environment audio",
+      "license": "Original SCENE 112 project asset; private/proprietary project license. No third-party samples.",
+      "third_party_samples": false,
+      "sha256": "97e8e7fc234f245a7c67caf825aa8be6fdfb7f07ed71bd9b3ab3f47653e4e208",
+      "sample_rate": 22050,
+      "channels": 1,
+      "seconds": 6.0,
+      "loop": true,
+      "peak": 0.11633,
+      "rms": 0.05103
+    }
+  ]
+}

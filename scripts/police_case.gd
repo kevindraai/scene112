@@ -3,8 +3,11 @@ extends RefCounted
 ## Original fictional adult training scenario, not professional instruction.
 ## Controller confirms proximity, real driving and player-performed actions.
 
-const SCHEMA := 1
-const MODES := ["none", "campaign", "basis", "intake"]
+const SCHEMA := 2
+const Legacy = preload("res://scripts/police_case_v1.gd")
+const Variants = preload("res://data/free_traffic_variants.gd")
+const MAX_INCIDENT_ID := 10_000_000
+const MODES := ["none", "campaign", "basis", "intake", "free"]
 const BASIC_STEPS := ["equipment", "radio", "enter", "drive", "exit"]
 const RIGHTS_STEPS := ["explanation", "cautie", "lawyer"]
 const CATEGORIES := ["observation", "declaration", "action", "conclusion"]
@@ -26,9 +29,12 @@ const PEOPLE := {
 		"suggestive": "U zegt dat zij hard reed. Dat zal dan wel, maar ik zag de botsing niet."}
 }
 const INTAKE_EXPLANATION := "Academie: een volwassen figurant speelt een verdachte uit een fictieve vernielingszaak. Directe waarneming, aanhoudingsreden en registratiegrond zijn vooraf door de begeleider in het oefendossier gecontroleerd. Leg deze reden, rechten en opname uit; je beslist geen echte bevoegdheid. Registratieafdrukken bewijzen geen schuld."
-const SNAPSHOT_KEYS := ["schema", "mode", "elapsed", "basics", "basic_times", "cones", "cone_times", "observations", "statements", "intake_rights", "rights_times", "print_qualities", "print_times", "submitted_cards", "report_score", "result"]
+const SNAPSHOT_KEYS := ["schema", "mode", "incident_id", "variant", "closed", "elapsed", "basics", "basic_times", "cones", "cone_times", "observations", "statements", "intake_rights", "rights_times", "print_qualities", "print_times", "submitted_cards", "report_score", "result"]
 
 var mode := "none"
+var incident_id := 0
+var variant := 0
+var closed := false
 var elapsed := 0.0
 var basics := {"equipment": false, "radio": false, "enter": false, "drive": false, "exit": false}
 var basic_times: Dictionary = {}
@@ -46,12 +52,15 @@ var result := "incomplete"
 var phase: String:
 	get:
 		if mode == "none": return "none"
-		if result == "careful": return "completed"
+		if _is_closed(): return "completed"
 		return "report" if can_report() else "active"
 
 func begin(new_mode: String) -> bool:
-	if new_mode not in MODES: return false
+	if new_mode not in MODES or new_mode == "free": return false
 	mode = new_mode
+	incident_id = 0
+	variant = 0
+	closed = false
 	elapsed = 0.0
 	basics = {"equipment": false, "radio": false, "enter": false, "drive": false, "exit": false}
 	basic_times = {}
@@ -68,13 +77,34 @@ func begin(new_mode: String) -> bool:
 	result = "incomplete"
 	return true
 
+func begin_free(call_id: Variant, case_variant: Variant) -> bool:
+	if not _integer(call_id, 1, MAX_INCIDENT_ID) or not _integer(case_variant, 0, Variants.CASES.size() - 1): return false
+	begin("campaign")
+	mode = "free"
+	incident_id = int(call_id)
+	variant = int(case_variant)
+	return true
+
+func person_data(id: String = "") -> Dictionary:
+	id = {"driver": "lotte", "witness": "bram"}.get(id, id)
+	var entries := _people_for(mode, variant)
+	return entries.duplicate(true) if id.is_empty() else entries.get(id, {}).duplicate(true)
+
+func observation_data(id: String = "") -> Dictionary:
+	id = {"pc_damage": "damage", "pc_tracks": "marks", "pc_signal": "road"}.get(id, id)
+	var entries := _observations_for(mode, variant)
+	return entries.duplicate(true) if id.is_empty() else entries.get(id, {}).duplicate(true)
+
+func case_title() -> String:
+	return str(Variants.CASES[variant].title) if mode == "free" else "De eerste dienst"
+
 func tick(delta: float) -> bool:
 	if mode == "none" or not report_score.is_empty() or not is_finite(delta) or delta <= 0 or delta > 3600 or elapsed + delta > MAX_TIME: return false
 	elapsed += delta
 	return true
 
 func complete_step(id: String) -> bool:
-	if not _road_mode() or result == "careful" or id not in BASIC_STEPS or basics[id]: return false
+	if not _road_mode() or _is_closed() or id not in BASIC_STEPS or basics[id]: return false
 	for step: String in BASIC_STEPS:
 		if not basics[step]:
 			if step != id: return false
@@ -89,7 +119,7 @@ func mark_basics(action: String) -> Dictionary:
 	return {"ok": ok, "message": "Diensthandeling vastgelegd." if ok else "Voer eerst de vorige diensthandeling werkelijk uit."}
 
 func place_cone(at: Vector3) -> Dictionary:
-	if not _road_mode() or result == "careful" or not basics.exit:
+	if not _road_mode() or _is_closed() or not basics.exit:
 		return {"ok": false, "message": "Neem uitrusting, meld je aan en rijd eerst naar de casus; stap veilig uit."}
 	var slot := _cone_slot([at.x, at.y, at.z])
 	if slot < 0: return {"ok": false, "message": "Gebruik een veilige westelijke afzetzone; houd de andere rijbaan vrij."}
@@ -102,8 +132,8 @@ func place_cone(at: Vector3) -> Dictionary:
 
 func record_observation(id: String) -> bool:
 	id = {"pc_damage": "damage", "pc_tracks": "marks", "pc_signal": "road"}.get(id, id)
-	if not _road_mode() or result == "careful" or cones.size() != 3 or id not in OBSERVATION_DATA or observations.has(id): return false
-	var item: Dictionary = OBSERVATION_DATA[id]
+	if not _road_mode() or _is_closed() or cones.size() != 3 or id not in observation_data() or observations.has(id): return false
+	var item: Dictionary = observation_data(id)
 	_invalidate_report()
 	observations[id] = {"source": "eigen waarneming", "time": elapsed, "location": item.position.duplicate(), "text": item.text}
 	return true
@@ -111,9 +141,9 @@ func record_observation(id: String) -> bool:
 func speak(person: String, approach: String) -> Dictionary:
 	person = {"driver": "lotte", "witness": "bram"}.get(person, person)
 	if approach == "leading": approach = "suggestive"
-	if not _road_mode() or result == "careful" or cones.size() != 3 or person not in PEOPLE or approach not in ["open", "suggestive"]:
+	if not _road_mode() or _is_closed() or cones.size() != 3 or person not in person_data() or approach not in ["open", "suggestive"]:
 		return {"ok": false, "message": "Zorg eerst voor een veilige afzetting en kies een open of suggestieve vraag."}
-	var item: Dictionary = PEOPLE[person]
+	var item: Dictionary = person_data(person)
 	_invalidate_report()
 	var reliability := 1.0 if approach == "open" else 0.3
 	statements[person] = {"source": item.source, "time": elapsed, "location": item.position.duplicate(), "text": item[approach], "approach": approach, "reliability": reliability}
@@ -121,7 +151,7 @@ func speak(person: String, approach: String) -> Dictionary:
 		"feedback": "Een verklaring blijft informatie van deze persoon." if approach == "open" else "De vraag beïnvloedde het antwoord. Vraag opnieuw open."}
 
 func rights(action: String) -> bool:
-	if mode != "intake" or result == "careful" or action not in RIGHTS_STEPS or intake_rights[action]: return false
+	if mode != "intake" or _is_closed() or action not in RIGHTS_STEPS or intake_rights[action]: return false
 	for step: String in RIGHTS_STEPS:
 		if not intake_rights[step]:
 			if step != action: return false
@@ -132,7 +162,7 @@ func rights(action: String) -> bool:
 	return false
 
 func register_print(quality: float) -> bool:
-	if mode != "intake" or result == "careful" or not intake_rights.lawyer or not is_finite(quality) or quality < 0 or quality > 1: return false
+	if mode != "intake" or _is_closed() or not intake_rights.lawyer or not is_finite(quality) or quality < 0 or quality > 1: return false
 	if print_qualities.size() < 3:
 		_invalidate_report()
 		print_qualities.append(quality)
@@ -154,14 +184,16 @@ func can_report() -> bool:
 
 func objective() -> String:
 	if mode == "none": return "Kies een academieles of De eerste dienst."
-	if result == "careful": return "Zorgvuldig afgerond. Herhaal de les of vervolg je dienst."
+	if _is_closed(): return "Zorgvuldig afgerond. Herhaal de les of vervolg je dienst." if result == "careful" else "Rapport afgesloten met tekortkomingen. De beoordeling blijft bewaard; vervolg je dienst."
 	if _road_mode():
 		for step: String in BASIC_STEPS:
 			if not basics[step]:
 				return {"equipment": "Neem je uitrusting op het bureau.", "radio": "Meld je aan bij de meldkamer.", "enter": "Stap in de dienstauto.", "drive": "Rijd werkelijk naar de kruising; volg de route.", "exit": "Stop bij de casus en stap veilig uit."}[step]
 		if cones.size() < 3: return "Plaats drie pionnen in verschillende westelijke afzetzones."
 		if observations.size() < 3: return "Bekijk voertuigschade, bandensporen en wegdek op de locatie."
-		if statements.size() < 2: return "Spreek met Lotte (bestuurder) en Bram (getuige)."
+		if statements.size() < 2:
+			if mode == "free": return "Spreek met %s en %s." % [person_data("lotte").source, person_data("bram").source]
+			return "Spreek met Lotte (bestuurder) en Bram (getuige)."
 	else:
 		for step: String in RIGHTS_STEPS:
 			if not intake_rights[step]:
@@ -170,7 +202,7 @@ func objective() -> String:
 	return "Stel het PV samen: onderscheid bron en categorie, orden de tijdlijn en trek geen onbewezen conclusie."
 
 func progress() -> Dictionary:
-	return {"mode": mode, "phase": phase, "elapsed": elapsed, "basics": basics.duplicate(), "intake_rights": intake_rights.duplicate(), "print_qualities": print_qualities.duplicate(), "cone_count": cones.size(), "observation_count": observations.size(), "statement_count": statements.size(), "can_report": can_report(), "objective": objective(), "result": result}
+	return {"mode": mode, "incident_id": incident_id, "variant": variant, "closed": closed, "phase": phase, "elapsed": elapsed, "basics": basics.duplicate(), "intake_rights": intake_rights.duplicate(), "print_qualities": print_qualities.duplicate(), "cone_count": cones.size(), "observation_count": observations.size(), "statement_count": statements.size(), "can_report": can_report(), "objective": objective(), "result": result}
 
 func report_cards() -> Array:
 	var cards: Array = []
@@ -259,17 +291,35 @@ func submit_report(cards: Array) -> Dictionary:
 	var score := score_report(cards)
 	var available: Dictionary = {}
 	for card in report_cards(): available[card.id] = card
-	if not can_report() or result == "careful" or not _valid_rows(cards, available): return score
+	if not can_report() or _is_closed() or not _valid_rows(cards, available): return score
 	submitted_cards = cards.duplicate(true)
 	report_score = score.duplicate(true)
 	result = score.result
+	if mode == "free" and result == "careful": closed = true
 	return score
 
+func finalize_report() -> Dictionary:
+	# An explicit player choice preserves a deficient submitted dossier; it never
+	# upgrades its quality or converts a declaration into evidence of guilt.
+	if mode != "free" or _is_closed() or report_score.is_empty():
+		return {"ok": false, "score": report_score.duplicate(true), "message": "Dien eerst een vrijedienstrapport in; je kunt het vóór afsluiting herstellen."}
+	closed = true
+	return {"ok": true, "score": report_score.duplicate(true), "message": "Rapport afgesloten met de vastgelegde tekortkomingen. De meldkamer bewaart deze beoordeling."}
+
 func to_dict() -> Dictionary:
-	return {"schema": SCHEMA, "mode": mode, "elapsed": elapsed, "basics": basics.duplicate(), "basic_times": basic_times.duplicate(), "cones": cones.duplicate(true), "cone_times": cone_times.duplicate(), "observations": observations.duplicate(true), "statements": statements.duplicate(true), "intake_rights": intake_rights.duplicate(), "rights_times": rights_times.duplicate(), "print_qualities": print_qualities.duplicate(), "print_times": print_times.duplicate(), "submitted_cards": submitted_cards.duplicate(true), "report_score": report_score.duplicate(true), "result": result}
+	return {"schema": SCHEMA, "mode": mode, "incident_id": incident_id, "variant": variant, "closed": closed, "elapsed": elapsed, "basics": basics.duplicate(), "basic_times": basic_times.duplicate(), "cones": cones.duplicate(true), "cone_times": cone_times.duplicate(), "observations": observations.duplicate(true), "statements": statements.duplicate(true), "intake_rights": intake_rights.duplicate(), "rights_times": rights_times.duplicate(), "print_qualities": print_qualities.duplicate(), "print_times": print_times.duplicate(), "submitted_cards": submitted_cards.duplicate(true), "report_score": report_score.duplicate(true), "result": result}
 
 func restore(data: Variant) -> bool:
-	if not data is Dictionary or not _valid_snapshot(data): return false
+	if not data is Dictionary: return false
+	if _integer(data.get("schema"), 1, 1):
+		var legacy := Legacy.new()
+		if not legacy.restore(data): return false
+		data = legacy.to_dict()
+		data.schema = SCHEMA
+		data.incident_id = 0
+		data.variant = 0
+		data.closed = false
+	if not _valid_snapshot(data): return false
 	var probe = get_script().new()
 	probe._apply(data)
 	var canonical_score: Dictionary = {}
@@ -287,6 +337,9 @@ func restore(data: Variant) -> bool:
 
 func _apply(data: Dictionary) -> void:
 	mode = data.mode
+	incident_id = int(data.incident_id)
+	variant = int(data.variant)
+	closed = data.closed
 	elapsed = float(data.elapsed)
 	basics = data.basics.duplicate()
 	basic_times = data.basic_times.duplicate()
@@ -303,7 +356,15 @@ func _apply(data: Dictionary) -> void:
 	result = data.result
 
 func _valid_snapshot(data: Dictionary) -> bool:
-	if not _keys(data, SNAPSHOT_KEYS) or not _number(data.schema, 1, 1) or not data.mode is String or data.mode not in MODES or not _number(data.elapsed, 0, MAX_TIME): return false
+	if not _keys(data, SNAPSHOT_KEYS) or not _integer(data.schema, SCHEMA, SCHEMA) or not data.mode is String or data.mode not in MODES or not _number(data.elapsed, 0, MAX_TIME): return false
+	if not data.closed is bool or not _integer(data.incident_id, 0, MAX_INCIDENT_ID) or not _integer(data.variant, 0, Variants.CASES.size() - 1): return false
+	if data.mode == "free":
+		if int(data.incident_id) < 1: return false
+		if data.closed and data.report_score is Dictionary and data.report_score.is_empty(): return false
+		if data.result == "careful" and not data.closed: return false
+	elif int(data.incident_id) != 0 or int(data.variant) != 0 or data.closed: return false
+	var people := _people_for(data.mode, int(data.variant))
+	var observed := _observations_for(data.mode, int(data.variant))
 	if not data.result is String or data.result not in ["incomplete", "careful", "wrong"]: return false
 	if not _sequence(data.basics, data.basic_times, BASIC_STEPS, float(data.elapsed)) or not _sequence(data.intake_rights, data.rights_times, RIGHTS_STEPS, float(data.elapsed)): return false
 	if not data.cones is Array or data.cones.size() > 3 or not _times(data.cone_times, data.cones.size(), float(data.elapsed)): return false
@@ -319,17 +380,17 @@ func _valid_snapshot(data: Dictionary) -> bool:
 		if not _number(quality, 0, 1): return false
 	if not data.observations is Dictionary or data.observations.size() > 3 or not data.statements is Dictionary or data.statements.size() > 2: return false
 	for id in data.observations:
-		if id not in OBSERVATION_DATA: return false
+		if id not in observed: return false
 		var item: Variant = data.observations[id]
-		if not _record(item, float(data.elapsed), false) or item.source != "eigen waarneming" or item.text != OBSERVATION_DATA[id].text or not _position_equal(item.location, OBSERVATION_DATA[id].position): return false
+		if not _record(item, float(data.elapsed), false) or item.source != "eigen waarneming" or item.text != observed[id].text or not _position_equal(item.location, observed[id].position): return false
 	for person in data.statements:
-		if person not in PEOPLE: return false
+		if person not in people: return false
 		var item: Variant = data.statements[person]
 		if not _record(item, float(data.elapsed), true) or not item.approach is String or item.approach not in ["open", "suggestive"]: return false
-		if item.source != PEOPLE[person].source or item.text != PEOPLE[person][item.approach] or not _position_equal(item.location, PEOPLE[person].position): return false
+		if item.source != people[person].source or item.text != people[person][item.approach] or not _position_equal(item.location, people[person].position): return false
 		if not _number(item.reliability, 0, 1) or not is_equal_approx(float(item.reliability), 1.0 if item.approach == "open" else 0.3): return false
 	if not data.submitted_cards is Array or not data.report_score is Dictionary: return false
-	if data.mode in ["campaign", "basis"]:
+	if data.mode in ["campaign", "basis", "free"]:
 		if not data.rights_times.is_empty() or not data.print_qualities.is_empty(): return false
 		if not data.cones.is_empty() and not data.basics.exit: return false
 		if (not data.observations.is_empty() or not data.statements.is_empty()) and data.cones.size() != 3: return false
@@ -423,7 +484,19 @@ func _prints_good() -> bool:
 	return true
 
 func _road_mode() -> bool:
-	return mode in ["campaign", "basis"]
+	return mode in ["campaign", "basis", "free"]
+
+func _is_closed() -> bool:
+	return result == "careful" or closed
+
+func _people_for(case_mode: String, case_variant: int) -> Dictionary:
+	return Variants.CASES[case_variant].people if case_mode == "free" else PEOPLE
+
+func _observations_for(case_mode: String, case_variant: int) -> Dictionary:
+	return Variants.CASES[case_variant].observations if case_mode == "free" else OBSERVATION_DATA
+
+func _integer(value: Variant, minimum: int, maximum: int) -> bool:
+	return _number(value, minimum, maximum) and float(value) == floorf(float(value))
 
 func _invalidate_report() -> void:
 	submitted_cards = []

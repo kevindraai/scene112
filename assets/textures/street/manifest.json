@@ -1,0 +1,200 @@
+[
+  {
+    "file": "brick_albedo.png",
+    "sha256": "508f1d16ec9edea911088993303585b70d1fe954c3f51eb80115d006ef3c5910",
+    "resolution": [
+      1024,
+      1024
+    ],
+    "author": "SC\u00c8NE 112 original project asset",
+    "source": "tools/art/author_street_textures.py",
+    "license": "Private/proprietary SC\u00c8NE 112 project license; no third-party samples"
+  },
+  {
+    "file": "brick_normal.png",
+    "sha256": "e1fd7c9a262fdd695f3c6f5079c76a6e5dc47a73b4a30bf7c62da8c1237a8e59",
+    "resolution": [
+      1024,
+      1024
+    ],
+    "author": "SC\u00c8NE 112 original project asset",
+    "source": "tools/art/author_street_textures.py",
+    "license": "Private/proprietary SC\u00c8NE 112 project license; no third-party samples"
+  },
+  {
+    "file": "brick_roughness.png",
+    "sha256": "24b7891c9a353106493246abe100da5d349f2a28451bc6002d2872d4fa00d63e",
+    "resolution": [
+      1024,
+      1024
+    ],
+    "author": "SC\u00c8NE 112 original project asset",
+    "source": "tools/art/author_street_textures.py",
+    "license": "Private/proprietary SC\u00c8NE 112 project license; no third-party samples"
+  },
+  {
+    "file": "paving_albedo.png",
+    "sha256": "f4faf4b431a1a8f91ceae4c2a1a63b18fe3949a3c55842353589c0f04a8ab5e7",
+    "resolution": [
+      1024,
+      1024
+    ],
+    "author": "SC\u00c8NE 112 original project asset",
+    "source": "tools/art/author_street_textures.py",
+    "license": "Private/proprietary SC\u00c8NE 112 project license; no third-party samples"
+  },
+  {
+    "file": "paving_normal.png",
+    "sha256": "29bedfdb192980f01d73ea52b4198fb6c0fcb63bb49b866a902b6e4407dd336a",
+    "resolution": [
+      1024,
+      1024
+    ],
+    "author": "SC\u00c8NE 112 original project asset",
+    "source": "tools/art/author_street_textures.py",
+    "license": "Private/proprietary SC\u00c8NE 112 project license; no third-party samples"
+  },
+  {
+    "file": "paving_roughness.png",
+    "sha256": "62d53cdb7f23d31eb4ed3a23d03a136078525ded40ca349ae20cc7faf3bc0e00",
+    "resolution": [
+      1024,
+      1024
+    ],
+    "author": "SC\u00c8NE 112 original project asset",
+    "source": "tools/art/author_street_textures.py",
+    "license": "Private/proprietary SC\u00c8NE 112 project license; no third-party samples"
+  },
+  {
+    "file": "asphalt_albedo.png",
+    "sha256": "6bac3ad2e7234f536d0b42593f1479dcc3016e58f6f190b2a2a8a96258808e51",
+    "resolution": [
+      1024,
+      1024
+    ],
+    "author": "SC\u00c8NE 112 original project asset",
+    "source": "tools/art/author_street_textures.py",
+    "license": "Private/proprietary SC\u00c8NE 112 project license; no third-party samples"
+  },
+  {
+    "file": "asphalt_normal.png",
+    "sha256": "3947d04ef3ff2a7652486fa5c67c34e9c3dc72b7462600f81f8cca7d71c82028",
+    "resolution": [
+      1024,
+      1024
+    ],
+    "author": "SC\u00c8NE 112 original project asset",
+    "source": "tools/art/author_street_textures.py",
+    "license": "Private/proprietary SC\u00c8NE 112 project license; no third-party samples"
+  },
+  {
+    "file": "asphalt_roughness.png",
+    "sha256": "d9986830ad34ea6594d776882f8679648124c103f7e231b8e7ca4e36e35edb80",
+    "resolution": [
+      1024,
+      1024
+    ],
+    "author": "SC\u00c8NE 112 original project asset",
+    "source": "tools/art/author_street_textures.py",
+    "license": "Private/proprietary SC\u00c8NE 112 project license; no third-party samples"
+  },
+  {
+    "file": "roof_albedo.png",
+    "sha256": "89c44cf1e750e0b3449b68f099df061ad82fe644a52d6d376c7f2332ba3b3584",
+    "resolution": [
+      1024,
+      1024
+    ],
+    "author": "SC\u00c8NE 112 original project asset",
+    "source": "tools/art/author_street_textures.py",
+    "license": "Private/proprietary SC\u00c8NE 112 project license; no third-party samples"
+  },
+  {
+    "file": "roof_normal.png",
+    "sha256": "bd14580a66bcd20f330ac7bf7cc1faae449c5dbe2c46021e44282919bf62562a",
+    "resolution": [
+      1024,
+      1024
+    ],
+    "author": "SC\u00c8NE 112 original project asset",
+    "source": "tools/art/author_street_textures.py",
+    "license": "Private/proprietary SC\u00c8NE 112 project license; no third-party samples"
+  },
+  {
+    "file": "roof_roughness.png",
+    "sha256": "0df3913541d2674a25958459fbfd242354bc7ac7b690d17bb9c8609f2eaf4355",
+    "resolution": [
+      1024,
+      1024
+    ],
+    "author": "SC\u00c8NE 112 original project asset",
+    "source": "tools/art/author_street_textures.py",
+    "license": "Private/proprietary SC\u00c8NE 112 project license; no third-party samples"
+  },
+  {
+    "file": "wood_albedo.png",
+    "sha256": "e0933eff30548976bb19b9538694cf6e2c78607851656ac5dcc54655e350f4f3",
+    "resolution": [
+      1024,
+      1024
+    ],
+    "author": "SC\u00c8NE 112 original project asset",
+    "source": "tools/art/author_street_textures.py",
+    "license": "Private/proprietary SC\u00c8NE 112 project license; no third-party samples"
+  },
+  {
+    "file": "wood_normal.png",
+    "sha256": "eb0c94ae165468b97d4982fc9adc1f9f41dcc7fc2b928564c175b331fb27afae",
+    "resolution": [
+      1024,
+      1024
+    ],
+    "author": "SC\u00c8NE 112 original project asset",
+    "source": "tools/art/author_street_textures.py",
+    "license": "Private/proprietary SC\u00c8NE 112 project license; no third-party samples"
+  },
+  {
+    "file": "wood_roughness.png",
+    "sha256": "4736a0b7f05e981f5f05bf64f5c660057ebb5ccaa42134cdc2b7c9daced342d9",
+    "resolution": [
+      1024,
+      1024
+    ],
+    "author": "SC\u00c8NE 112 original project asset",
+    "source": "tools/art/author_street_textures.py",
+    "license": "Private/proprietary SC\u00c8NE 112 project license; no third-party samples"
+  },
+  {
+    "file": "grass_albedo.png",
+    "sha256": "45801fca151dbe9f8fc711817258418fd0bf9073740275c953f32df02cc268f6",
+    "resolution": [
+      1024,
+      1024
+    ],
+    "author": "SC\u00c8NE 112 original project asset",
+    "source": "tools/art/author_street_textures.py",
+    "license": "Private/proprietary SC\u00c8NE 112 project license; no third-party samples"
+  },
+  {
+    "file": "grass_normal.png",
+    "sha256": "28ed20d9419c6797d49fd8b0f50b2929d6b2e7b01643913af494add5c5838b82",
+    "resolution": [
+      1024,
+      1024
+    ],
+    "author": "SC\u00c8NE 112 original project asset",
+    "source": "tools/art/author_street_textures.py",
+    "license": "Private/proprietary SC\u00c8NE 112 project license; no third-party samples"
+  },
+  {
+    "file": "grass_roughness.png",
+    "sha256": "96ea17ece916358a2f7697b20a03ab4494042ae9c4acd942d56c8d039da0d70f",
+    "resolution": [
+      1024,
+      1024
+    ],
+    "author": "SC\u00c8NE 112 original project asset",
+    "source": "tools/art/author_street_textures.py",
+    "license": "Private/proprietary SC\u00c8NE 112 project license; no third-party samples"
+  }
+]

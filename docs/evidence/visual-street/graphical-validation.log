@@ -1,0 +1,8 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:372)
+OpenGL API 4.5 (Core Profile) Mesa 25.0.7-2+deb13u1 - Compatibility - Using Device: Mesa - llvmpipe (LLVM 19.1.7, 256 bits)
+
+SCENE112_GRAPHICS_BACKEND={"adapter":"llvmpipe (LLVM 19.1.7, 256 bits)","adapter_type":0,"api":"4.5 (Core Profile) Mesa 25.0.7-2+deb13u1","display":"X11","driver":"opengl3","renderer":"gl_compatibility","user_data_dir":"/tmp/scene112-quality-evidence/final-graphics/data/Scene112","vendor":"Mesa"}
+SCENE112_VISUAL_OK checks=195 renderer=gl_compatibility driver=opengl3 adapter=llvmpipe (LLVM 19.1.7, 256 bits) screenshots=true fixtures=initial positions and equipment; actual walk>10m drive>20m reverse/steering/brake/exit, imported PBR/rig/wheel/camera/pause, conditions and root save/load
+SCENE112_AUDIO_STOP driver=Dummy mixes=2 synchronized=true

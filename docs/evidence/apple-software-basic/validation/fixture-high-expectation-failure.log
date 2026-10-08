@@ -1,0 +1,31 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:372)
+OpenGL API 4.5 (Core Profile) Mesa 25.0.7-2+deb13u1 - Compatibility - Using Device: Mesa - llvmpipe (LLVM 19.1.7, 256 bits)
+
+SCENE112_PROFILE_FIXTURE={"actual_adapter":"llvmpipe (LLVM 19.1.7, 256 bits)","forced":true,"lod_getter":8.0,"scale_getter":0.25}
+SCENE112_GRAPHICS_STAGE=initial_draw elapsed_ms=2540 checks=0
+SCENE112_GRAPHICS_BACKEND={"adapter":"llvmpipe (LLVM 19.1.7, 256 bits)","adapter_type":0,"api":"4.5 (Core Profile) Mesa 25.0.7-2+deb13u1","display":"X11","driver":"opengl3","renderer":"gl_compatibility","user_data_dir":"/tmp/scene112-tools/apple-basic-fixture-data/Scene112","vendor":"Mesa"}
+SCENE112_GRAPHICS_STAGE=start_new elapsed_ms=2577 checks=0
+SCENE112_GRAPHICS_STAGE=models_and_rigs elapsed_ms=2579 checks=2
+SCENE112_GRAPHICS_STAGE=roof_camera elapsed_ms=2581 checks=148
+SCENE112_GRAPHICS_STAGE=walk_and_pause elapsed_ms=3488 checks=150
+SCENE112_GRAPHICS_STAGE=vehicle elapsed_ms=7531 checks=167
+SCENE112_GRAPHICS_STAGE=connected_street elapsed_ms=12367 checks=173
+SCENE112_BRAKE_DIAGNOSTICS={"final_speed":0.0,"passed":true,"physics_ticks":65,"samples":[{"brake_held":true,"enabled_input":true,"physics_ticks":0,"position":[21.1450424194336,0.0142315533012152,37.5630187988281],"speed":13.999942779541,"wall_ms":0},{"brake_held":true,"enabled_input":true,"physics_ticks":4,"position":[22.0413341522217,0.0142300706356764,37.6036033630371],"speed":13.1330547332764,"wall_ms":62},{"brake_held":true,"enabled_input":true,"physics_ticks":8,"position":[22.8798942565918,0.0142283355817199,37.6415748596191],"speed":12.2661819458008,"wall_ms":124},{"brake_held":true,"enabled_input":true,"physics_ticks":13,"position":[23.8469047546387,0.0058928495272994,37.6853561401367],"speed":11.1826114654541,"wall_ms":196},{"brake_held":true,"enabled_input":true,"physics_ticks":17,"position":[24.5555686950684,0.00589010957628489,37.7174491882324],"speed":10.315770149231,"wall_ms":263},{"brake_held":true,"enabled_input":true,"physics_ticks":20,"position":[25.0491828918457,0.0142198633402586,37.7397994995117],"speed":9.66564750671387,"wall_ms":318},{"brake_held":true,"enabled_input":true,"physics_ticks":23,"position":[25.5103206634521,0.00588448811322451,37.7606773376465],"speed":9.01553249359131,"wall_ms":371},{"brake_held":true,"enabled_input":true,"physics_ticks":27,"position":[26.0746593475342,0.00587918143719435,37.7862281799316],"speed":8.14872741699219,"wall_ms":432},{"brake_held":true,"enabled_input":true,"physics_ticks":30,"position":[26.4600296020508,0.0142051223665476,37.8036766052246],"speed":7.49863195419312,"wall_ms":488},{"brake_held":true,"enabled_input":true,"physics_ticks":34,"position":[26.9233436584473,0.0141948265954852,37.824649810791],"speed":6.6318507194519,"wall_ms":544},{"brake_held":true,"enabled_input":true,"physics_ticks":37,"position":[27.2329425811768,0.00585499592125416,37.8386688232422],"speed":5.98177528381348,"wall_ms":596},{"brake_held":true,"enabled_input":true,"physics_ticks":40,"position":[27.5100727081299,0.0141689470037818,37.8512153625488],"speed":5.33170747756958,"wall_ms":654},{"brake_held":true,"enabled_input":true,"physics_ticks":43,"position":[27.7547225952148,0.00582313910126686,37.8622932434082],"speed":4.68164730072021,"wall_ms":704},{"brake_held":true,"enabled_input":true,"physics_ticks":47,"position":[28.0304374694824,0.0141014652326703,37.8747749328613],"speed":3.81491231918335,"wall_ms":759},{"brake_held":true,"enabled_input":true,"physics_ticks":50,"position":[28.1993427276611,0.0140392445027828,37.8824195861816],"speed":3.16487050056458,"wall_ms":811},{"brake_held":true,"enabled_input":true,"physics_ticks":53,"position":[28.3357753753662,0.0139252264052629,37.8885955810547],"speed":2.51483654975891,"wall_ms":865},{"brake_held":true,"enabled_input":true,"physics_ticks":56,"position":[28.4397411346436,0.0136826075613499,37.8933029174805],"speed":1.86481106281281,"wall_ms":918},{"brake_held":true,"enabled_input":true,"physics_ticks":59,"position":[28.5112400054932,0.00590568594634533,37.896541595459],"speed":1.21479344367981,"wall_ms":964},{"brake_held":true,"enabled_input":true,"physics_ticks":62,"position":[28.5502738952637,0.0140300113707781,37.8983116149902],"speed":0.564783871173859,"wall_ms":1024},{"brake_held":true,"enabled_input":true,"physics_ticks":65,"position":[28.5582580566406,0.0141092045232654,37.8986740112305],"speed":0.0,"wall_ms":1072}],"wall_ms":1072}
+SCENE112_GRAPHICS_STAGE=conditions_and_save elapsed_ms=20769 checks=178
+SCENE112_GRAPHICS_STAGE=condition_day elapsed_ms=20769 checks=178
+SCENE112_GRAPHICS_STAGE=condition_dusk elapsed_ms=21535 checks=182
+SCENE112_GRAPHICS_STAGE=condition_rain elapsed_ms=23413 checks=186
+SCENE112_GRAPHICS_STAGE=high_rain elapsed_ms=25236 checks=193
+ERROR: DUTY_FAIL VISUAL requested high is truthfully reported as software fallback
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] _check (res://scripts/app.gd:795)
+       [1] _check (res://scripts/graphics_validation.gd:353)
+       [2] _conditions_and_save (res://scripts/graphics_validation.gd:310)
+SCENE112_AUDIO_STOP driver=Dummy mixes=2 synchronized=true
+ERROR: Texture with GL ID of 138: leaked 5460 bytes.
+   at: ~Utilities (drivers/gles3/storage/utilities.cpp:82)
+ERROR: Texture with GL ID of 139: leaked 5460 bytes.
+   at: ~Utilities (drivers/gles3/storage/utilities.cpp:82)

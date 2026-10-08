@@ -1,0 +1,21 @@
+{
+  "command": [
+    "python3",
+    "tools/graphical_playthrough.py",
+    "/tmp/scene112-tools/Godot_v4.7.2-stable_linux.x86_64",
+    "--project",
+    "/tmp/scene112-software-gl-prep/prototype",
+    "--scenario=--visual-playthrough",
+    "--timeout=240"
+  ],
+  "returncode": 0,
+  "wall_seconds": 46.172638007003115,
+  "source_sha256": {
+    "scripts/app.gd": "a549f423a532e960658d556a62984baf83fc9d67abe764c60b8b041c00a219f9",
+    "scripts/street_atmosphere.gd": "8d00b37d05b7340add87795fed0aa47aeada0b66eef5f37e8dfa542dc5c00196",
+    "scripts/graphics_validation.gd": "9a4f198855a5dfb3376e9617744f35c6d19947fa37dc1e1c5c9cd32e7960cb90",
+    "shaders/wet_paving.gdshader": "3dd3896530f4a36fb94d5a61fb59a0bf1dccff128c6ead3690103193d1307ef2"
+  },
+  "source_unchanged_during_run": true,
+  "scope": "isolated source on actual Linux llvmpipe; no Apple Software Renderer proof"
+}

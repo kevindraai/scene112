@@ -1,0 +1,27 @@
+{
+  "asset": "officer",
+  "author": "SCENE112 original authoring",
+  "blender": "4.3.2",
+  "meshes": 1,
+  "triangles": 29198,
+  "animations": [
+    "carry",
+    "idle",
+    "run",
+    "walk"
+  ],
+  "coordinate_convention": "Blender +Y forward, +Z up; glTF/Godot -Z forward, +Y up",
+  "license": "SCENE112 original private/proprietary project content; docs/LICENSES.md",
+  "source_blend": "source/3d/characters/officer.blend",
+  "source_builder": "source/3d/characters/build_characters.py",
+  "source_helper": "source/3d/characters/assetkit.py",
+  "texture_directory": "assets/textures/characters",
+  "runtime_glb": "assets/models/characters/officer.glb",
+  "glb_sha256": "0cb457633672b59ff410eb93aade4cb82795bceaa3ab42ebb8a3e8756265b76d",
+  "packed_editable_images": true,
+  "preview_rendered": false,
+  "source_refinement": "source/3d/characters/character_polish.py",
+  "rig_contract": "18 original bones/rest/inverse binds; unchanged idle/walk/run/carry keyframes",
+  "vertex_color_contract": "active AuthoredMaterialVariation as COLOR_0; bounded 0..1",
+  "texture_budget": "embedded 512x512 albedo/normal/roughness maps"
+}

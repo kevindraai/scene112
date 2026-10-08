@@ -1,0 +1,429 @@
+{
+	"adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+	"api": "4.5 (Core Profile) Mesa 25.0.7-2+deb13u1",
+	"checks": 200,
+	"conditions": [
+		{
+			"adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+			"apple_software_basic": true,
+			"conditions": "day",
+			"draw_calls": 101.0,
+			"effective_quality": "software_basic",
+			"glow": false,
+			"lamps": 0,
+			"local_shadows": 0,
+			"managed_surfaces": 151,
+			"material_variants": 34,
+			"mesh_lod_threshold": 8.0,
+			"particles": 0,
+			"particles_paused": false,
+			"primitives": 33304.0,
+			"probe_revision": 0,
+			"quality": "balanced",
+			"reflection_probes": 0,
+			"render_scale": 0.25,
+			"renderer": "gl_compatibility",
+			"requested_quality": "balanced",
+			"sky_radiance_size": 32,
+			"software_gl": true,
+			"ssao": false,
+			"ssr": false,
+			"sun_shadows": false,
+			"video_bytes": 227247497.0
+		},
+		{
+			"adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+			"apple_software_basic": true,
+			"conditions": "dusk",
+			"draw_calls": 101.0,
+			"effective_quality": "software_basic",
+			"glow": false,
+			"lamps": 2,
+			"local_shadows": 0,
+			"managed_surfaces": 151,
+			"material_variants": 34,
+			"mesh_lod_threshold": 8.0,
+			"particles": 0,
+			"particles_paused": false,
+			"primitives": 33304.0,
+			"probe_revision": 0,
+			"quality": "balanced",
+			"reflection_probes": 0,
+			"render_scale": 0.25,
+			"renderer": "gl_compatibility",
+			"requested_quality": "balanced",
+			"sky_radiance_size": 32,
+			"software_gl": true,
+			"ssao": false,
+			"ssr": false,
+			"sun_shadows": false,
+			"video_bytes": 227247497.0
+		},
+		{
+			"adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+			"apple_software_basic": true,
+			"conditions": "rain",
+			"draw_calls": 102.0,
+			"effective_quality": "software_basic",
+			"glow": false,
+			"lamps": 2,
+			"local_shadows": 0,
+			"managed_surfaces": 151,
+			"material_variants": 34,
+			"mesh_lod_threshold": 8.0,
+			"particles": 72,
+			"particles_paused": false,
+			"primitives": 33448.0,
+			"probe_revision": 0,
+			"quality": "balanced",
+			"reflection_probes": 0,
+			"render_scale": 0.25,
+			"renderer": "gl_compatibility",
+			"requested_quality": "balanced",
+			"sky_radiance_size": 32,
+			"software_gl": true,
+			"ssao": false,
+			"ssr": false,
+			"sun_shadows": false,
+			"video_bytes": 227247497.0
+		}
+	],
+	"display": "X11",
+	"drive_metres": 31.5058403015137,
+	"driver": "opengl3",
+	"engine": {
+		"build": "official",
+		"hash": "ed1daf0bf001b61586d9930840f2f1394092c079",
+		"hex": 263938,
+		"major": 4,
+		"minor": 7,
+		"patch": 2,
+		"status": "stable",
+		"string": "4.7.2-stable (official)",
+		"timestamp": 0
+	},
+	"frame_samples": [
+		{
+			"actual_adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+			"draw_calls": 0,
+			"mesh_lod_threshold": 8.0,
+			"objects": 0,
+			"primitives": 0,
+			"scale": 0.25,
+			"stage": "initial_draw"
+		},
+		{
+			"actual_adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+			"draw_calls": 0,
+			"mesh_lod_threshold": 8.0,
+			"objects": 0,
+			"primitives": 0,
+			"scale": 0.25,
+			"stage": "start_new"
+		},
+		{
+			"actual_adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+			"draw_calls": 0,
+			"mesh_lod_threshold": 8.0,
+			"objects": 0,
+			"primitives": 0,
+			"scale": 0.25,
+			"stage": "models_and_rigs"
+		},
+		{
+			"actual_adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+			"draw_calls": 0,
+			"mesh_lod_threshold": 8.0,
+			"objects": 0,
+			"primitives": 0,
+			"scale": 0.25,
+			"stage": "roof_camera"
+		},
+		{
+			"actual_adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+			"draw_calls": 60,
+			"mesh_lod_threshold": 8.0,
+			"objects": 60,
+			"primitives": 7996,
+			"scale": 0.25,
+			"stage": "walk_and_pause"
+		},
+		{
+			"actual_adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+			"draw_calls": 68,
+			"mesh_lod_threshold": 8.0,
+			"objects": 68,
+			"primitives": 33136,
+			"scale": 0.25,
+			"stage": "vehicle"
+		},
+		{
+			"actual_adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+			"draw_calls": 231,
+			"mesh_lod_threshold": 8.0,
+			"objects": 231,
+			"primitives": 86978,
+			"scale": 0.25,
+			"stage": "connected_street"
+		},
+		{
+			"actual_adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+			"draw_calls": 106,
+			"mesh_lod_threshold": 8.0,
+			"objects": 106,
+			"primitives": 66280,
+			"scale": 0.25,
+			"stage": "conditions_and_save"
+		},
+		{
+			"actual_adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+			"draw_calls": 106,
+			"mesh_lod_threshold": 8.0,
+			"objects": 106,
+			"primitives": 66280,
+			"scale": 0.25,
+			"stage": "condition_day"
+		},
+		{
+			"actual_adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+			"draw_calls": 88,
+			"mesh_lod_threshold": 8.0,
+			"objects": 88,
+			"primitives": 32138,
+			"scale": 0.25,
+			"stage": "condition_dusk"
+		},
+		{
+			"actual_adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+			"draw_calls": 88,
+			"mesh_lod_threshold": 8.0,
+			"objects": 88,
+			"primitives": 32138,
+			"scale": 0.25,
+			"stage": "condition_rain"
+		},
+		{
+			"actual_adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+			"draw_calls": 89,
+			"mesh_lod_threshold": 8.0,
+			"objects": 89,
+			"primitives": 32282,
+			"scale": 0.25,
+			"stage": "high_rain"
+		}
+	],
+	"frontage_drive_metres": 43.9794998168945,
+	"high_rain": {
+		"adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+		"apple_software_basic": true,
+		"conditions": "rain",
+		"effective_quality": "software_basic",
+		"glow": false,
+		"lamps": 2,
+		"local_shadows": 0,
+		"managed_surfaces": 151,
+		"material_variants": 34,
+		"mesh_lod_threshold": 8.0,
+		"particles": 72,
+		"particles_paused": false,
+		"probe_revision": 0,
+		"quality": "high",
+		"reflection_probes": 0,
+		"render_scale": 0.25,
+		"renderer": "gl_compatibility",
+		"requested_quality": "high",
+		"sky_radiance_size": 32,
+		"software_gl": true,
+		"ssao": false,
+		"ssr": false,
+		"sun_shadows": false
+	},
+	"limits": "No physical target GPU or audible quality claim; screenshots absent in headless. Godot monitors may lag. Existing M2 police/native flags remain separate mandatory regressions.",
+	"models": {
+		"characters/civilian": {
+			"full_pbr": 5,
+			"materials": 14,
+			"meshes": 1,
+			"skin_meshes": 1
+		},
+		"characters/officer": {
+			"full_pbr": 5,
+			"materials": 14,
+			"meshes": 1,
+			"skin_meshes": 1
+		},
+		"street/dutch_bicycle": {
+			"full_pbr": 0,
+			"materials": 3,
+			"meshes": 3,
+			"skin_meshes": 0
+		},
+		"street/dutch_terrace": {
+			"full_pbr": 3,
+			"materials": 11,
+			"meshes": 11,
+			"skin_meshes": 0
+		},
+		"street/street_bench": {
+			"full_pbr": 1,
+			"materials": 2,
+			"meshes": 2,
+			"skin_meshes": 0
+		},
+		"street/street_lamp": {
+			"full_pbr": 0,
+			"materials": 3,
+			"meshes": 3,
+			"skin_meshes": 0
+		},
+		"vegetation/street_tree": {
+			"full_pbr": 3,
+			"materials": 3,
+			"meshes": 1,
+			"skin_meshes": 0
+		},
+		"vehicles/fire_truck": {
+			"collision_bounds": [
+				3.07999992370605,
+				3.20000004768372,
+				6.28999996185303
+			],
+			"full_pbr": 5,
+			"materials": 11,
+			"meshes": 5,
+			"render_bounds": [
+				3.08000016212463,
+				3.20192003250122,
+				6.28649997711182
+			],
+			"skin_meshes": 0
+		},
+		"vehicles/police_car": {
+			"collision_bounds": [
+				2.46000003814697,
+				1.72000002861023,
+				4.46999979019165
+			],
+			"full_pbr": 5,
+			"materials": 11,
+			"meshes": 5,
+			"render_bounds": [
+				2.45999979972839,
+				1.71721994876862,
+				4.46749973297119
+			],
+			"skin_meshes": 0
+		}
+	},
+	"profile_fixture": {
+		"actual_adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+		"actual_renderer": "gl_compatibility",
+		"forced_apple_profile_fixture": true,
+		"no_native_claim": true,
+		"profile": {
+			"adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+			"apple_software_basic": true,
+			"conditions": "day",
+			"effective_quality": "software_basic",
+			"glow": false,
+			"lamps": 0,
+			"local_shadows": 0,
+			"managed_surfaces": 151,
+			"material_variants": 34,
+			"mesh_lod_threshold": 8.0,
+			"particles": 0,
+			"particles_paused": true,
+			"probe_revision": 0,
+			"quality": "portable",
+			"reflection_probes": 0,
+			"render_scale": 0.25,
+			"renderer": "gl_compatibility",
+			"requested_quality": "portable",
+			"sky_radiance_size": 32,
+			"software_gl": true,
+			"ssao": false,
+			"ssr": false,
+			"sun_shadows": false
+		},
+		"source_geometry": {
+			"collision_objects": 129,
+			"glb_paths": [
+				"res://assets/models/vegetation/street_tree.glb",
+				"res://assets/models/street/dutch_terrace.glb",
+				"res://assets/models/vehicles/police_car.glb",
+				"res://assets/models/vehicles/fire_truck.glb",
+				"res://assets/models/characters/civilian.glb",
+				"res://assets/models/street/street_lamp.glb",
+				"res://assets/models/street/street_bench.glb",
+				"res://assets/models/street/dutch_bicycle.glb",
+				"res://assets/models/characters/officer.glb"
+			],
+			"lod_levels": 403,
+			"lod_surfaces": 89,
+			"rigs": [
+				{
+					"bones": 18,
+					"name": "Skeleton3D"
+				},
+				{
+					"bones": 18,
+					"name": "Skeleton3D"
+				},
+				{
+					"bones": 18,
+					"name": "Skeleton3D"
+				},
+				{
+					"bones": 18,
+					"name": "Skeleton3D"
+				},
+				{
+					"bones": 18,
+					"name": "Skeleton3D"
+				},
+				{
+					"bones": 18,
+					"name": "Skeleton3D"
+				},
+				{
+					"bones": 18,
+					"name": "Skeleton3D"
+				},
+				{
+					"bones": 18,
+					"name": "Skeleton3D"
+				},
+				{
+					"bones": 18,
+					"name": "Skeleton3D"
+				},
+				{
+					"bones": 18,
+					"name": "Skeleton3D"
+				}
+			],
+			"source_indices": 795432,
+			"source_vertices": 226040,
+			"surface_count": 405,
+			"unique_meshes": 343
+		}
+	},
+	"renderer": "gl_compatibility",
+	"roof_camera": {
+		"arm_hit_length": 4.3505859375,
+		"camera": [
+			-2.0,
+			5.07897710800171,
+			44.0306625366211
+		],
+		"facade_triangles_checked": 9314,
+		"intersections": 0,
+		"pitch": -0.95
+	},
+	"scope": "integrated runtime; initial pose/equipment fixtures",
+	"viewport": [
+		1280.0,
+		720.0
+	],
+	"walk_metres": 10.063328742981
+}

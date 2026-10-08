@@ -1,0 +1,28 @@
+{
+  "asset": "fire_officer",
+  "author": "SCENE112 original authoring",
+  "blender": "4.3.2",
+  "meshes": 1,
+  "triangles": 35410,
+  "animations": [
+    "carry",
+    "idle",
+    "run",
+    "walk"
+  ],
+  "coordinate_convention": "Blender +Y forward, +Z up; glTF/Godot -Z forward, +Y up",
+  "license": "SCENE112 original private/proprietary project content; docs/LICENSES.md",
+  "source_blend": "source/3d/fire_outfit/fire_officer.blend",
+  "source_builder": "source/3d/fire_outfit/build_fire_officer.py",
+  "source_helper": "source/3d/fire_outfit/assetkit.py",
+  "texture_directory": "assets/textures/fire_outfit",
+  "runtime_glb": "assets/models/characters/fire_officer.glb",
+  "glb_sha256": "5e5398c651b9dde8e6f81bc218ad700ad08c1e5f937fb05295df18d42e46b17f",
+  "packed_editable_images": true,
+  "preview_rendered": false,
+  "source_refinement": "source/3d/characters/character_polish.py",
+  "rig_contract": "18 original bones/rest/inverse binds; unchanged idle/walk/run/carry keyframes",
+  "vertex_color_contract": "active AuthoredMaterialVariation as COLOR_0; bounded 0..1",
+  "texture_budget": "embedded 512x512 albedo/normal/roughness maps",
+  "source_geometry": "source/3d/fire_outfit/character_base.py"
+}

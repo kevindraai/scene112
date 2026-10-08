@@ -1,0 +1,80 @@
+{
+  "schema": 1,
+  "milestone": "M4",
+  "source_seed": 4112,
+  "generator_sha256": "7cae2c2d02eb22c559c9caea442025a6da1d552e54b88b8e5069b84f58ae6ed7",
+  "helper_sha256": "df077ecb2acc541748511dd127280513c22add4e3dd291df0e2ad99785f86ebb",
+  "no_speech_recording_or_synthesis": true,
+  "files": [
+    {
+      "file": "evidence_paper.wav",
+      "source": "tools/compose_investigation_audio.py",
+      "creator": "SCENE 112 original procedural investigation object audio",
+      "license": "Original SCENE 112 project asset; private/proprietary project license. No third-party samples.",
+      "third_party_samples": false,
+      "sha256": "089df662bb66e0c8427086f8385a13e37d529ba04377716c1a87110b28c5c9d1",
+      "sample_rate": 22050,
+      "channels": 1,
+      "seconds": 0.6499773242630386,
+      "loop": false,
+      "peak": 0.09882,
+      "rms": 0.01748
+    },
+    {
+      "file": "evidence_bag.wav",
+      "source": "tools/compose_investigation_audio.py",
+      "creator": "SCENE 112 original procedural investigation object audio",
+      "license": "Original SCENE 112 project asset; private/proprietary project license. No third-party samples.",
+      "third_party_samples": false,
+      "sha256": "08f099df6a7e2beea7ec5849e1750bb6bf3ae1818ff64f55341d048d5a39ea95",
+      "sample_rate": 22050,
+      "channels": 1,
+      "seconds": 0.5499773242630386,
+      "loop": false,
+      "peak": 0.17576,
+      "rms": 0.02386
+    },
+    {
+      "file": "evidence_camera.wav",
+      "source": "tools/compose_investigation_audio.py",
+      "creator": "SCENE 112 original procedural investigation object audio",
+      "license": "Original SCENE 112 project asset; private/proprietary project license. No third-party samples.",
+      "third_party_samples": false,
+      "sha256": "0488240d8d412da0b96af5599ade4ccbb41c8fc8e1f457e31cf546bcabe0aa2e",
+      "sample_rate": 22050,
+      "channels": 1,
+      "seconds": 0.28,
+      "loop": false,
+      "peak": 0.10203,
+      "rms": 0.01112
+    },
+    {
+      "file": "office_chair.wav",
+      "source": "tools/compose_investigation_audio.py",
+      "creator": "SCENE 112 original procedural investigation object audio",
+      "license": "Original SCENE 112 project asset; private/proprietary project license. No third-party samples.",
+      "third_party_samples": false,
+      "sha256": "a6bf40a51ec96f31080b494afb3e51d4f15a884750c57e747784501575296231",
+      "sample_rate": 22050,
+      "channels": 1,
+      "seconds": 0.8,
+      "loop": false,
+      "peak": 0.04185,
+      "rms": 0.01155
+    },
+    {
+      "file": "office_clock_loop.wav",
+      "source": "tools/compose_investigation_audio.py",
+      "creator": "SCENE 112 original procedural investigation object audio",
+      "license": "Original SCENE 112 project asset; private/proprietary project license. No third-party samples.",
+      "third_party_samples": false,
+      "sha256": "f24ce03782d901e3cd53d0ae63f7cd7e2c09204da672a235e221dfe463fe2fa7",
+      "sample_rate": 22050,
+      "channels": 1,
+      "seconds": 8.0,
+      "loop": true,
+      "peak": 0.0428,
+      "rms": 0.00135
+    }
+  ]
+}

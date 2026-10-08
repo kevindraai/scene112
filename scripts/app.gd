@@ -8,12 +8,38 @@ const Police = preload("res://scripts/police_case.gd")
 const PoliceSiteScript = preload("res://scripts/police_site.gd")
 const PoliceUI = preload("res://scripts/police_controller.gd")
 const PoliceValidation = preload("res://scripts/police_validation.gd")
+const GraphicsValidation = preload("res://scripts/graphics_validation.gd")
+const Fire = preload("res://scripts/fire_case.gd")
+const FireSiteScript = preload("res://scripts/fire_site.gd")
+const FireUI = preload("res://scripts/fire_controller.gd")
+const FireValidation = preload("res://scripts/fire_validation.gd")
+const Investigation = preload("res://scripts/investigation_case.gd")
+const ResearchSite = preload("res://scripts/investigation_site.gd")
+const ResearchUI = preload("res://scripts/investigation_controller.gd")
+const PublicOrder = preload("res://scripts/noise_case.gd")
+const NoiseSite = preload("res://scripts/noise_site.gd")
+const NoiseUI = preload("res://scripts/noise_controller.gd")
+const OutsideFire = preload("res://scripts/outside_fire_case.gd")
+const OutsideSite = preload("res://scripts/outside_fire_site.gd")
+const OutsideUI = preload("res://scripts/outside_fire_controller.gd")
 const Audio = preload("res://scripts/audio_director.gd")
 var state := State.new()
 var ledger := Ledger.new()
 var police_model := Police.new()
 var police_ui := PoliceUI.new()
 var police_site: Node3D
+var fire_model := Fire.new()
+var fire_ui := FireUI.new()
+var fire_site: Node3D
+var research_model := Investigation.new()
+var research_ui := ResearchUI.new()
+var research_site: Node3D
+var noise_model := PublicOrder.new()
+var noise_ui := NoiseUI.new()
+var noise_site: Node3D
+var outside_model := OutsideFire.new()
+var outside_ui := OutsideUI.new()
+var outside_site: Node3D
 var audio: Node
 var district: Node3D
 var officer: CharacterBody3D
@@ -40,14 +66,21 @@ func _ready() -> void:
 	DisplayServer.window_set_title("SCÈNE 112")
 	get_tree().auto_accept_quit = false
 	_bind_inputs()
+	_trace_graphics_stage("world_begin")
 	district = World.new()
+	district.hide()
 	add_child(district)
+	_trace_graphics_stage("world_ready")
 	police_site = PoliceSiteScript.new()
 	police_site.attach_to(district)
+	fire_site = FireSiteScript.new()
+	fire_site.attach_to(district)
 	officer = Player.new()
+	officer.hide()
 	add_child(officer)
 	officer.position = state.player_position
 	officer.enable_input = false
+	_trace_graphics_stage("actor_ready")
 	district.interacted.connect(_interact)
 	incident_marker = Label3D.new()
 	incident_marker.font_size = 42
@@ -56,15 +89,33 @@ func _ready() -> void:
 	incident_marker.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	incident_marker.hide()
 	add_child(incident_marker)
+	_trace_graphics_stage("ui_begin")
 	_build_ui()
+	_trace_graphics_stage("ui_ready")
 	police_ui.setup(self, police_model, police_site)
 	police_ui.completed.connect(_police_completed)
+	fire_ui.setup(self, fire_model, fire_site)
+	fire_ui.completed.connect(_fire_completed)
+	research_site = ResearchSite.new()
+	research_ui.setup(self, research_model, research_site)
+	research_ui.completed.connect(_research_completed)
+	noise_site = NoiseSite.new()
+	noise_ui.setup(self, noise_model, noise_site, Vector3.ZERO)
+	noise_ui.completed.connect(_noise_completed)
+	outside_site = OutsideSite.new()
+	outside_site.attach_to(district)
+	outside_ui.setup(self, outside_model, outside_site)
+	outside_ui.completed.connect(_outside_completed)
 	audio = Audio.new()
 	add_child(audio)
+	_trace_graphics_stage("audio_begin")
 	audio.setup(self)
+	_trace_graphics_stage("audio_ready")
+	_trace_graphics_stage("main_menu_begin")
 	_show_main()
+	_trace_graphics_stage("menu_and_audio_ready")
 	var args := OS.get_cmdline_user_args()
-	test_mode = "--smoke-test" in args or "--playthrough" in args or "--duty-playthrough" in args or "--police-playthrough" in args
+	test_mode = "--smoke-test" in args or "--playthrough" in args or "--duty-playthrough" in args or "--police-playthrough" in args or "--visual-playthrough" in args or "--fire-playthrough" in args or "--research-playthrough" in args
 	if "--smoke-test" in args:
 		_smoke_test.call_deferred()
 	elif "--playthrough" in args:
@@ -73,6 +124,16 @@ func _ready() -> void:
 		_duty_playthrough.call_deferred()
 	elif "--police-playthrough" in args:
 		_police_playthrough.call_deferred()
+	elif "--research-playthrough" in args:
+		_research_playthrough.call_deferred()
+	elif "--fire-playthrough" in args:
+		_fire_playthrough.call_deferred()
+	elif "--visual-playthrough" in args:
+		_graphics_playthrough.call_deferred()
+
+func _trace_graphics_stage(value: String) -> void:
+	if "--visual-playthrough" in OS.get_cmdline_user_args():
+		print("SCENE112_GRAPHICS_STAGE=", value, " elapsed_ms=", Time.get_ticks_msec())
 
 func _bind_inputs() -> void:
 	var keys := {"move_forward": KEY_W, "move_back": KEY_S, "move_left": KEY_A,
@@ -86,6 +147,10 @@ func _bind_inputs() -> void:
 		var event := InputEventKey.new()
 		event.physical_keycode = keys[action]
 		InputMap.action_add_event(action, event)
+
+func _graphics_playthrough() -> void:
+	var validation = GraphicsValidation.new()
+	await validation.run(self)
 
 func _build_ui() -> void:
 	canvas = CanvasLayer.new()
@@ -137,9 +202,14 @@ func _build_ui() -> void:
 	menu.custom_minimum_size = Vector2(470, 590)
 	menu.add_theme_stylebox_override("panel", _panel(Color(0.035, 0.085, 0.12, 0.97)))
 	canvas.add_child(menu)
+	var menu_scroll := ScrollContainer.new()
+	menu_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	menu_scroll.follow_focus = true
+	menu.add_child(menu_scroll)
 	menu_items = VBoxContainer.new()
+	menu_items.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	menu_items.add_theme_constant_override("separation", 11)
-	menu.add_child(menu_items)
+	menu_scroll.add_child(menu_items)
 
 func _panel(color: Color) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
@@ -164,6 +234,7 @@ func _label(value: String, size: int = 18, color: Color = Color(0.89, 0.94, 0.95
 	return label
 
 func _clear_menu(title: String, subtitle: String) -> void:
+	(menu_items.get_parent() as ScrollContainer).scroll_vertical = 0
 	for child in menu_items.get_children():
 		menu_items.remove_child(child)
 		child.queue_free()
@@ -205,6 +276,8 @@ func _button(title: String, action: Callable, disabled: bool = false) -> Button:
 func _show_main() -> void:
 	_freeze()
 	active = false
+	district.hide()
+	officer.hide()
 	hud.hide()
 	menu_art.show()
 	_clear_menu("SCÈNE 112", "Een nieuwe dienst begint aan de Noorderkade.\n%s · Nederlandstalig · 14+" % ProjectSettings.get_setting("application/config/version"))
@@ -230,13 +303,27 @@ func _show_main() -> void:
 
 func start_new(role: String = "police") -> void:
 	_freeze()
+	var preferred_condition := state.condition
+	var preferred_quality := state.graphics_quality
 	state = State.new()
+	state.condition = preferred_condition
+	state.graphics_quality = preferred_quality
+	_apply_visual_settings()
 	state.role = role
 	state.player_position = Vector3(28, 0.1, 0) if role == "fire" else Vector3(0, 0.1, 6)
 	ledger = Ledger.new()
-	ledger.start(112)
+	ledger.start(112, state.role)
 	police_model.begin("none")
 	police_ui.setup(self, police_model, police_site)
+	fire_model.begin("none")
+	fire_ui.setup(self, fire_model, fire_site)
+	research_model.begin("none")
+	research_ui.setup(self, research_model, research_site)
+	noise_model = PublicOrder.new()
+	noise_ui.setup(self, noise_model, noise_site, Vector3.ZERO)
+	outside_model = OutsideFire.new()
+	outside_ui.setup(self, outside_model, outside_site)
+	officer.set_role(role)
 	_restore_vehicles()
 	_restore_on_foot(state.player_position)
 	officer.sensitivity = state.sensitivity
@@ -248,9 +335,13 @@ func _freeze() -> void:
 	paused = true
 	if is_instance_valid(hud): hud.hide()
 	officer.enable_input = false
-	officer.set_physics_process(false)
+	officer.set_simulation_active(false)
 	district.set_simulation_active(false)
 	if is_instance_valid(police_site): police_site.set_simulation_active(false)
+	if is_instance_valid(fire_site): fire_site.set_simulation_active(false)
+	if is_instance_valid(research_site): research_site.set_simulation_active(false)
+	if is_instance_valid(noise_site): noise_site.set_simulation_active(false)
+	if is_instance_valid(outside_site): outside_site.set_simulation_active(false)
 	for id in ["police_car", "fire_truck"]:
 		district.objects[id].enabled_input = false
 
@@ -258,21 +349,25 @@ func _resume() -> void:
 	if not active:
 		return
 	paused = false
+	noise_ui.conversation = false
+	district.show()
 	menu.hide()
 	menu_art.hide()
 	hud.show()
 	district.set_simulation_active(true)
 	police_site.set_simulation_active(true)
+	fire_site.set_simulation_active(true)
+	research_site.set_simulation_active(true)
 	for id in ["police_car", "fire_truck"]:
 		district.objects[id].enabled_input = id == state.occupied_vehicle
 		district.objects[id].camera.current = false
 	if state.occupied_vehicle.is_empty():
 		officer.enable_input = true
-		officer.set_physics_process(true)
+		officer.set_simulation_active(true)
 		officer.camera.current = true
 	else:
 		officer.enable_input = false
-		officer.set_physics_process(false)
+		officer.set_simulation_active(false)
 		officer.camera.current = false
 		district.objects[state.occupied_vehicle].camera.current = true
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -324,6 +419,27 @@ func show_settings() -> void:
 		for id in ["police_car", "fire_truck"]:
 			district.objects[id].sensitivity = value)
 	options.add_child(slider)
+	options.add_child(_label("Omstandigheden in de wijk", 17))
+	var conditions := OptionButton.new()
+	for value in ["Overdag", "Schemer", "Lichte regen"]: conditions.add_item(value)
+	conditions.select(["day", "dusk", "rain"].find(state.condition))
+	conditions.item_selected.connect(func(index):
+		state.condition = ["day", "dusk", "rain"][index]
+		_apply_visual_settings())
+	options.add_child(conditions)
+	options.add_child(_label("Grafische kwaliteit", 17))
+	var quality := OptionButton.new()
+	for value in ["Draagbaar", "Standaard", "Hoog"]: quality.add_item(value)
+	quality.select(["portable", "balanced", "high"].find(state.graphics_quality))
+	quality.item_selected.connect(func(index):
+		state.graphics_quality = ["portable", "balanced", "high"][index]
+		_apply_visual_settings())
+	options.add_child(quality)
+	if district.atmosphere.software_gl:
+		var fallback := _label("Lichte weergave actief op dit systeem. Je beeldvoorkeur blijft bewaard.", 16)
+		fallback.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		fallback.custom_minimum_size.x = 400
+		options.add_child(fallback)
 	var settings: Dictionary = audio.get_settings()
 	var names := {"Master": "Totaal", "Music": "Muziek", "Ambience": "Omgeving", "SFX": "Handelingen", "Vehicle": "Voertuigen", "Radio": "Radio", "Voice": "Stemmen", "UI": "Menu"}
 	for bus: String in names:
@@ -361,6 +477,18 @@ func _back() -> void:
 	else: _show_main()
 
 func _unhandled_input(event: InputEvent) -> void:
+	if outside_ui.handle_input(event):
+		get_viewport().set_input_as_handled()
+		return
+	if noise_ui.handle_input(event):
+		get_viewport().set_input_as_handled()
+		return
+	if research_ui.handle_input(event):
+		get_viewport().set_input_as_handled()
+		return
+	if fire_ui.handle_input(event):
+		get_viewport().set_input_as_handled()
+		return
 	if police_ui.handle_input(event):
 		get_viewport().set_input_as_handled()
 		return
@@ -377,24 +505,30 @@ func _unhandled_input(event: InputEvent) -> void:
 			if not state.occupied_vehicle.is_empty():
 				_exit_vehicle()
 			elif not current_target.is_empty():
-				if current_target.id == "incident_response": _show_response()
-				else: district.interact(current_target.id)
+				district.interact(current_target.id)
 		elif event.is_action_pressed("map"): show_help()
 		elif event.is_action_pressed("radio"): show_radio()
 		elif event.is_action_pressed("siren") and not state.occupied_vehicle.is_empty():
 			var id: String = state.occupied_vehicle
 			audio.set_siren(not audio._siren_enabled[id], id)
-			_notify("Sirene " + ("aan" if audio._siren_enabled[id] else "uit") + ". Rijd beheerst; overige verkeer heeft geen automatische voorrangstaak.")
+			_notify("Sirene " + ("aan" if audio._siren_enabled[id] else "uit") + ". Rijd beheerst en controleer of verkeer ruimte maakt.")
 
 func _process(delta: float) -> void:
+	_update_traffic_context()
+	_update_free_audio()
 	if not active or paused:
 		police_ui.tick(delta)
+		if research_model.mode == "none" and outside_model.mode == "none": fire_ui.tick(delta)
+		research_ui.tick(delta)
+		noise_ui.tick(delta)
+		outside_ui.tick(delta)
 		return
-	if state.radio_checked and police_model.mode == "none" and ledger.tick(delta):
+	if state.radio_checked and police_model.mode in ["none", "free"] and fire_model.mode == "none" and research_model.mode == "none" and ledger.tick(delta):
 		_notify(str(ledger.messages.back()))
 		if not ledger.incident.is_empty() and ledger.incident.phase == "offered":
 			audio.cue("radio_call")
 			audio.set_theme("urgency")
+	_sync_free_cases()
 	if not state.occupied_vehicle.is_empty():
 		var vehicle: Node3D = district.objects[state.occupied_vehicle]
 		officer.global_position = vehicle.global_position
@@ -402,11 +536,14 @@ func _process(delta: float) -> void:
 		prompt.text = "[E] Veilig uitstappen" if absf(vehicle.speed) <= 0.8 else "[Spatie] Remmen vóór uitstappen"
 	else:
 		current_target = district.get_interaction(officer.global_position)
-		if _at_incident():
-			current_target = {"id": "incident_response", "title": "Melding ter plaatse afhandelen"}
+		if str(current_target.get("id", "")).begins_with("noise_") or str(current_target.get("id", "")).begins_with("outside_"): current_target = {}
 		prompt.text = "[E] " + str(current_target.title) if not current_target.is_empty() else ""
 	_update_objective()
 	police_ui.tick(delta)
+	if research_model.mode == "none" and outside_model.mode == "none": fire_ui.tick(delta)
+	research_ui.tick(delta)
+	noise_ui.tick(delta)
+	outside_ui.tick(delta)
 	if notice_time > 0:
 		notice_time -= delta
 		if notice_time <= 0: notice.text = ""
@@ -415,6 +552,10 @@ func _interact(id: String) -> void:
 	audio.cue("interaction", officer.global_position)
 	if id == "academy":
 		state.academy_visits += 1 if state.radio_checked else 0
+	if outside_ui.on_interact(id): return
+	if noise_ui.on_interact(id): return
+	if research_ui.on_interact(id): return
+	if fire_ui.on_interact(id): return
 	if police_ui.on_interact(id): return
 	match id:
 		"equipment", "fire_equipment":
@@ -479,8 +620,10 @@ func load_game(path: String = State.SAVE_PATH) -> void:
 		return
 	_freeze()
 	state = loaded
+	if is_instance_valid(audio): audio.update_fire({"mode": "none"}, state.player_position, false, false)
+	_apply_visual_settings()
 	ledger = Ledger.new()
-	if state.dispatch.is_empty(): ledger.start(112)
+	if state.dispatch.is_empty(): ledger.start(112, state.role)
 	else: ledger.restore(state.dispatch)
 	police_model.begin("none")
 	if not state.police.is_empty(): police_model.restore(state.police)
@@ -488,9 +631,22 @@ func load_game(path: String = State.SAVE_PATH) -> void:
 	police_ui._practice = state.police_practice
 	police_ui.restore_draft(state.police_draft)
 	police_site.show_guidance(police_model.mode == "basis" and not state.police_practice)
+	fire_model.begin("none")
+	if not state.fire.is_empty(): fire_model.restore(state.fire)
+	officer.set_role(state.role)
 	var seated: String = state.occupied_vehicle
 	_restore_vehicles()
 	_restore_on_foot(state.player_position)
+	fire_ui.setup(self, fire_model, fire_site)
+	research_model.begin("none")
+	if not state.investigation.is_empty(): research_model.restore(state.investigation)
+	research_ui.setup(self, research_model, research_site)
+	noise_model = PublicOrder.new()
+	if not state.noise.is_empty(): noise_model.restore(state.noise)
+	noise_ui.setup(self, noise_model, noise_site, _incident_position() if not ledger.incident.is_empty() else Vector3.ZERO)
+	outside_model = OutsideFire.new()
+	if not state.outside_fire.is_empty(): outside_model.restore(state.outside_fire)
+	outside_ui.setup(self, outside_model, outside_site)
 	officer.sensitivity = state.sensitivity
 	if not seated.is_empty(): _enter_vehicle(seated, true)
 	active = true
@@ -512,15 +668,27 @@ func _restore_vehicles() -> void:
 func _restore_on_foot(at: Vector3) -> void:
 	state.occupied_vehicle = ""
 	officer.show()
+	# Godot queues kinematic transforms until integration. Flush this teleport
+	# while static, so re-enabling the capsule never exposes its old seat pose.
+	var previous_process_mode: int = officer.process_mode
+	var previous_disable_mode: int = officer.disable_mode
+	officer.disable_mode = CollisionObject3D.DISABLE_MODE_MAKE_STATIC
+	officer.process_mode = Node.PROCESS_MODE_DISABLED
 	officer.position = at
+	officer.force_update_transform()
+	officer.process_mode = previous_process_mode
+	officer.disable_mode = previous_disable_mode
 	officer.velocity = Vector3.ZERO
 	officer.collision_layer = 1
-	officer.collision_mask = 1
+	officer.collision_mask = 9 if fire_model.mode != "none" else 1
 	officer.enable_input = false
-	officer.set_physics_process(false)
+	officer.set_simulation_active(false)
 	officer.camera.current = true
 
 func _enter_vehicle(id: String, restoring: bool = false) -> void:
+	if fire_model.mode != "none" and fire_model.victim.status == "carried":
+		_notify("Breng het slachtoffer eerst te voet naar de opvang. Instappen tijdens dragen is niet mogelijk.")
+		return
 	if not restoring:
 		if not state.equipment or not state.radio_checked:
 			_notify("Controleer eerst je uitrusting en meld je aan bij de radio.")
@@ -538,7 +706,7 @@ func _enter_vehicle(id: String, restoring: bool = false) -> void:
 	officer.collision_layer = 0
 	officer.collision_mask = 0
 	officer.velocity = Vector3.ZERO
-	officer.set_physics_process(false)
+	officer.set_simulation_active(false)
 	officer.global_position = vehicle.global_position
 	officer.camera.current = false
 	vehicle.camera.current = true
@@ -569,6 +737,11 @@ func _capture_state() -> void:
 	state.police_draft = police_ui.capture_draft()
 	state.police_practice = police_ui._practice
 	if police_model.mode == "campaign": state.police_campaign = state.police.duplicate(true)
+	state.investigation = research_model.to_dict()
+	state.noise = noise_model.to_dict()
+	state.outside_fire = outside_model.to_dict() if outside_model.mode != "none" else {}
+	state.fire = fire_model.to_dict()
+	if fire_model.mode == "campaign": state.fire_campaign = state.fire.duplicate(true)
 
 func _controlled_position() -> Vector3:
 	return officer.global_position if state.occupied_vehicle.is_empty() else district.objects[state.occupied_vehicle].global_position
@@ -619,6 +792,7 @@ func _draw_map(map: Control) -> void:
 	map.draw_string(ThemeDB.fallback_font, Vector2(14, 22), "N ↑   Turkoois: jij   Geel: aangenomen melding", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color("ede7d9"))
 
 func show_radio() -> void:
+	noise_ui.conversation = false
 	if not state.radio_checked:
 		_notify("Meld je eerst aan bij de radio van je bureau of kazerne.")
 		return
@@ -644,39 +818,25 @@ func _phase_title(phase: String) -> String:
 	return {"offered": "beschikbaar", "accepted": "aangenomen", "resolved": "afgehandeld", "handed_over": "doorgegeven", "expired": "verlopen"}.get(phase, phase)
 
 func _accept_call() -> void:
-	if ledger.accept(): _notify("Melding aangenomen. Volg de GPS-route; stap ter plaatse veilig uit.")
+	_sync_free_cases()
+	if ledger.accept():
+		_notify("Melding aangenomen. Volg de GPS-route; stap ter plaatse veilig uit.")
+		if ledger.incident.kind == "noise" and state.role == "police":
+			noise_model.begin(ledger.serial, int(ledger.incident.variant))
+			noise_ui.setup(self, noise_model, noise_site, _incident_position())
+		elif ledger.incident.kind == "traffic" and state.role == "police":
+			police_model.begin_free(ledger.serial, int(ledger.incident.variant))
+			police_ui.setup(self, police_model, police_site)
+			police_ui._drive_start = district.objects.police_car.global_position
+		elif ledger.incident.kind == "fire" and state.role == "fire":
+			outside_ui.start(ledger.serial, int(ledger.incident.variant), _incident_position())
 	audio.cue("radio_call")
 	_resume()
 
 func _hand_over_call() -> void:
-	if ledger.hand_over(): _notify("Meldkamer: andere eenheid neemt over. Vervolg de dienst.")
-	_resume()
-
-func _show_response() -> void:
-	if not _at_incident(): return
-	_freeze()
-	_clear_menu("Ter plaatse", str(ledger.incident.title) + "\nKies hoe je deze eerste beoordeling uitvoert.")
-	if ledger.incident.kind == "noise":
-		var context := _label("Twee bewoners ruziën over lawaai. Ze staan op afstand van elkaar. Er is geen zichtbaar acuut gevaar. Hoe begin je?", 20)
-		context.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		menu_items.add_child(context)
-		_button("Rustig luisteren en afspraken maken", _resolve_call.bind(90))
-		_button("Schreeuwen en meteen schuld aanwijzen", _resolve_call.bind(25))
-	else:
-		var context := _label("Een voertuig blokkeert de doorgang. Betrokkenen zijn aanspreekbaar; achteropkomend verkeer nadert. Wat krijgt prioriteit?", 20)
-		context.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		menu_items.add_child(context)
-		_button("Locatie beveiligen en betrokkenen spreken", _resolve_call.bind(95))
-		_button("Snel afmelden zonder veiligstellen", _resolve_call.bind(30))
-	_button("Terug naar de locatie", _resume)
-
-func _resolve_call(quality: int) -> void:
-	if not _at_incident():
-		_resume()
-		return
-	if ledger.resolve(quality):
-		audio.cue("success" if quality >= 80 else "partial")
-		_notify("Afgehandeld · zorgvuldigheid %d/100. %s" % [quality, "Rust en veiligheid zijn behouden. Je kunt verder surveilleren." if quality >= 80 else "Je aanpak liet risico's of onduidelijkheid bestaan. Neem volgende keer tijd voor luisteren en veiligheid."])
+	if ledger.hand_over():
+		_sync_free_cases()
+		_notify("Meldkamer: andere eenheid neemt over. Vervolg de dienst.")
 	_resume()
 
 func _smoke_test() -> void:
@@ -860,22 +1020,19 @@ func _duty_playthrough() -> void:
 	if not _check(paused and ledger.incident.phase == "offered", "radio offered panel"): return
 	if not _press_menu("Melding aannemen"): return
 	if not _check(_accepted_incident() and incident_marker.visible, "accepted route marker"): return
-	officer.global_position = _incident_position() + Vector3(0, 0.1, 1)
-	officer.velocity = Vector3.ZERO
-	if not await _wait_for(func(): return current_target.get("id", "") == "incident_response", "noise arrival prompt"): return
-	if not await _tap_action("interact", func(): return paused and _menu_title_is("Ter plaatse"), "noise response panel"): return
-	if not _press_menu("Rustig luisteren en afspraken maken"): return
-	if not _check(ledger.incident.phase == "resolved" and ledger.incident.quality == 90 and not incident_marker.visible, "noise response quality and marker"): return
+	if not _check(noise_model.phase == "active" and noise_model.id == ledger.serial, "accepted noise creates interactive case"): return
+	if not await _tap_action("radio", func(): return paused, "active noise field panel"): return
+	if not _press_menu("Meldkamer · doorgeven"): return
+	if not _press_menu("Doorgeven aan andere eenheid"): return
+	if not _check(ledger.incident.phase == "handed_over" and noise_model.phase == "none", "handover removes active noise actors and case"): return
 	ledger.tick(30.1)
 	if not await _tap_action("radio", func(): return paused and _menu_title_is("Meldkamer"), "repeat radio panel"): return
 	if not _press_menu("Melding aannemen"): return
-	if not _check(ledger.incident.kind == "traffic", "repeat incident variation"): return
-	officer.global_position = _incident_position() + Vector3(0, 0.1, 1)
-	officer.velocity = Vector3.ZERO
-	if not await _wait_for(func(): return current_target.get("id", "") == "incident_response", "traffic arrival prompt"): return
-	if not await _tap_action("interact", func(): return paused and _menu_title_is("Ter plaatse"), "traffic response panel"): return
-	if not _press_menu("Snel afmelden zonder veiligstellen"): return
-	if not _check(ledger.incident.phase == "resolved" and ledger.incident.quality == 30 and ledger.completed == 2, "poor response consequence"): return
+	if not _check(ledger.incident.kind == "traffic" and police_model.mode == "free" and police_model.incident_id == ledger.serial, "repeat incident has interactive traffic model"): return
+	# Full sourced completion is separately exercised by noise_playthrough
+	# and free_traffic_playthrough; this route verifies dispatch lifecycle.
+	_hand_over_call()
+	if not _check(ledger.incident.phase == "handed_over" and police_model.mode == "none", "traffic handover clears physical case"): return
 	ledger.tick(30.1)
 	if not await _tap_action("radio", func(): return paused and _menu_title_is("Meldkamer"), "handover radio panel"): return
 	if not _press_menu("Doorgeven aan andere eenheid"): return
@@ -906,27 +1063,48 @@ func _duty_playthrough() -> void:
 		if not _check(screenshot_result == OK, "graphical screenshot"): return
 	DirAccess.remove_absolute(test_path)
 	DirAccess.remove_absolute(test_path + ".bak")
-	print("SCENE112_DUTY_OK both duty menus, driving/braking, enter/exit, seated save/load+backup, NPC movement/pause, dispatch accept/resolve/repeat/handover/expire; automated_duty_seconds=", automated_seconds)
+	print("SCENE112_DUTY_OK both duty menus, driving/braking, enter/exit, seated save/load+backup, NPC movement/pause, dispatch interactive accept/repeat/handover/expire; automated_duty_seconds=", automated_seconds)
 	_test_finished = true
 	quit_game(0)
 
 func start_training(role: String = "police") -> void:
+	var old_research: Dictionary = state.research_campaign.duplicate(true)
+	if research_model.mode == "campaign" and research_model.phase == "completed": old_research = research_model.to_dict()
 	var old_stage := state.campaign_stage
 	var old_courses: Array = state.course_passes.duplicate()
+	var old_fire: Dictionary = state.fire_campaign.duplicate(true)
+	if fire_model.mode == "campaign": old_fire = fire_model.to_dict()
 	var old_campaign: Dictionary = state.police_campaign.duplicate(true)
 	if police_model.mode == "campaign": old_campaign = police_model.to_dict()
 	start_new(role)
 	state.campaign_stage = old_stage
 	state.course_passes = old_courses
 	state.police_campaign = old_campaign
+	state.fire_campaign = old_fire
+	state.research_campaign = old_research
 
 func _police_completed(mode: String, _score: Dictionary) -> void:
-	audio.cue("success")
-	if mode == "campaign":
+	audio.cue("success" if _score.result == "careful" else "partial")
+	if mode == "free":
+		if ledger.incident.get("id") == police_model.incident_id and ledger.incident.get("kind") == "traffic": ledger.resolve(int(_score.score))
+	elif mode == "campaign":
 		state.campaign_stage = maxi(state.campaign_stage, 1)
 		state.police_campaign = police_model.to_dict()
 	elif mode in ["basis", "intake"] and mode not in state.course_passes:
 		state.course_passes.append(mode)
+
+func _fire_completed(mode: String, _score: Dictionary) -> void:
+	if mode == "campaign":
+		state.campaign_stage = maxi(state.campaign_stage, 2)
+		state.fire_campaign = fire_model.to_dict()
+	elif mode == "lesson" and _score.result == "careful" and "fire" not in state.course_passes:
+		state.course_passes.append("fire")
+
+func _research_completed(mode: String, score: Dictionary) -> void:
+	if mode == "campaign":
+		state.campaign_stage = maxi(state.campaign_stage, 3)
+		state.research_campaign = research_model.to_dict()
+	if score.outcome == "careful": audio.cue("success")
 
 func _police_playthrough() -> void:
 	var validation := PoliceValidation.new()
@@ -935,8 +1113,74 @@ func _police_playthrough() -> void:
 func quit_game(code: int = 0) -> void:
 	if _quitting: return
 	_quitting = true
+	RenderingServer.set_render_loop_enabled(false)
 	if is_instance_valid(audio): await audio.shutdown()
 	get_tree().quit(code)
 
+func _apply_visual_settings() -> void:
+	if is_instance_valid(district) and is_instance_valid(district.atmosphere):
+		district.atmosphere.set_quality(state.graphics_quality)
+		district.atmosphere.apply_conditions(state.condition)
+
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_CLOSE_REQUEST: quit_game()
+
+
+func _fire_playthrough() -> void:
+	var validation := FireValidation.new()
+	await validation.run(self)
+
+func _research_playthrough() -> void:
+	var validation = load("res://scripts/investigation_validation.gd").new()
+	await validation.run(self)
+
+func _noise_completed(score: Dictionary) -> void:
+	if ledger.incident.get("kind") == "noise" and ledger.incident.get("id") == noise_model.id:
+		ledger.resolve(int(score.total))
+		audio.cue("success" if score.result == "careful" else "partial")
+
+
+func _sync_free_cases() -> void:
+	var call: Dictionary = ledger.incident
+	if noise_model.phase != "none":
+		if call.get("kind") != "noise" or call.get("id") != noise_model.id or call.get("phase") not in ["accepted", "resolved"]:
+			noise_model = PublicOrder.new()
+			noise_ui.setup(self, noise_model, noise_site, Vector3.ZERO)
+			state.noise = {}
+	if police_model.mode == "free":
+		if call.get("kind") != "traffic" or call.get("id") != police_model.incident_id or call.get("phase") not in ["accepted", "resolved"]:
+			police_model.begin("none")
+			police_ui.setup(self, police_model, police_site)
+			state.police = police_model.to_dict()
+			state.police_draft = []
+	if outside_model.mode != "none":
+		if call.get("kind") != "fire" or call.get("id") != outside_model.incident_id or call.get("phase") not in ["accepted", "resolved"]:
+			outside_model = OutsideFire.new()
+			outside_ui.setup(self, outside_model, outside_site)
+			state.outside_fire = {}
+			audio.update_outside_fire({"mode": "none"}, officer.global_position, false)
+
+func _update_free_audio() -> void:
+	if not is_instance_valid(audio): return
+	var traffic_audio: Array = []
+	if is_instance_valid(district.traffic):
+		for car: CharacterBody3D in district.traffic.cars:
+			traffic_audio.append({"at": car.global_position, "speed": car.speed})
+	var present: bool = noise_model.phase != "none"
+	audio.update_free_context({"active": active, "kind": "noise" if present else "none",
+		"at": _incident_position() if present else _controlled_position(),
+		"conversation": present and noise_ui.conversation and paused,
+		"settled": present and noise_model.separated, "traffic": traffic_audio})
+
+func _update_traffic_context() -> void:
+	if not is_instance_valid(district.traffic): return
+	district.traffic.set_observer_position(_controlled_position())
+	var emergency: Array = []
+	for id: String in ["police_car", "fire_truck"]:
+		emergency.append({"active": bool(audio._siren_enabled.get(id, false)), "position": district.objects[id].global_position})
+	district.traffic.update_emergency_context({"vehicles": emergency})
+
+func _outside_completed(score: Dictionary) -> void:
+	if ledger.incident.get("kind") == "fire" and ledger.incident.get("id") == outside_model.incident_id:
+		ledger.resolve(int(score.total))
+		audio.cue("success" if score.result == "careful" else "partial")

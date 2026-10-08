@@ -1,7 +1,11 @@
 class_name GameState
 extends RefCounted
 
-const SCHEMA := 3
+const SCHEMA := 7
+const OutsideFire = preload("res://scripts/outside_fire_case.gd")
+const PublicOrder = preload("res://scripts/noise_case.gd")
+const Investigation = preload("res://scripts/investigation_case.gd")
+const Fire = preload("res://scripts/fire_case.gd")
 const Police = preload("res://scripts/police_case.gd")
 const Ledger = preload("res://scripts/dispatch.gd")
 const SAVE_PATH := "user://dienst.json"
@@ -18,10 +22,18 @@ var vehicles := {"police_car": {"position": [2.0, 0.05, 9.0], "yaw": PI},
 var dispatch := {}
 var police := {}
 var police_campaign := {}
+var fire := {}
+var fire_campaign := {}
+var investigation := {}
+var research_campaign := {}
+var noise := {}
+var outside_fire := {}
 var police_draft: Array = []
 var police_practice := false
 var campaign_stage := 0
 var course_passes: Array = []
+var condition := "day"
+var graphics_quality := "portable"
 
 func to_dict() -> Dictionary:
 	return {"schema": SCHEMA, "equipment": equipment, "radio_checked": radio_checked,
@@ -29,14 +41,16 @@ func to_dict() -> Dictionary:
 		"position": [player_position.x, player_position.y, player_position.z],
 		"sensitivity": sensitivity, "role": role, "occupied_vehicle": occupied_vehicle,
 		"vehicles": vehicles.duplicate(true), "dispatch": dispatch.duplicate(true), "police": police.duplicate(true), "police_campaign": police_campaign.duplicate(true),
+		"fire": fire.duplicate(true), "fire_campaign": fire_campaign.duplicate(true), "investigation": investigation.duplicate(true), "research_campaign": research_campaign.duplicate(true), "noise": noise.duplicate(true), "outside_fire": outside_fire.duplicate(true),
 		"police_draft": police_draft.duplicate(true), "police_practice": police_practice,
-		"campaign_stage": campaign_stage, "course_passes": course_passes.duplicate()}
+		"campaign_stage": campaign_stage, "course_passes": course_passes.duplicate(),
+		"condition": condition, "graphics_quality": graphics_quality}
 
 func restore(data: Variant) -> bool:
 	if not data is Dictionary:
 		return false
 	var revision: Variant = data.get("schema")
-	if not (revision is int or revision is float) or (revision != 1 and revision != 2 and revision != SCHEMA):
+	if not (revision is int or revision is float) or not is_finite(float(revision)) or float(revision) != floorf(float(revision)) or int(revision) not in [1, 2, 3, 4, 5, 6, SCHEMA]:
 		return false
 	var p: Variant = data.get("position")
 	if not p is Array or p.size() != 3:
@@ -55,7 +69,7 @@ func restore(data: Variant) -> bool:
 		return false
 	var next_role: Variant = data.get("role", "police")
 	var seated: Variant = data.get("occupied_vehicle", "")
-	if next_role not in ["police", "fire"] or seated not in ["", "police_car", "fire_truck"]:
+	if next_role not in ["police", "fire", "research"] or seated not in ["", "police_car", "fire_truck"]:
 		return false
 	var saved_vehicles: Variant = data.get("vehicles", vehicles.duplicate(true))
 	if not saved_vehicles is Dictionary or saved_vehicles.size() != 2:
@@ -74,6 +88,14 @@ func restore(data: Variant) -> bool:
 		var ledger := Ledger.new()
 		if not ledger.restore(saved_dispatch):
 			return false
+		var expected_role := "fire" if next_role == "fire" else "police"
+		if ledger.role != expected_role:
+			# Pre-M5 fire duties shared the police dispatch generator. Preserve
+			# clock/history, hand over its live call, then migrate the duty profile.
+			if int(revision) >= SCHEMA or saved_dispatch.get("schema") != 1: return false
+			ledger.hand_over()
+			ledger.role = expected_role
+		saved_dispatch = ledger.to_dict()
 	var police_save: Variant = data.get("police", {})
 	if not police_save is Dictionary:
 		return false
@@ -81,6 +103,14 @@ func restore(data: Variant) -> bool:
 		var scenario := Police.new()
 		if not scenario.restore(police_save):
 			return false
+		police_save = scenario.to_dict()
+		if scenario.mode == "free":
+			if next_role != "police" or saved_dispatch.is_empty(): return false
+			var call: Dictionary = saved_dispatch.incident
+			if call.get("kind") != "traffic" or call.get("id") != scenario.incident_id or call.get("variant") != scenario.variant: return false
+			if scenario.phase == "completed":
+				if call.get("phase") != "resolved" or call.get("quality") != scenario.report_score.score: return false
+			elif call.get("phase") != "accepted": return false
 	var campaign_save: Variant = data.get("police_campaign", {})
 	if not campaign_save is Dictionary:
 		return false
@@ -88,6 +118,62 @@ func restore(data: Variant) -> bool:
 		var campaign_case := Police.new()
 		if not campaign_case.restore(campaign_save) or campaign_case.mode != "campaign":
 			return false
+	var fire_save: Variant = data.get("fire", {})
+	var fire_archive: Variant = data.get("fire_campaign", {})
+	if not fire_save is Dictionary or not fire_archive is Dictionary: return false
+	for snapshot: Dictionary in [fire_save, fire_archive]:
+		if snapshot.is_empty(): continue
+		var incident := Fire.new()
+		if not incident.restore(snapshot): return false
+	if not fire_archive.is_empty() and fire_archive.mode != "campaign": return false
+	if not fire_save.is_empty() and fire_save.mode != "none":
+		if fire_save.victim.status == "carried" and seated != "": return false
+		if next_role != "fire" or (not police_save.is_empty() and police_save.mode != "none"): return false
+	var research_save: Variant = data.get("investigation", {})
+	if not research_save is Dictionary: return false
+	if not research_save.is_empty():
+		var research := Investigation.new()
+		if not research.restore(research_save): return false
+		if research.mode != "none":
+			if next_role != "research" or (not fire_save.is_empty() and fire_save.mode != "none") or (not police_save.is_empty() and police_save.mode != "none"): return false
+	var research_archive: Variant = data.get("research_campaign", {})
+	if not research_archive is Dictionary: return false
+	if not research_archive.is_empty():
+		var archive_case := Investigation.new()
+		if not archive_case.restore(research_archive) or archive_case.mode != "campaign" or archive_case.phase != "completed": return false
+	var noise_save: Variant = data.get("noise", {})
+	if not noise_save is Dictionary: return false
+	if not noise_save.is_empty():
+		var public_order := PublicOrder.new()
+		if not public_order.restore(noise_save) or next_role != "police": return false
+		var radio_incident := Ledger.new()
+		if saved_dispatch.is_empty() or not radio_incident.restore(saved_dispatch): return false
+		if radio_incident.incident.get("kind") != "noise" or radio_incident.incident.get("id") != public_order.id or radio_incident.incident.get("variant") != public_order.variant: return false
+		if public_order.phase == "active" and radio_incident.incident.phase != "accepted": return false
+		if public_order.phase == "completed" and (radio_incident.incident.phase != "resolved" or radio_incident.incident.quality != public_order.report.total): return false
+
+		if (not police_save.is_empty() and police_save.mode != "none") or (not fire_save.is_empty() and fire_save.mode != "none") or (not research_save.is_empty() and research_save.mode != "none"): return false
+	var outside_save: Variant = data.get("outside_fire", {})
+	if not outside_save is Dictionary: return false
+	if not outside_save.is_empty():
+		var outside := OutsideFire.new()
+		if not outside.restore(outside_save) or outside.mode != "free" or next_role != "fire" or saved_dispatch.is_empty(): return false
+		var call: Dictionary = saved_dispatch.incident
+		if call.get("kind") != "fire" or call.get("id") != outside.incident_id or call.get("variant") != outside.variant: return false
+		if not valid_position(call.get("position")) or not outside.origin.is_equal_approx(Vector3(call.position[0], call.position[1], call.position[2])): return false
+		if outside.phase == "completed":
+			if call.get("phase") != "resolved" or call.get("quality") != outside.report_score.total: return false
+		elif call.get("phase") != "accepted": return false
+		if not noise_save.is_empty() or (not police_save.is_empty() and police_save.mode != "none") or (not fire_save.is_empty() and fire_save.mode != "none") or (not research_save.is_empty() and research_save.mode != "none"): return false
+	if not saved_dispatch.is_empty() and saved_dispatch.incident.get("phase") == "accepted":
+		var has_free_case: bool = not noise_save.is_empty() or not outside_save.is_empty() or police_save.get("mode") == "free"
+		if not has_free_case:
+			# Older duties used a one-click assessment. Hand its pending call
+			# over without inventing evidence, keeping the duty and archive.
+			if int(revision) >= SCHEMA: return false
+			var legacy_duty := Ledger.new()
+			if not legacy_duty.restore(saved_dispatch) or not legacy_duty.hand_over(): return false
+			saved_dispatch = legacy_duty.to_dict()
 	var draft: Variant = data.get("police_draft", [])
 	if not draft is Array or draft.size() > 32:
 		return false
@@ -117,12 +203,24 @@ func restore(data: Variant) -> bool:
 		if course not in ["basis", "intake", "fire"] or unique.has(course):
 			return false
 		unique[course] = true
+	var saved_condition: Variant = data.get("condition", "day")
+	var saved_quality: Variant = data.get("graphics_quality", "portable")
+	if saved_condition not in ["day", "dusk", "rain"] or saved_quality not in ["portable", "balanced", "high"]:
+		return false
+	outside_fire = outside_save.duplicate(true)
+	noise = noise_save.duplicate(true)
+	research_campaign = research_archive.duplicate(true)
+	investigation = research_save.duplicate(true)
+	fire = fire_save.duplicate(true)
+	fire_campaign = fire_archive.duplicate(true)
 	police = police_save.duplicate(true)
 	police_campaign = campaign_save.duplicate(true)
 	police_draft = draft.duplicate(true)
 	police_practice = practice
 	campaign_stage = int(stage)
 	course_passes = courses.duplicate()
+	condition = saved_condition
+	graphics_quality = saved_quality
 	role = next_role
 	occupied_vehicle = seated
 	vehicles = saved_vehicles.duplicate(true)

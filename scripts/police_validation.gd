@@ -132,7 +132,7 @@ func _check_audio() -> bool:
 	var audio: Node = _app.audio
 	if not _app._check(is_instance_valid(audio), "actual root audio director exists"): return false
 	var status: Dictionary = audio.status()
-	if not _app._check(status.waves_loaded == 24 and status.missing.is_empty() and status.theme == "menu", "native imported score and all 24 original audio resources load"): return false
+	if not _app._check(status.waves_loaded == app_audio_count() and status.missing.is_empty() and status.theme == "menu", "native imported score and complete original audio resource set loads"): return false
 	if not _app._check(status.driver is String and not status.driver.is_empty() and status.no_device == (status.driver == "Dummy"), "audio reports device or silent Dummy fallback without gameplay failure"): return false
 	for bus: String in audio.BUSES:
 		if not _app._check(AudioServer.get_bus_index(bus) >= 0, "native audio mixer bus exists: " + bus): return false
@@ -326,3 +326,7 @@ func _cleanup() -> void:
 func _cleanup_audio() -> void:
 	for suffix in ["", ".bak", ".tmp"]:
 		if FileAccess.file_exists(TEST_AUDIO_SAVE + suffix): DirAccess.remove_absolute(TEST_AUDIO_SAVE + suffix)
+
+
+func app_audio_count() -> int:
+	return _app.Audio.FILES.size()

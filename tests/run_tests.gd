@@ -47,7 +47,7 @@ func _initialize() -> void:
 	check(not restored.restore(invalid_vehicle), "reject invalid incident save")
 	check(restored.to_dict() == original, "vehicle/incident rejection leaves duty untouched")
 	var ledger := preload("res://scripts/dispatch.gd").new()
-	ledger.start(112)
+	ledger.start(112, "fire")
 	ledger.tick(25.0)
 	ledger.accept()
 	var driving := State.new()
@@ -55,6 +55,10 @@ func _initialize() -> void:
 	driving.occupied_vehicle = "fire_truck"
 	driving.vehicles.fire_truck = {"position": [42.0, 0.1, -28.0], "yaw": -1.2}
 	driving.dispatch = ledger.to_dict()
+	var outside := preload("res://scripts/outside_fire_case.gd").new()
+	var fire_at: Array = ledger.incident.position
+	outside.begin(ledger.serial, int(ledger.incident.variant), Vector3(fire_at[0], fire_at[1], fire_at[2]))
+	driving.outside_fire = outside.to_dict()
 	var seated := State.new()
 	check(seated.restore(driving.to_dict()) and seated.occupied_vehicle == "fire_truck", "restore seated role and vehicle state")
 	check(seated.dispatch.incident.phase == "accepted", "restore accepted incident and chronology")
@@ -62,7 +66,22 @@ func _initialize() -> void:
 	schema_two.schema = 2
 	for key in ["police", "police_campaign", "police_draft", "police_practice", "campaign_stage", "course_passes"]: schema_two.erase(key)
 	var upgrade := State.new()
-	check(upgrade.restore(schema_two) and upgrade.police.is_empty(), "M1 save migrates to schema 3 without phantom case")
+	check(upgrade.restore(schema_two) and upgrade.police.is_empty(), "M1 save migrates to current schema without phantom case")
+	var schema_three := state.to_dict()
+	schema_three.schema = 3
+	schema_three.erase("condition")
+	schema_three.erase("graphics_quality")
+	check(upgrade.restore(schema_three) and upgrade.condition == "day" and upgrade.graphics_quality == "portable", "M2 save migrates with deterministic portable day settings")
+	var visual_state := state.to_dict()
+	visual_state.condition = "rain"
+	visual_state.graphics_quality = "high"
+	check(upgrade.restore(visual_state) and upgrade.condition == "rain" and upgrade.graphics_quality == "high", "world conditions and quality restore with gameplay")
+	var visual_before := upgrade.to_dict()
+	visual_state.condition = "invalid"
+	check(not upgrade.restore(visual_state) and upgrade.to_dict() == visual_before, "unknown condition rejected atomically")
+	visual_state.condition = "day"
+	visual_state.graphics_quality = "invalid"
+	check(not upgrade.restore(visual_state) and upgrade.to_dict() == visual_before, "unknown quality rejected atomically")
 	var case_model := preload("res://scripts/police_case.gd").new()
 	case_model.begin("campaign")
 	for action in ["equipment", "radio", "enter", "drive", "exit"]:

@@ -1,0 +1,20 @@
+{
+  "asset": "street_tree",
+  "author": "SCENE112 original procedural Blender authoring",
+  "license": "Private/proprietary project content; docs/LICENSES.md",
+  "blender": "4.3.2",
+  "materials": 3,
+  "triangles": 15388,
+  "leaves": 1488,
+  "canopy_min_height_m": 3.609999895095825,
+  "overall_height_m": 6.566185474395752,
+  "canopy_radius_m": 2.1457573888464676,
+  "physical_trunk_radius_m": 0.2,
+  "source_builder": "source/3d/vegetation/build_street_tree.py",
+  "source_blend": "source/3d/vegetation/street_tree.blend",
+  "runtime_glb": "assets/models/vegetation/street_tree.glb",
+  "texture_directory": "assets/textures/vegetation",
+  "packed_images": true,
+  "glb_sha256": "dc4ce02d020fd214385aaef13fc0067382f442cef070482a503e848234e48e02",
+  "renders": 0
+}

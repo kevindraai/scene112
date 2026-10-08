@@ -1,0 +1,45 @@
+{
+  "asset": "fire_truck",
+  "author": "SCENE112 original authoring",
+  "blender": "4.3.2",
+  "meshes": 5,
+  "triangles": 79958,
+  "animations": [],
+  "coordinate_convention": "Blender +Y forward, +Z up; glTF/Godot -Z forward, +Y up",
+  "license": "SCENE112 original private/proprietary project content; docs/LICENSES.md",
+  "source_blend": "source/3d/vehicles/fire_truck.blend",
+  "source_builder": "source/3d/vehicles/build_vehicles.py",
+  "source_helper": "source/3d/vehicles/assetkit.py",
+  "texture_directory": "assets/textures/vehicles",
+  "runtime_glb": "assets/models/vehicles/fire_truck.glb",
+  "glb_sha256": "f5e9784a4b12c9f5a805cfebd93c91adaabdf9ed3ff51a5b056f021b9fc3ad07",
+  "packed_editable_images": true,
+  "preview_rendered": false,
+  "source_validation": {
+    "asset": "fire_truck",
+    "accepted_glb_sha256": "f5e9784a4b12c9f5a805cfebd93c91adaabdf9ed3ff51a5b056f021b9fc3ad07",
+    "rebuild_glb_sha256": "2e7fb8c1ecd1b0b76b81301e5bb2dead601500a471229f38eb4321a03815b4e5",
+    "byte_identical": false,
+    "json_identical": true,
+    "embedded_images_identical": true,
+    "positions_uv_weights_animations_identical": true,
+    "equivalent_geometry": true,
+    "allowed_evaluation_deltas": [
+      {
+        "buffer_view": 16,
+        "kind": "floating normal/tangent tolerance",
+        "max_absolute_delta": 4.965066909790039e-05
+      },
+      {
+        "buffer_view": 18,
+        "kind": "oriented triangle ordering only"
+      }
+    ],
+    "packed_images": 18,
+    "external_textures_present": false,
+    "reexported": true,
+    "render_calls": 0,
+    "source_layout": "final repository source/3d + assets/models + assets/textures",
+    "runtime_asset_replaced": false
+  }
+}

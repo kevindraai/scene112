@@ -1,0 +1,6 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+VEHICLE_EXIT_POSES={"after":"(16.00017, 0.013916, 19.0)","arm":4.8984375,"officer":"(17.0, -0.009161, 25.59667)","parked":"(16.00017, 0.013916, 19.0)","vehicle":"fire_truck"}
+VEHICLE_EXIT_POSES={"after":"(18.47205, 0.009017, 19.0)","arm":5.5,"officer":"(17.0, -0.009161, 25.59667)","parked":"(18.47205, 0.009017, 19.0)","vehicle":"police_car"}
+SCENE112_VEHICLE_EXIT_OK checks=18 failures=0 actual menus/PPE/radio/two drives/brakes/E exits; physical pose, stationary vehicle, capsule and camera verified
+SCENE112_AUDIO_STOP driver=Dummy mixes=2 synchronized=true

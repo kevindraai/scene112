@@ -1,0 +1,130 @@
+{
+  "id": "house24",
+  "title": "Sporen in de as",
+  "setting": "De volgende ochtend. Huis 24 is na overdracht door de gesimuleerde ploeg veilig verklaard; de oorspronkelijke inzetstaat blijft ongewijzigd bewaard.",
+  "hypotheses": {
+    "electrical": "Waarschijnlijk elektrisch ontstaan bij de aansluiting van een keukenapparaat",
+    "open_flame": "Onbedoeld open vuur in de woonkamer",
+    "intentional": "Vermoedelijke opzettelijke ontsteking; afzonderlijke rechercheoverdracht nodig",
+    "unknown": "Oorzaak niet voldoende vast te stellen"
+  },
+  "evidence": {
+    "overview": {
+      "title": "Overzicht en brandverloop",
+      "source": "Eigen fotografische vastlegging, Huis 24",
+      "position": [
+        -2.0,
+        1.15,
+        46.2
+      ],
+      "text": "Drie aangetaste plekken. Dat aantal bewijst geen drie afzonderlijke ontstekingen; uitbreiding en inzetgegevens moeten meewegen."
+    },
+    "origin": {
+      "title": "Ontstaansgebied achterin",
+      "source": "Eigen waarneming, keukenhoek",
+      "position": [
+        -3.8,
+        1.1,
+        49.8
+      ],
+      "text": "Schade rond de achterste warmtebron kan het ontstaansgebied ondersteunen. Bruikbaarheid hangt af van de werkelijk gespeelde brandontwikkeling."
+    },
+    "connection": {
+      "title": "Aansluiting en kabel",
+      "source": "Gelabeld object, keukenhoek",
+      "position": [
+        -4.9,
+        1.0,
+        50.2
+      ],
+      "text": "Een beschadigde aansluiting. Een smeltspoor alleen bewijst de oorzaak niet; deskundig vervolgonderzoek is nodig."
+    },
+    "living": {
+      "title": "Alternatief in de woonkamer",
+      "source": "Eigen waarneming, voorste ruimte",
+      "position": [
+        -4.1,
+        1.0,
+        47.1
+      ],
+      "text": "Geen aangetroffen kaars of andere open-vuurbron op de onderzochte plek. Dit is een beperkte waarneming, geen bewijs dat open vuur overal afwezig was."
+    },
+    "entry_record": {
+      "title": "Cameraregistratie winkel",
+      "source": "Fictieve, gelogde winkelcamera; incidentdag 18:02",
+      "position": [
+        -2.0,
+        1.0,
+        23.5
+      ],
+      "text": "Een persoon met Lars' kleding gaat om 18:02 naar binnen en vertrekt om 18:09. Aanwezigheid alleen bewijst geen ontsteking of opzet."
+    },
+    "dispatch_record": {
+      "title": "Melding en inzetlog",
+      "source": "Bewaarde meld- en inzetgegevens",
+      "position": [
+        1.0,
+        1.0,
+        -7.35
+      ],
+      "text": "De melding volgt op eerste rook rond 18:14. Water, brandstofschade, slachtofferstatus en handelingen komen uit de werkelijk gespeelde inzet."
+    }
+  },
+  "witnesses": {
+    "saar": {
+      "name": "Saar · bewoner",
+      "age": 38,
+      "interest": "Wil begrijpen waarom haar woning brandde; weet niet wat Lars precies heeft gerepareerd.",
+      "open": "Lars kwam die avond naar de stekker kijken. Daarna zette ik het keukenapparaat aan. Eerst rook ik iets scherps achterin. Ik liep naar buiten om hulp te halen; mijn volwassen bezoeker was nog voorin. Ik heb geen vlam aangestoken.",
+      "timeline": "Hij was rond zes uur binnen. Nadat hij vertrok, gebruikte ik het apparaat. Om ongeveer kwart over zes zag ik rook.",
+      "repair": "De aansluiting werd al eerder warm. Lars zei dat hij het had nagekeken; ik zag geen meting of vervanging.",
+      "suggestive": "Als u zegt dat hij het expres deed, weet ik het echt niet meer. Ik heb dat zelf niet gezien."
+    },
+    "lars": {
+      "name": "Lars · kennis van Saar",
+      "age": 42,
+      "interest": "Schaamt zich voor een ondeskundige reparatie; aanwezigheid verzwijgen beschermt zijn zelfbeeld, maar bewijst geen brandstichting.",
+      "open": "Ik was buiten in de straat. Ik ben die avond niet in haar woning geweest; toen ik vertrok was er geen brand.",
+      "timeline": "Ik liep ongeveer tien over zes weg. Ik hoorde pas later over de rook.",
+      "repair": "Ik heb eerder naar die aansluiting gekeken, zonder meetgereedschap. Ik wil geen gok doen over de oorzaak.",
+      "corrected": "De opname laat inderdaad zien dat ik binnen was. Ik schaamde me: ik had die aansluiting zonder goede controle teruggezet. Ik zag geen vuur en heb niets aangestoken.",
+      "suggestive": "U legt het antwoord al vast. Ik wil dit gesprek nu stoppen en advies vragen.",
+      "silence": "Ik wil eerst met een advocaat overleggen; ik beantwoord nu geen inhoudelijke vragen."
+    }
+  },
+  "links": {
+    "origin_connection": {
+      "title": "Ontstaansgebied ↔ aansluiting",
+      "requires": [
+        "origin",
+        "connection"
+      ]
+    },
+    "entry_contradiction": {
+      "title": "Aanwezigheidsverklaring ↔ cameraregistratie",
+      "requires": [
+        "entry_record"
+      ]
+    },
+    "alternative_tested": {
+      "title": "Woonkamerhypothese ↔ beperkte waarneming",
+      "requires": [
+        "living",
+        "overview"
+      ]
+    },
+    "response_effect": {
+      "title": "Inzet ↔ resterende sporen",
+      "requires": [
+        "dispatch_record",
+        "overview"
+      ]
+    }
+  },
+  "simplification": "Alle personen, tijden, camerabeelden, objecten en deskundigenresultaten zijn oorspronkelijk fictief spelmateriaal. Brandonderzoek en strafrechtelijke opsporing hebben afzonderlijke stappen. De speler voert geen echte elektrische meting of beroepsbevoegdheid uit. Zwijgen levert geen schuldpunten op.",
+  "expert_report": {
+    "source": "Fictief deskundigenonderzoek, gelabeld aansluitingsdeel Huis 24",
+    "supported": "Het behouden aansluitingsdeel past in dit fictieve scenario bij primaire oververhitting. Samen met ontstaansgebied, verklaringen en tijdlijn ondersteunt dit een waarschijnlijk elektrisch ontstaan. Het resultaat bewijst geen opzet en sluit niet zelfstandig alle alternatieven uit.",
+    "inconclusive": "Het aansluitingsdeel is te sterk aangetast om primair en secundair ontstaan voldoende te onderscheiden. Een stellige oorzaak is niet verantwoord; leg de beperkingen en overige bronnen vast."
+  }
+}

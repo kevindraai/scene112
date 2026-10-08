@@ -1,0 +1,195 @@
+{
+  "scope": "actual isolated Linux llvmpipe only; Apple Software Renderer success pending",
+  "files": [
+    {
+      "file": "software-gl-fallback.patch",
+      "sha256": "6f8504820413ea2282e7a32b7c480485429b9fdf018911c02efb8cf8eb9da3a6"
+    },
+    {
+      "file": "prototype/scripts/street_atmosphere.gd",
+      "sha256": "8d00b37d05b7340add87795fed0aa47aeada0b66eef5f37e8dfa542dc5c00196"
+    },
+    {
+      "file": "prototype/scripts/graphics_validation.gd",
+      "sha256": "9a4f198855a5dfb3376e9617744f35c6d19947fa37dc1e1c5c9cd32e7960cb90"
+    },
+    {
+      "file": "classification-tests.log",
+      "sha256": "2158ce9a043233715856b3fc50df6653195aac5bbee3b90f7f75a55ec958c319"
+    },
+    {
+      "file": "baseline.log",
+      "sha256": "f12b9f709851e9608995c09b0d1548f002ff25c950c8809e4f894d62320925f1"
+    },
+    {
+      "file": "prototype.log",
+      "sha256": "3caef3ced185ceaa43f49c745a408826f1e1dd9e6b85cff9db5fa3a1fbca7fb3"
+    },
+    {
+      "file": "baseline-process.json",
+      "sha256": "bac9939aea2b28e85ffc9356ac6fca0d2cd2a08cafd53b50c8e4af6977e4b9f2"
+    },
+    {
+      "file": "prototype-process.json",
+      "sha256": "c8244d989f0609babf08d4265e8ad429c6d340424e70fd0d16e64dee5c51c202"
+    },
+    {
+      "file": "final.log",
+      "sha256": "f1d0bd6123ace43a83eb80d74ec9430fc09c8201e583e19290f1f7a4a3cbe0e4"
+    },
+    {
+      "file": "final-process.json",
+      "sha256": "370d972366d5b4c130f9f7d8ff9ea48d1ef672f7ffcb409e61c4e49ae738e264"
+    },
+    {
+      "file": "software_gl_tests.gd",
+      "sha256": "9ac86eaedfbc338d49aebe15b451284a3146a5e0301ace45391e0ec00917f354"
+    }
+  ],
+  "screenshots": [
+    {
+      "run": "baseline",
+      "file": "evidence/baseline/visual-street-day.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "cae288cf4ba88f5319be302893d3d7c083e1299b2ed1a3588ec3b0b0dc0629dd"
+    },
+    {
+      "run": "baseline",
+      "file": "evidence/baseline/visual-street-dusk.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "c18edf3b60505f7c55787d3ce2ad090ff07e8a62b327f72ff1371a8062be1b5f"
+    },
+    {
+      "run": "baseline",
+      "file": "evidence/baseline/visual-street-high-rain.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "04a038dfd0643caa2fe4604a92a653380e0e69352690be18351b204e32f1deb8"
+    },
+    {
+      "run": "baseline",
+      "file": "evidence/baseline/visual-street-rain.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "47d6bb61ca9ff40f74b0362f8ba9d27a6485ea76f2f244c0e0beba623dc2f7df"
+    },
+    {
+      "run": "prototype",
+      "file": "evidence/prototype/visual-street-day.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "82a0c579782a78dd205ed730fc55662d64c6fedc7ebfa173eff6717e44cf8852"
+    },
+    {
+      "run": "prototype",
+      "file": "evidence/prototype/visual-street-dusk.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "d0df72540ebd02afd24fabed94ef6fe6d61d6ccd2c7ef87e7eb23d72bf4852b0"
+    },
+    {
+      "run": "prototype",
+      "file": "evidence/prototype/visual-street-high-rain.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "5edd54a69030e20d68f8805f490a3469eccf74cbe995f44b9c40af5e55595605"
+    },
+    {
+      "run": "prototype",
+      "file": "evidence/prototype/visual-street-rain.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "04fed63c68f858bea696cb6e303c65b19c1469dbafdc1cd4aee36ead68ec83bd"
+    },
+    {
+      "run": "final",
+      "file": "evidence/final/visual-street-day.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "b31e0eab0ad84f83957edc0d85b3cc4e8af99b6ea9491b7f9cbb2408aeddf220"
+    },
+    {
+      "run": "final",
+      "file": "evidence/final/visual-street-dusk.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "ad8643a31d350d790e3be8c8cf3849fc8ea60c081e26cb113ec3d601f0f52335"
+    },
+    {
+      "run": "final",
+      "file": "evidence/final/visual-street-high-rain.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "13010e1ad38e2da5559b28d1e06616d252814a2550bb68d697245f891ce63221"
+    },
+    {
+      "run": "final",
+      "file": "evidence/final/visual-street-rain.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "6ad5d8597377760310f37e7941d69560a4b3f3db0cd2492031a115839a7a1edb"
+    }
+  ],
+  "phases": {
+    "baseline": [
+      "SCENE112_GRAPHICS_STAGE=world_begin elapsed_ms=1340",
+      "SCENE112_GRAPHICS_STAGE=world_ready elapsed_ms=2264",
+      "SCENE112_GRAPHICS_STAGE=actor_ready elapsed_ms=2356",
+      "SCENE112_GRAPHICS_STAGE=menu_and_audio_ready elapsed_ms=2424",
+      "SCENE112_GRAPHICS_STAGE=initial_draw elapsed_ms=2447 checks=0",
+      "SCENE112_GRAPHICS_STAGE=start_new elapsed_ms=2448 checks=0",
+      "SCENE112_GRAPHICS_STAGE=models_and_rigs elapsed_ms=2450 checks=2",
+      "SCENE112_GRAPHICS_STAGE=roof_camera elapsed_ms=2453 checks=148",
+      "SCENE112_GRAPHICS_STAGE=walk_and_pause elapsed_ms=10746 checks=150",
+      "SCENE112_GRAPHICS_STAGE=vehicle elapsed_ms=30442 checks=167",
+      "SCENE112_GRAPHICS_STAGE=connected_street elapsed_ms=38955 checks=173",
+      "SCENE112_GRAPHICS_STAGE=conditions_and_save elapsed_ms=53680 checks=178",
+      "SCENE112_GRAPHICS_STAGE=condition_day elapsed_ms=53680 checks=178",
+      "SCENE112_GRAPHICS_STAGE=condition_dusk elapsed_ms=64187 checks=181",
+      "SCENE112_GRAPHICS_STAGE=condition_rain elapsed_ms=84768 checks=184",
+      "SCENE112_GRAPHICS_STAGE=high_rain elapsed_ms=102498 checks=190"
+    ],
+    "prototype": [
+      "SCENE112_GRAPHICS_STAGE=world_begin elapsed_ms=1459",
+      "SCENE112_GRAPHICS_STAGE=world_ready elapsed_ms=2353",
+      "SCENE112_GRAPHICS_STAGE=actor_ready elapsed_ms=2444",
+      "SCENE112_GRAPHICS_STAGE=menu_and_audio_ready elapsed_ms=2514",
+      "SCENE112_GRAPHICS_STAGE=initial_draw elapsed_ms=2538 checks=0",
+      "SCENE112_GRAPHICS_STAGE=start_new elapsed_ms=2539 checks=0",
+      "SCENE112_GRAPHICS_STAGE=models_and_rigs elapsed_ms=2542 checks=2",
+      "SCENE112_GRAPHICS_STAGE=roof_camera elapsed_ms=2545 checks=148",
+      "SCENE112_GRAPHICS_STAGE=walk_and_pause elapsed_ms=8893 checks=150",
+      "SCENE112_GRAPHICS_STAGE=vehicle elapsed_ms=15205 checks=167",
+      "SCENE112_GRAPHICS_STAGE=connected_street elapsed_ms=20330 checks=173",
+      "SCENE112_GRAPHICS_STAGE=conditions_and_save elapsed_ms=28858 checks=178",
+      "SCENE112_GRAPHICS_STAGE=condition_day elapsed_ms=28858 checks=178",
+      "SCENE112_GRAPHICS_STAGE=condition_dusk elapsed_ms=30008 checks=182",
+      "SCENE112_GRAPHICS_STAGE=condition_rain elapsed_ms=35538 checks=186",
+      "SCENE112_GRAPHICS_STAGE=high_rain elapsed_ms=43052 checks=193"
+    ],
+    "final": [
+      "SCENE112_GRAPHICS_STAGE=world_begin elapsed_ms=1464",
+      "SCENE112_GRAPHICS_STAGE=world_ready elapsed_ms=2421",
+      "SCENE112_GRAPHICS_STAGE=actor_ready elapsed_ms=2504",
+      "SCENE112_GRAPHICS_STAGE=menu_and_audio_ready elapsed_ms=2571",
+      "SCENE112_GRAPHICS_STAGE=initial_draw elapsed_ms=2595 checks=0",
+      "SCENE112_GRAPHICS_STAGE=start_new elapsed_ms=2596 checks=0",
+      "SCENE112_GRAPHICS_STAGE=models_and_rigs elapsed_ms=2598 checks=2",
+      "SCENE112_GRAPHICS_STAGE=roof_camera elapsed_ms=2600 checks=148",
+      "SCENE112_GRAPHICS_STAGE=walk_and_pause elapsed_ms=9256 checks=150",
+      "SCENE112_GRAPHICS_STAGE=vehicle elapsed_ms=15754 checks=167",
+      "SCENE112_GRAPHICS_STAGE=connected_street elapsed_ms=20966 checks=173",
+      "SCENE112_GRAPHICS_STAGE=conditions_and_save elapsed_ms=29777 checks=178",
+      "SCENE112_GRAPHICS_STAGE=condition_day elapsed_ms=29777 checks=178",
+      "SCENE112_GRAPHICS_STAGE=condition_dusk elapsed_ms=30912 checks=182",
+      "SCENE112_GRAPHICS_STAGE=condition_rain elapsed_ms=36759 checks=186",
+      "SCENE112_GRAPHICS_STAGE=high_rain elapsed_ms=44504 checks=193"
+    ]
+  },
+  "assets_unchanged": true,
+  "assets_files_checked": 388,
+  "shaders_unchanged": true,
+  "shaders_files_checked": 2
+}

@@ -1,0 +1,93 @@
+--- a/scripts/street_atmosphere.gd
++++ b/scripts/street_atmosphere.gd
+@@ -12,10 +12,12 @@
+ var quality := "balanced"
+ var renderer := ""
+ var software_gl := false
++var apple_software_basic := false
+ var adapter := ""
+ var effective_quality := "balanced"
+ var _original_render_scale := 1.0
+ var _original_scaling_mode := Viewport.SCALING_3D_MODE_BILINEAR
++var _original_mesh_lod_threshold := 1.0
+ var _district: Node3D
+ var _world: WorldEnvironment
+ var _environment: Environment
+@@ -49,11 +51,12 @@
+ 	renderer = str(RenderingServer.get_current_rendering_method())
+ 	adapter = RenderingServer.get_video_adapter_name()
+ 	software_gl = is_software_gl(renderer, adapter) and DisplayServer.get_name() != "headless"
++	apple_software_basic = software_gl and is_apple_software_basic(renderer,adapter)
+ 	if software_gl:
+ 		_original_render_scale = district.get_viewport().scaling_3d_scale
+ 		_original_scaling_mode = district.get_viewport().scaling_3d_mode
+-		district.get_viewport().scaling_3d_mode = Viewport.SCALING_3D_MODE_BILINEAR
+-		district.get_viewport().scaling_3d_scale = .5
++		_original_mesh_lod_threshold = district.get_viewport().mesh_lod_threshold
++		_apply_software_viewport()
+ 	name = "StreetAtmosphere"
+ 	process_priority = 20 # Legacy District sun drift runs first; selected condition stays stable.
+ 	if get_parent() == null: district.add_child(self)
+@@ -91,7 +94,7 @@
+ func apply_conditions(value: String) -> bool:
+ 	if value not in CONDITIONS or _environment == null: return false
+ 	conditions = value
+-	effective_quality = "software_portable" if software_gl else quality
++	effective_quality = "software_basic" if apple_software_basic else ("software_portable" if software_gl else quality)
+ 	var dusk := value == "dusk"
+ 	var rainy := value == "rain"
+ 	_sun_pose = Vector3(-9,-55,0) if dusk else Vector3(-48,-28,0)
+@@ -237,7 +240,8 @@
+ 			enabled += 1
+ 			if lamp.shadow_enabled: shadows += 1
+ 	return {"conditions":conditions,"quality":quality,"requested_quality":quality,"effective_quality":effective_quality,
+-		"software_gl":software_gl,"adapter":adapter,"render_scale":get_viewport().scaling_3d_scale,
++		"software_gl":software_gl,"apple_software_basic":apple_software_basic,"adapter":adapter,"render_scale":get_viewport().scaling_3d_scale,
++		"mesh_lod_threshold":get_viewport().mesh_lod_threshold,
+ 		"sky_radiance_size":32 << int(_environment.sky.radiance_size),"sun_shadows":_sun.shadow_enabled,"renderer":renderer,"lamps":enabled,"local_shadows":shadows,
+ 		"reflection_probes":1 if is_instance_valid(_reflection) else 0,"probe_revision":_probe_revision,
+ 		"ssao":_environment.ssao_enabled if _environment else false,"glow":_environment.glow_enabled if _environment else false,
+@@ -249,6 +253,7 @@
+ 	if software_gl and is_inside_tree():
+ 		get_viewport().scaling_3d_scale = _original_render_scale
+ 		get_viewport().scaling_3d_mode = _original_scaling_mode
++		get_viewport().mesh_lod_threshold = _original_mesh_lod_threshold
+ 	for entry: Dictionary in _surfaces:
+ 		if is_instance_valid(entry.mesh):
+ 			if entry.surface == -1: entry.mesh.material_override = entry.original_override
+@@ -449,3 +454,15 @@
+ 	if method != "gl_compatibility": return false
+ 	var actual := device_name.to_lower()
+ 	return actual.contains("apple software renderer") or actual.begins_with("llvmpipe") or actual.begins_with("softpipe")
++
++
++func _apply_software_viewport() -> void:
++	if not software_gl or not is_instance_valid(_district):return
++	var viewport:=_district.get_viewport()
++	viewport.scaling_3d_mode=Viewport.SCALING_3D_MODE_BILINEAR
++	viewport.scaling_3d_scale=.25 if apple_software_basic else .5
++	viewport.mesh_lod_threshold=8.0 if apple_software_basic else _original_mesh_lod_threshold
++
++
++static func is_apple_software_basic(method: String,device_name: String) -> bool:
++	return method=="gl_compatibility" and device_name.strip_edges().to_lower().begins_with("apple software renderer")
+--- a/scripts/graphics_validation.gd
++++ b/scripts/graphics_validation.gd
+@@ -278,7 +278,7 @@
+ 		var info: Dictionary = atmosphere.diagnostics()
+ 		if not _check(info.conditions == condition and info.quality == "balanced" and info.lamps <= 4 and info.local_shadows <= 2 and info.reflection_probes == (0 if info.software_gl else 1) and info.particles <= 280, "bounded root scene condition: " + condition): return false
+ 		if info.software_gl:
+-			if not _check(info.requested_quality == "balanced" and info.effective_quality == "software_portable" and info.render_scale == .5 and info.sky_radiance_size == 32 and not info.ssao and not info.glow and not info.ssr and not info.sun_shadows and info.local_shadows == 0, "actual software-only fallback is explicit and bounded"): return false
++			if not _check(info.requested_quality == "balanced" and info.effective_quality == ("software_basic" if info.apple_software_basic else "software_portable") and info.render_scale == (.25 if info.apple_software_basic else .5) and (not info.apple_software_basic or info.mesh_lod_threshold == 8.0) and info.sky_radiance_size == 32 and not info.ssao and not info.glow and not info.ssr and not info.sun_shadows and info.local_shadows == 0, "actual software-only fallback is explicit and bounded"): return false
+ 		else:
+ 			if not _check(info.effective_quality == "balanced", "hardware quality remains unchanged"): return false
+ 		if not _check(info.managed_surfaces > 35 and info.material_variants > 10, "condition manages actual authored surfaces"): return false
+@@ -307,7 +307,7 @@
+ 	if not _check(high.ssr == (high.renderer == "forward_plus" and not high.software_gl), "rain SSR only active on high Forward+"): return false
+ 	report["high_rain"] = high
+ 	if high.software_gl:
+-		if not _check(high.requested_quality == "high" and high.effective_quality == "software_portable" and not high.ssao and not high.glow and not high.ssr and high.local_shadows == 0, "requested high is truthfully reported as software fallback"): return false
++		if not _check(high.requested_quality == "high" and high.effective_quality == ("software_basic" if high.apple_software_basic else "software_portable") and high.render_scale == (.25 if high.apple_software_basic else .5) and (not high.apple_software_basic or high.mesh_lod_threshold == 8.0) and not high.ssao and not high.glow and not high.ssr and high.local_shadows == 0, "requested high is truthfully reported as software fallback"): return false
+ 	if DisplayServer.get_name() != "headless":
+ 		for frame in range(4): await RenderingServer.frame_post_draw
+ 		if not _check(app.get_viewport().get_texture().get_image().save_png("user://visual-street-high-rain.png") == OK, "actual rain shader rendering with effective profile recorded"): return false

@@ -1,0 +1,44 @@
+{
+  "asset": "police_car",
+  "author": "SCENE112 original authoring",
+  "blender": "4.3.2",
+  "meshes": 5,
+  "triangles": 65824,
+  "animations": [],
+  "coordinate_convention": "Blender +Y forward, +Z up; glTF/Godot -Z forward, +Y up",
+  "license": "SCENE112 original private/proprietary project content; docs/LICENSES.md",
+  "source_blend": "source/3d/vehicles/police_car.blend",
+  "source_builder": "source/3d/vehicles/build_vehicles.py",
+  "source_helper": "source/3d/vehicles/assetkit.py",
+  "texture_directory": "assets/textures/vehicles",
+  "runtime_glb": "assets/models/vehicles/police_car.glb",
+  "glb_sha256": "818e4aa79b820097bb034f087661ab9449c4c848a9d3fb6484070f9db93b40d9",
+  "packed_editable_images": true,
+  "preview_rendered": false,
+  "source_validation": {
+    "asset": "police_car",
+    "accepted_glb_sha256": "818e4aa79b820097bb034f087661ab9449c4c848a9d3fb6484070f9db93b40d9",
+    "rebuild_glb_sha256": "cc516b254ce02e22f36d467fb43d414272cb030ea9638133dc9ea6d98ad4ba2e",
+    "byte_identical": false,
+    "json_identical": true,
+    "embedded_images_identical": true,
+    "positions_uv_weights_animations_identical": true,
+    "equivalent_geometry": true,
+    "allowed_evaluation_deltas": [
+      {
+        "buffer_view": 3,
+        "kind": "oriented triangle ordering only"
+      },
+      {
+        "buffer_view": 44,
+        "kind": "oriented triangle ordering only"
+      }
+    ],
+    "packed_images": 18,
+    "external_textures_present": false,
+    "reexported": true,
+    "render_calls": 0,
+    "source_layout": "final repository source/3d + assets/models + assets/textures",
+    "runtime_asset_replaced": false
+  }
+}

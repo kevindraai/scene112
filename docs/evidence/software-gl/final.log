@@ -1,0 +1,25 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:372)
+OpenGL API 4.5 (Core Profile) Mesa 25.0.7-2+deb13u1 - Compatibility - Using Device: Mesa - llvmpipe (LLVM 19.1.7, 256 bits)
+
+SCENE112_GRAPHICS_STAGE=world_begin elapsed_ms=1464
+SCENE112_GRAPHICS_STAGE=world_ready elapsed_ms=2421
+SCENE112_GRAPHICS_STAGE=actor_ready elapsed_ms=2504
+SCENE112_GRAPHICS_STAGE=menu_and_audio_ready elapsed_ms=2571
+SCENE112_GRAPHICS_STAGE=initial_draw elapsed_ms=2595 checks=0
+SCENE112_GRAPHICS_BACKEND={"adapter":"llvmpipe (LLVM 19.1.7, 256 bits)","adapter_type":0,"api":"4.5 (Core Profile) Mesa 25.0.7-2+deb13u1","display":"X11","driver":"opengl3","renderer":"gl_compatibility","user_data_dir":"/tmp/scene112-software-gl-prep/data-final/Scene112","vendor":"Mesa"}
+SCENE112_GRAPHICS_STAGE=start_new elapsed_ms=2596 checks=0
+SCENE112_GRAPHICS_STAGE=models_and_rigs elapsed_ms=2598 checks=2
+SCENE112_GRAPHICS_STAGE=roof_camera elapsed_ms=2600 checks=148
+SCENE112_GRAPHICS_STAGE=walk_and_pause elapsed_ms=9256 checks=150
+SCENE112_GRAPHICS_STAGE=vehicle elapsed_ms=15754 checks=167
+SCENE112_GRAPHICS_STAGE=connected_street elapsed_ms=20966 checks=173
+SCENE112_BRAKE_DIAGNOSTICS={"final_speed":0.0,"passed":true,"physics_ticks":65,"samples":[{"brake_held":true,"enabled_input":true,"physics_ticks":0,"position":[20.9119396209717,0.0142315234988928,38.0932960510254],"speed":13.999942779541,"wall_ms":0},{"brake_held":true,"enabled_input":true,"physics_ticks":8,"position":[22.6467914581299,0.0142283132299781,38.1718521118164],"speed":12.2661819458008,"wall_ms":125},{"brake_held":true,"enabled_input":true,"physics_ticks":16,"position":[24.1507129669189,0.0142233744263649,38.2399482727051],"speed":10.5324792861938,"wall_ms":239},{"brake_held":true,"enabled_input":true,"physics_ticks":23,"position":[25.2772178649902,0.00588445831090212,38.2909545898438],"speed":9.01553249359131,"wall_ms":369},{"brake_held":true,"enabled_input":true,"physics_ticks":30,"position":[26.2269268035889,0.0142051046714187,38.3339538574219],"speed":7.49863195419312,"wall_ms":484},{"brake_held":true,"enabled_input":true,"physics_ticks":38,"position":[27.0958251953125,0.0141795389354229,38.3732948303223],"speed":5.76508474349976,"wall_ms":613},{"brake_held":true,"enabled_input":true,"physics_ticks":45,"position":[27.6666927337646,0.0142419608309865,38.3991355895996],"speed":4.24827814102173,"wall_ms":733},{"brake_held":true,"enabled_input":true,"physics_ticks":52,"position":[28.0608024597168,0.00590450502932072,38.4169769287109],"speed":2.73151350021362,"wall_ms":854},{"brake_held":true,"enabled_input":true,"physics_ticks":59,"position":[28.2781372070312,0.00590567290782928,38.4268188476562],"speed":1.21479344367981,"wall_ms":962},{"brake_held":true,"enabled_input":true,"physics_ticks":65,"position":[28.3251552581787,0.0141092007979751,38.4289512634277],"speed":0.0,"wall_ms":1062}],"wall_ms":1062}
+SCENE112_GRAPHICS_STAGE=conditions_and_save elapsed_ms=29777 checks=178
+SCENE112_GRAPHICS_STAGE=condition_day elapsed_ms=29777 checks=178
+SCENE112_GRAPHICS_STAGE=condition_dusk elapsed_ms=30912 checks=182
+SCENE112_GRAPHICS_STAGE=condition_rain elapsed_ms=36759 checks=186
+SCENE112_GRAPHICS_STAGE=high_rain elapsed_ms=44504 checks=193
+SCENE112_VISUAL_OK checks=200 renderer=gl_compatibility driver=opengl3 adapter=llvmpipe (LLVM 19.1.7, 256 bits) screenshots=true fixtures=initial positions and equipment; actual walk>10m drive>20m reverse/steering/brake/exit, imported PBR/rig/wheel/camera/pause, conditions and root save/load
+SCENE112_AUDIO_STOP driver=Dummy mixes=2 synchronized=true

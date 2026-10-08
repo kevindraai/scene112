@@ -1,0 +1,24 @@
+{
+  "base_files": [
+    {
+      "file": "project.godot",
+      "sha256": "63ed7192184990114fadc82e5a92b67b0d06c928f1a02d25b73d5188da704be5"
+    },
+    {
+      "file": "scripts/app.gd",
+      "sha256": "a549f423a532e960658d556a62984baf83fc9d67abe764c60b8b041c00a219f9"
+    },
+    {
+      "file": "scripts/street_atmosphere.gd",
+      "sha256": "895a7c53ff1527edd6175f95c0d4b90fe104993e3ce5e2218985734ada168684"
+    },
+    {
+      "file": "scripts/graphics_validation.gd",
+      "sha256": "e9cf4937ff7c59017b33ec8e6f25f85b980fcb8085efa8910476ee65489545ef"
+    },
+    {
+      "file": "shaders/wet_paving.gdshader",
+      "sha256": "3dd3896530f4a36fb94d5a61fb59a0bf1dccff128c6ead3690103193d1307ef2"
+    }
+  ]
+}

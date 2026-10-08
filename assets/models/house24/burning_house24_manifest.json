@@ -1,0 +1,29 @@
+{
+  "asset": "burning_house24",
+  "author": "SCENE112 original authoring",
+  "blender": "4.3.2",
+  "meshes": 15,
+  "triangles": 23254,
+  "animations": [],
+  "coordinate_convention": "Blender +Y forward, +Z up; glTF/Godot -Z forward, +Y up",
+  "license": "SCENE112 original private/proprietary project content; docs/LICENSES.md",
+  "source_blend": "source/3d/house24/burning_house24.blend",
+  "source_builder": "source/3d/house24/build_house24.py",
+  "source_helper": "source/3d/house24/assetkit.py",
+  "texture_directory": "assets/textures/house24",
+  "runtime_glb": "assets/models/house24/burning_house24.glb",
+  "glb_sha256": "6255c8682bfb9aac86a02c0d16941f8f0c1e0e7dc4d392ac428a509047b35e8e",
+  "packed_editable_images": true,
+  "preview_rendered": false,
+  "validation": {
+    "engine": "4.7.2",
+    "headless_checks": 101,
+    "actual_capsule_open_entry": true,
+    "actual_capsule_closed_block": true,
+    "floor_feet_y": 0.0208,
+    "packed_source_relocated": true,
+    "packed_images": 21,
+    "renders": 0,
+    "native_or_visual_acceptance_claim": false
+  }
+}

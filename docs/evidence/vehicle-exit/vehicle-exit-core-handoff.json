@@ -1,0 +1,40 @@
+{
+  "status": "Proven core fix ready for independent root review",
+  "base": "e246d93223f2388e6c4968d8c7b0c474ec62b7d9",
+  "patch": "/tmp/scene112-quality-resume/vehicle-exit-core.patch",
+  "regression_test": "/tmp/scene112-vehicle-exit-prep/tests/vehicle_exit_regression.gd",
+  "regression_sha256": "451e38f4e53d625a1d28d206d86b683ee509a095647cec06363ba2c300b4499c",
+  "results": {
+    "original": {
+      "failed_checks": 3,
+      "checks": 8,
+      "log": "vehicle-exit-baseline.log"
+    },
+    "force_update_transform_only": {
+      "failed_checks": 3,
+      "checks": 8,
+      "log": "vehicle-exit-flush-only.log"
+    },
+    "disable_remove_lifecycle": {
+      "failed_checks": 3,
+      "checks": 8,
+      "log": "vehicle-exit-lifecycle.log"
+    },
+    "disable_make_static_lifecycle": {
+      "failed_checks": 0,
+      "checks": 8,
+      "log": "vehicle-exit-static-lifecycle.log"
+    },
+    "both_service_vehicles_public_input": {
+      "failed_checks": 0,
+      "checks": 18,
+      "log": "vehicle-exit-both.log"
+    }
+  },
+  "source_cause": "Pinned GodotBody3D::set_state BODY_STATE_TRANSFORM queues new_transform for kinematic bodies until integration; layer reactivation exposes old seat transform. Temporarily static through public CollisionObject disable lifecycle applies the destination synchronously, preserving/restoring process and disable modes before restoring original masks.",
+  "scope": "Only core app teleport hunk; no collision-mask change, platform guard, model/save mutation, asynchronous waits or internal PhysicsServer mode calls.",
+  "limits": [
+    "Actual input/physics/camera proof is current M5 isolated scene. Driver has only existing M2 app/vehicle dependencies; root integrates and independently runs against actual canonical M2.",
+    "Separate optional floor-follow guard is independently demonstrated but not included in core patch."
+  ]
+}
