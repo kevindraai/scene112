@@ -1,0 +1,10 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:372)
+OpenGL API 4.5 (Core Profile) Mesa 25.0.7-2+deb13u1 - Compatibility - Using Device: Mesa - llvmpipe (LLVM 19.1.7, 256 bits)
+
+SCENE112_LOD_SCALE={"actual_adapter":"llvmpipe (LLVM 19.1.7, 256 bits)","actual_renderer":"gl_compatibility","frame_interval_p50_ms":57.673,"frame_interval_p95_ms":68.991,"lod_getter":1.0,"no_native_claim":true,"sample_count":24,"scale_getter":0.5,"scope":"static actual street, paused via production app; explicit scale/LOD axis fixtures","visible_draw_calls_median":102,"visible_primitives_median":52776}
+SCENE112_LOD_SCALE={"actual_adapter":"llvmpipe (LLVM 19.1.7, 256 bits)","actual_renderer":"gl_compatibility","frame_interval_p50_ms":49.54,"frame_interval_p95_ms":58.934,"lod_getter":1.0,"no_native_claim":true,"sample_count":24,"scale_getter":0.25,"scope":"static actual street, paused via production app; explicit scale/LOD axis fixtures","visible_draw_calls_median":102,"visible_primitives_median":52776}
+SCENE112_LOD_SCALE={"actual_adapter":"llvmpipe (LLVM 19.1.7, 256 bits)","actual_renderer":"gl_compatibility","frame_interval_p50_ms":30.408,"frame_interval_p95_ms":36.609,"lod_getter":8.0,"no_native_claim":true,"sample_count":24,"scale_getter":0.25,"scope":"static actual street, paused via production app; explicit scale/LOD axis fixtures","visible_draw_calls_median":102,"visible_primitives_median":33688}
+SCENE112_LOD_SCALE={"actual_adapter":"llvmpipe (LLVM 19.1.7, 256 bits)","actual_renderer":"gl_compatibility","frame_interval_p50_ms":29.403,"frame_interval_p95_ms":36.845,"lod_getter":16.0,"no_native_claim":true,"sample_count":24,"scale_getter":0.25,"scope":"static actual street, paused via production app; explicit scale/LOD axis fixtures","visible_draw_calls_median":102,"visible_primitives_median":30952}
+SCENE112_AUDIO_STOP driver=Dummy mixes=2 synchronized=true

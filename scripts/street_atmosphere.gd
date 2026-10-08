@@ -12,10 +12,12 @@ var conditions := "day"
 var quality := "balanced"
 var renderer := ""
 var software_gl := false
+var apple_software_basic := false
 var adapter := ""
 var effective_quality := "balanced"
 var _original_render_scale := 1.0
 var _original_scaling_mode := Viewport.SCALING_3D_MODE_BILINEAR
+var _original_mesh_lod_threshold := 1.0
 var _district: Node3D
 var _world: WorldEnvironment
 var _environment: Environment
@@ -49,11 +51,12 @@ func setup(district: Node3D) -> bool:
 	renderer = str(RenderingServer.get_current_rendering_method())
 	adapter = RenderingServer.get_video_adapter_name()
 	software_gl = is_software_gl(renderer, adapter) and DisplayServer.get_name() != "headless"
+	apple_software_basic = software_gl and is_apple_software_basic(renderer,adapter)
 	if software_gl:
 		_original_render_scale = district.get_viewport().scaling_3d_scale
 		_original_scaling_mode = district.get_viewport().scaling_3d_mode
-		district.get_viewport().scaling_3d_mode = Viewport.SCALING_3D_MODE_BILINEAR
-		district.get_viewport().scaling_3d_scale = .5
+		_original_mesh_lod_threshold = district.get_viewport().mesh_lod_threshold
+		_apply_software_viewport()
 	name = "StreetAtmosphere"
 	process_priority = 20 # Legacy District sun drift runs first; selected condition stays stable.
 	if get_parent() == null: district.add_child(self)
@@ -91,7 +94,7 @@ func setup(district: Node3D) -> bool:
 func apply_conditions(value: String) -> bool:
 	if value not in CONDITIONS or _environment == null: return false
 	conditions = value
-	effective_quality = "software_portable" if software_gl else quality
+	effective_quality = "software_basic" if apple_software_basic else ("software_portable" if software_gl else quality)
 	var dusk := value == "dusk"
 	var rainy := value == "rain"
 	_sun_pose = Vector3(-9,-55,0) if dusk else Vector3(-48,-28,0)
@@ -237,7 +240,8 @@ func diagnostics() -> Dictionary:
 			enabled += 1
 			if lamp.shadow_enabled: shadows += 1
 	return {"conditions":conditions,"quality":quality,"requested_quality":quality,"effective_quality":effective_quality,
-		"software_gl":software_gl,"adapter":adapter,"render_scale":get_viewport().scaling_3d_scale,
+		"software_gl":software_gl,"apple_software_basic":apple_software_basic,"adapter":adapter,"render_scale":get_viewport().scaling_3d_scale,
+		"mesh_lod_threshold":get_viewport().mesh_lod_threshold,
 		"sky_radiance_size":32 << int(_environment.sky.radiance_size),"sun_shadows":_sun.shadow_enabled,"renderer":renderer,"lamps":enabled,"local_shadows":shadows,
 		"reflection_probes":1 if is_instance_valid(_reflection) else 0,"probe_revision":_probe_revision,
 		"ssao":_environment.ssao_enabled if _environment else false,"glow":_environment.glow_enabled if _environment else false,
@@ -249,6 +253,7 @@ func restore_original() -> void:
 	if software_gl and is_inside_tree():
 		get_viewport().scaling_3d_scale = _original_render_scale
 		get_viewport().scaling_3d_mode = _original_scaling_mode
+		get_viewport().mesh_lod_threshold = _original_mesh_lod_threshold
 	for entry: Dictionary in _surfaces:
 		if is_instance_valid(entry.mesh):
 			if entry.surface == -1: entry.mesh.material_override = entry.original_override
@@ -449,3 +454,15 @@ static func is_software_gl(method: String, device_name: String) -> bool:
 	if method != "gl_compatibility": return false
 	var actual := device_name.to_lower()
 	return actual.contains("apple software renderer") or actual.begins_with("llvmpipe") or actual.begins_with("softpipe")
+
+
+func _apply_software_viewport() -> void:
+	if not software_gl or not is_instance_valid(_district):return
+	var viewport:=_district.get_viewport()
+	viewport.scaling_3d_mode=Viewport.SCALING_3D_MODE_BILINEAR
+	viewport.scaling_3d_scale=.25 if apple_software_basic else .5
+	viewport.mesh_lod_threshold=8.0 if apple_software_basic else _original_mesh_lod_threshold
+
+
+static func is_apple_software_basic(method: String,device_name: String) -> bool:
+	return method=="gl_compatibility" and device_name.strip_edges().to_lower().begins_with("apple software renderer")

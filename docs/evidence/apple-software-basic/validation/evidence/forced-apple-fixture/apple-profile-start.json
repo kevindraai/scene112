@@ -1,0 +1,93 @@
+{
+  "actual_adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+  "actual_renderer": "gl_compatibility",
+  "forced_apple_profile_fixture": true,
+  "no_native_claim": true,
+  "profile": {
+    "adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+    "apple_software_basic": true,
+    "conditions": "day",
+    "effective_quality": "software_basic",
+    "glow": false,
+    "lamps": 0,
+    "local_shadows": 0,
+    "managed_surfaces": 151,
+    "material_variants": 34,
+    "mesh_lod_threshold": 8.0,
+    "particles": 0,
+    "particles_paused": true,
+    "probe_revision": 0,
+    "quality": "portable",
+    "reflection_probes": 0,
+    "render_scale": 0.25,
+    "renderer": "gl_compatibility",
+    "requested_quality": "portable",
+    "sky_radiance_size": 32,
+    "software_gl": true,
+    "ssao": false,
+    "ssr": false,
+    "sun_shadows": false
+  },
+  "source_geometry": {
+    "collision_objects": 129,
+    "glb_paths": [
+      "res://assets/models/vegetation/street_tree.glb",
+      "res://assets/models/street/dutch_terrace.glb",
+      "res://assets/models/vehicles/police_car.glb",
+      "res://assets/models/vehicles/fire_truck.glb",
+      "res://assets/models/characters/civilian.glb",
+      "res://assets/models/street/street_lamp.glb",
+      "res://assets/models/street/street_bench.glb",
+      "res://assets/models/street/dutch_bicycle.glb",
+      "res://assets/models/characters/officer.glb"
+    ],
+    "lod_levels": 403,
+    "lod_surfaces": 89,
+    "rigs": [
+      {
+        "bones": 18,
+        "name": "Skeleton3D"
+      },
+      {
+        "bones": 18,
+        "name": "Skeleton3D"
+      },
+      {
+        "bones": 18,
+        "name": "Skeleton3D"
+      },
+      {
+        "bones": 18,
+        "name": "Skeleton3D"
+      },
+      {
+        "bones": 18,
+        "name": "Skeleton3D"
+      },
+      {
+        "bones": 18,
+        "name": "Skeleton3D"
+      },
+      {
+        "bones": 18,
+        "name": "Skeleton3D"
+      },
+      {
+        "bones": 18,
+        "name": "Skeleton3D"
+      },
+      {
+        "bones": 18,
+        "name": "Skeleton3D"
+      },
+      {
+        "bones": 18,
+        "name": "Skeleton3D"
+      }
+    ],
+    "source_indices": 795432,
+    "source_vertices": 226040,
+    "surface_count": 405,
+    "unique_meshes": 343
+  }
+}

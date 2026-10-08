@@ -624,6 +624,41 @@ def quality_tier(results: list[dict]) -> str | None:
     return None
 
 
+def selected_intel_compatibility(
+    target: str, architecture: str, explicit: bool, result: dict, runtime: dict
+) -> bool:
+    """Select the proven shipping renderer; retain failed research untouched."""
+    if explicit is not True or target != "macos" or architecture.lower() not in ("x86_64", "amd64"):
+        return False
+    if (result.get("requested_renderer") != "gl_compatibility"
+            or result.get("requested_driver") != "opengl3"
+            or result.get("status") != "passed" or result.get("returncode") != 0):
+        return False
+    backend = result.get("actual_backend")
+    if not isinstance(backend, dict) or (backend.get("display") != "macOS"
+            or backend.get("renderer") != "gl_compatibility"
+            or backend.get("driver") not in ("opengl3", "opengl3_es")
+            or not isinstance(backend.get("adapter"), str) or not backend["adapter"]):
+        return False
+    try:
+        require_gameplay_report(runtime, backend)
+    except (KeyError, TypeError, ValueError, AttributeError):
+        return False
+    if type(runtime.get("checks")) is not int or runtime["checks"] < 200:
+        return False
+    pictures = result.get("screenshots")
+    if not isinstance(pictures, list) or len(pictures) != len(PNG_NAMES):
+        return False
+    if any(not isinstance(picture, dict) for picture in pictures):
+        return False
+    if [picture.get("file") for picture in pictures] != list(PNG_NAMES):
+        return False
+    return all(type(p.get("width")) is int and p["width"] >= 640
+               and type(p.get("height")) is int and p["height"] >= 360
+               and isinstance(p.get("sha256"), str)
+               and re.fullmatch("[0-9a-f]{64}", p["sha256"]) for p in pictures)
+
+
 def intel_probe_environment(
     target: str, architecture: str, enabled: bool
 ) -> dict[str, str]:
@@ -718,6 +753,8 @@ def main() -> int:
         action="store_true",
         help="Require an additional Mobile/Vulkan quality proof for the known Intel host cluster-PSO failure",
     )
+    parser.add_argument("--intel-compatibility-quality", action="store_true",
+                        help="Explicitly choose fully verified default Compatibility as Intel quality tier")
     args = parser.parse_args()
     args.output_dir.mkdir(parents=True, exist_ok=True)
     primary_environment = intel_probe_environment(
@@ -725,6 +762,8 @@ def main() -> int:
     )
     if args.intel_mobile_fallback and not primary_environment:
         raise ValueError("Intel Mobile research requires the explicit Intel-only configuration")
+    if args.intel_compatibility_quality and not primary_environment:
+        raise ValueError("Intel Compatibility quality is limited to the configured macOS Intel job")
     provenance = json_read(args.provenance.read_text(encoding="utf-8"))
     digest = hashlib.sha256(args.archive.read_bytes()).hexdigest()
     if (
@@ -824,8 +863,16 @@ def main() -> int:
                 )
             )
     accepted_quality = quality_tier(results)
+    if args.intel_compatibility_quality:
+        accepted_quality = None
+        if results[1]["status"] == "passed":
+            runtime = json_read((args.output_dir / "gl_compatibility-opengl3/visual-runtime.json").read_text(encoding="utf-8"))
+            if selected_intel_compatibility(args.platform, platform.machine(), True, results[1], runtime):
+                accepted_quality = "gl_compatibility"
     passed = compatibility_passed(results, args.platform) and (
-        accepted_quality is not None or results[0]["status"] == "environment_unavailable"
+        accepted_quality is not None or (
+            not args.intel_compatibility_quality and results[0]["status"] == "environment_unavailable"
+        )
     )
     report = {
         "source_head": args.source_head,
@@ -847,9 +894,10 @@ def main() -> int:
         "primary_forward_plus_validated": results[0]["status"] == "passed",
         "validated_quality_tier": accepted_quality,
         "mobile_quality_fallback_validated": accepted_quality == "mobile",
+        "requested_intel_quality_tier": "gl_compatibility" if args.intel_compatibility_quality else None,
         "gate_passed": passed,
         "default_renderer_changed": False,
-        "limits": "Forward+ failure is retained; separately verified Mobile is an authorized quality tier. Every selected Mobile/Compatibility error remains fatal. Software/hosted adapters are not physical target acceptance.",
+        "limits": "Failed Forward+/Mobile research is retained. Only the explicitly selected, fully proven quality tier is accepted. Every selected-tier error remains fatal; software/hosted adapters are not physical target acceptance.",
     }
     json_write(args.output_dir / "graphics-provenance.json", report)
     print(json.dumps(report, indent=2))

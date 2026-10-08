@@ -108,6 +108,7 @@ jobs:
               ("audio-tests", ["--headless", "--path", ".", "--script", "tests/audio_tests.gd"], "SCENE112_AUDIO_TESTS_OK"),
               ("weather-audio-tests", ["--headless", "--path", ".", "--script", "tests/weather_audio_tests.gd"], "SCENE112_WEATHER_AUDIO_TESTS_OK"),
               ("software-graphics-tests", ["--headless", "--path", ".", "--script", "tests/software_gl_tests.gd"], "SCENE112_SOFTWARE_CLASSIFICATION_OK"),
+              ("apple-software-tests", ["--headless", "--path", ".", "--script", "tests/apple_profile_tests.gd"], "SCENE112_APPLE_PROFILE_CLASSIFICATION_OK"),
               ("smoke", ["--headless", "--path", ".", "--", "--smoke-test"], "SMOKE_OK"),
               ("playthrough", ["--headless", "--path", ".", "--", "--playthrough"], "SCENE112_PLAYTHROUGH_OK"),
               ("duty-playthrough", ["--headless", "--path", ".", "--", "--duty-playthrough"], "SCENE112_DUTY_OK"),
@@ -487,7 +488,7 @@ jobs:
               "--source-head", os.environ["SOURCE_HEAD"], "--platform", os.environ["TARGET_PLATFORM"],
               "--output-dir", str(output)]
           if os.environ["TARGET_PLATFORM"] == "macos" and os.environ["TARGET_ARCH"] == "x86_64":
-              command.extend(["--intel-no-argument-buffers", "--intel-mobile-fallback"])
+              command.extend(["--intel-no-argument-buffers", "--intel-mobile-fallback", "--intel-compatibility-quality"])
           result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
               text=True, encoding="utf-8", errors="replace", timeout=1100)
           (output / "probe.txt").write_text(result.stdout, encoding="utf-8")

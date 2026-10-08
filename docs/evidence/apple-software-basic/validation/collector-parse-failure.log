@@ -1,0 +1,32 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:372)
+OpenGL API 4.5 (Core Profile) Mesa 25.0.7-2+deb13u1 - Compatibility - Using Device: Mesa - llvmpipe (LLVM 19.1.7, 256 bits)
+
+SCRIPT ERROR: Parse Error: Too few arguments for "get_render_info()" call. Expected at least 2 but received 1.
+          at: GDScript::reload (res://tests/apple_runtime_collector.gd:9)
+SCRIPT ERROR: Parse Error: Cannot pass a value of type "Viewport.RenderInfo" as "Viewport.RenderInfoType".
+          at: GDScript::reload (res://tests/apple_runtime_collector.gd:9)
+SCRIPT ERROR: Parse Error: Invalid argument for "get_render_info()" function: argument 1 should be "Viewport.RenderInfoType" but is "Viewport.RenderInfo".
+          at: GDScript::reload (res://tests/apple_runtime_collector.gd:9)
+SCRIPT ERROR: Parse Error: Too few arguments for "get_render_info()" call. Expected at least 2 but received 1.
+          at: GDScript::reload (res://tests/apple_runtime_collector.gd:10)
+SCRIPT ERROR: Parse Error: Cannot pass a value of type "Viewport.RenderInfo" as "Viewport.RenderInfoType".
+          at: GDScript::reload (res://tests/apple_runtime_collector.gd:10)
+SCRIPT ERROR: Parse Error: Invalid argument for "get_render_info()" function: argument 1 should be "Viewport.RenderInfoType" but is "Viewport.RenderInfo".
+          at: GDScript::reload (res://tests/apple_runtime_collector.gd:10)
+SCRIPT ERROR: Parse Error: Too few arguments for "get_render_info()" call. Expected at least 2 but received 1.
+          at: GDScript::reload (res://tests/apple_runtime_collector.gd:11)
+SCRIPT ERROR: Parse Error: Cannot pass a value of type "Viewport.RenderInfo" as "Viewport.RenderInfoType".
+          at: GDScript::reload (res://tests/apple_runtime_collector.gd:11)
+SCRIPT ERROR: Parse Error: Invalid argument for "get_render_info()" function: argument 1 should be "Viewport.RenderInfoType" but is "Viewport.RenderInfo".
+          at: GDScript::reload (res://tests/apple_runtime_collector.gd:11)
+SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
+          at: GDScript::reload (res://tests/apple_profile_runtime.gd:0)
+ERROR: Failed to load script "res://tests/apple_profile_runtime.gd" with error "Compilation failed".
+   at: load (modules/gdscript/gdscript_resource_format.cpp:46)
+SCENE112_PROFILE_FIXTURE={"actual_adapter":"llvmpipe (LLVM 19.1.7, 256 bits)","forced":false,"lod_getter":1.0,"scale_getter":0.5}
+SCRIPT ERROR: Invalid call. Nonexistent function 'new' in base 'GDScript'.
+          at: run (res://tests/apple_profile_runtime.gd:23)
+          GDScript backtrace (most recent call first):
+              [0] run (res://tests/apple_profile_runtime.gd:23)
