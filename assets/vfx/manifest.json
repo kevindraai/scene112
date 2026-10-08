@@ -1,0 +1,49 @@
+{
+  "author": "Tuned.pixel / SC\u00c8NE 112",
+  "license": "Private/proprietary project asset; no third-party asset content",
+  "source": "tools/art/author_fire_vfx.py",
+  "technique": "Original analytic envelopes with deterministic multi-frequency scalar fields; no sampled photographs",
+  "textures": [
+    {
+      "path": "assets/vfx/textures/flame_wisp.png",
+      "sha256": "6f373bf214a9a21606f2820a51c55f6f0c8bca7d7e94a3284f7794e0ba25a487",
+      "width": 256,
+      "height": 256,
+      "channels": 4,
+      "bytes": 143392,
+      "seed": 1122026,
+      "alpha_nonzero_pixels": 20216
+    },
+    {
+      "path": "assets/vfx/textures/smoke_curl.png",
+      "sha256": "adce6843fb39f49c373d663008a193061b776352568a0a65c719fee5dee5c4b4",
+      "width": 256,
+      "height": 256,
+      "channels": 4,
+      "bytes": 77789,
+      "seed": 1122027,
+      "alpha_nonzero_pixels": 41603
+    },
+    {
+      "path": "assets/vfx/textures/steam_veil.png",
+      "sha256": "27e5d5692f9ffff3148eda0bc21445315345b1086e76f63c709730cbf580c69f",
+      "width": 256,
+      "height": 256,
+      "channels": 4,
+      "bytes": 54142,
+      "seed": 1122028,
+      "alpha_nonzero_pixels": 41780
+    },
+    {
+      "path": "assets/vfx/textures/water_drop.png",
+      "sha256": "7d5d64ce34d9320adda0af70809c7dff9f7df3a623b109efcdc03214e5047770",
+      "width": 128,
+      "height": 128,
+      "channels": 4,
+      "bytes": 23951,
+      "seed": 1122029,
+      "alpha_nonzero_pixels": 4660
+    }
+  ],
+  "rgba8_uncompressed_bytes": 851968
+}

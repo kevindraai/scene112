@@ -3,7 +3,7 @@
   "author": "SCENE112 original authoring",
   "blender": "4.3.2",
   "meshes": 1,
-  "triangles": 35780,
+  "triangles": 24862,
   "animations": [
     "carry",
     "idle",
@@ -14,56 +14,14 @@
   "license": "SCENE112 original private/proprietary project content; docs/LICENSES.md",
   "source_blend": "source/3d/characters/civilian.blend",
   "source_builder": "source/3d/characters/build_characters.py",
-  "source_helper": "source/3d/vehicles/assetkit.py",
+  "source_helper": "source/3d/characters/assetkit.py",
   "texture_directory": "assets/textures/characters",
   "runtime_glb": "assets/models/characters/civilian.glb",
-  "glb_sha256": "c011e35016fed0cdbfa41044ba1efe87e59ae03dc78f914d2deaaf0caa26efef",
+  "glb_sha256": "652c5a87c3edab2693954260334a3d39dd42296f9fa162a6807976ef196b5356",
   "packed_editable_images": true,
   "preview_rendered": false,
-  "source_validation": {
-    "asset": "civilian",
-    "accepted_glb_sha256": "c011e35016fed0cdbfa41044ba1efe87e59ae03dc78f914d2deaaf0caa26efef",
-    "rebuild_glb_sha256": "aa042d61f0f216cd320362f32b735a73fa884894b511695c15c0c8327b5389d7",
-    "byte_identical": false,
-    "json_identical": true,
-    "embedded_images_identical": true,
-    "positions_uv_weights_animations_identical": true,
-    "equivalent_geometry": true,
-    "allowed_evaluation_deltas": [
-      {
-        "buffer_view": 23,
-        "kind": "oriented triangle ordering only"
-      },
-      {
-        "buffer_view": 53,
-        "kind": "oriented triangle ordering only"
-      },
-      {
-        "buffer_view": 62,
-        "kind": "oriented triangle ordering only"
-      },
-      {
-        "buffer_view": 74,
-        "kind": "oriented triangle ordering only"
-      },
-      {
-        "buffer_view": 80,
-        "kind": "oriented triangle ordering only"
-      },
-      {
-        "buffer_view": 86,
-        "kind": "oriented triangle ordering only"
-      },
-      {
-        "buffer_view": 92,
-        "kind": "oriented triangle ordering only"
-      }
-    ],
-    "packed_images": 15,
-    "external_textures_present": false,
-    "reexported": true,
-    "render_calls": 0,
-    "source_layout": "final repository source/3d + assets/models + assets/textures",
-    "runtime_asset_replaced": false
-  }
+  "source_refinement": "source/3d/characters/character_polish.py",
+  "rig_contract": "18 original bones/rest/inverse binds; unchanged idle/walk/run/carry keyframes",
+  "vertex_color_contract": "active AuthoredMaterialVariation as COLOR_0; bounded 0..1",
+  "texture_budget": "embedded 512x512 albedo/normal/roughness maps"
 }

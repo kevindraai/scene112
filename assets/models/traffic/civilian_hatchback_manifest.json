@@ -1,0 +1,77 @@
+{
+  "asset": "civilian_hatchback",
+  "author": "SCENE112 original authoring",
+  "blender": "4.3.2",
+  "meshes": 5,
+  "triangles": 17084,
+  "animations": [],
+  "coordinate_convention": "Blender +Y forward, +Z up; glTF/Godot -Z forward, +Y up",
+  "license": "SCENE112 original private/proprietary project content; docs/LICENSES.md",
+  "source_blend": "source/3d/traffic/civilian_hatchback.blend",
+  "source_builder": "source/3d/traffic/build_hatchback.py",
+  "source_helper": "source/3d/traffic/assetkit.py",
+  "texture_directory": "assets/textures/traffic",
+  "runtime_glb": "assets/models/traffic/civilian_hatchback.glb",
+  "glb_sha256": "bd02998d96964f3e9ce99d4829d87efe8ffbd60e7327b43823a13f221896688d",
+  "packed_editable_images": true,
+  "preview_rendered": false,
+  "source_rebuild": {
+    "asset": "civilian_hatchback",
+    "accepted_glb_sha256": "bd02998d96964f3e9ce99d4829d87efe8ffbd60e7327b43823a13f221896688d",
+    "rebuild_glb_sha256": "a5a7256a38ae1782e2c7eae803364a84af51693e0c267c800c5f7a7030b9cd6f",
+    "byte_identical": false,
+    "json_identical": true,
+    "embedded_images_identical": true,
+    "positions_uv_weights_animations_identical": true,
+    "equivalent_geometry": true,
+    "allowed_evaluation_deltas": [
+      {
+        "buffer_view": 4,
+        "kind": "oriented triangle ordering only"
+      }
+    ]
+  },
+  "packed_images": 9,
+  "headless_checks": 219,
+  "graphical_checks": 222,
+  "graphical_renderer": "Godot4.7.2 OpenGL4.5 Compatibility Mesa llvmpipe Linux software",
+  "native_hardware_claim": false,
+  "original_texture_maps": [
+    {
+      "path": "assets/textures/traffic/traffic_alloy_lenses_albedo.png",
+      "sha256": "2e690676043653b79e6e62f58651e71954aefc6e493e4195d2c0682e9467103b"
+    },
+    {
+      "path": "assets/textures/traffic/traffic_alloy_lenses_normal.png",
+      "sha256": "4abc2a07ecc171eed75127e3e319f365ea02828c0bacb25d7eac33d0e8d0a2e9"
+    },
+    {
+      "path": "assets/textures/traffic/traffic_alloy_lenses_roughness.png",
+      "sha256": "03ced789f54bceb0172454e58970ce2853a06dff14ce0916b061cdce592a4c06"
+    },
+    {
+      "path": "assets/textures/traffic/traffic_bluegray_paint_albedo.png",
+      "sha256": "ce41bd57adc44c826659684f92a5989208fd98c4fc5890c925fdf669538ca8f8"
+    },
+    {
+      "path": "assets/textures/traffic/traffic_bluegray_paint_normal.png",
+      "sha256": "087be2db29fd410654cbe4669433137341172faa1e2f65a7c1b80e2127e528c5"
+    },
+    {
+      "path": "assets/textures/traffic/traffic_bluegray_paint_roughness.png",
+      "sha256": "bdd9f14de6e6e60f7f7e765cefd43a381ca0fd44068c16827082593188014fba"
+    },
+    {
+      "path": "assets/textures/traffic/traffic_rubber_polymer_albedo.png",
+      "sha256": "589204422fb4c51b5aa4d390261ffe7e74e2c8bfbbed92ac6d299ad5108fc278"
+    },
+    {
+      "path": "assets/textures/traffic/traffic_rubber_polymer_normal.png",
+      "sha256": "04a708933872b62344f151c4400070214b91a25a06fa77e8527fde14f5922a74"
+    },
+    {
+      "path": "assets/textures/traffic/traffic_rubber_polymer_roughness.png",
+      "sha256": "d029364175b01c00f7774373072161d24b879a8720201e7720fdeb93e90d894c"
+    }
+  ]
+}

@@ -3,10 +3,10 @@ extends SceneTree
 const Director = preload("res://scripts/audio_director.gd")
 var failures := 0
 
-class WeatherVehicleFixture extends Node3D:
+class WeatherVehicleStub extends Node3D:
 	var speed := 0.0
 
-class WeatherDistrictFixture extends Node3D:
+class WeatherDistrictStub extends Node3D:
 	var objects: Dictionary = {}
 
 class WeatherContext extends Node3D:
@@ -16,14 +16,14 @@ class WeatherContext extends Node3D:
 	var police_model := {"mode": "none", "observations": []}
 	var menu_items := VBoxContainer.new()
 	var officer := CharacterBody3D.new()
-	var district := WeatherDistrictFixture.new()
+	var district := WeatherDistrictStub.new()
 	var at := Vector3(4, 0, 31)
 	func _ready() -> void:
 		add_child(officer)
 		add_child(district)
 		add_child(menu_items)
 		for id: String in ["police_car", "fire_truck"]:
-			var car := WeatherVehicleFixture.new()
+			var car := WeatherVehicleStub.new()
 			district.add_child(car)
 			district.objects[id] = car
 	func _controlled_position() -> Vector3:
@@ -47,7 +47,7 @@ func _run() -> void:
 	director.setup(app)
 	await process_frame
 	director.set_process(false)
-	check(director.status().waves_loaded == 24 and director.status().missing.is_empty(), "weather uses existing complete original audio set")
+	check(director.status().waves_loaded == 40 and director.status().missing.is_empty(), "M5 loads all 40 original audio files with inherited weather routing")
 	var rain: AudioStreamPlayer3D = director._ambience.rain
 	var birds: AudioStreamPlayer3D = director._ambience.birds
 	check(director.get_child_count() == 13, "weather adds only one bounded positional loop")

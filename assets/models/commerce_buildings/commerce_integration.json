@@ -1,0 +1,74 @@
+{
+  "units": "metres",
+  "up": "+Y",
+  "local_front": "-Z",
+  "no_exported_physics": true,
+  "no_new_interiors_or_gameplay": true,
+  "bakery": {
+    "world_origin": [
+      46,
+      0,
+      31
+    ],
+    "yaw": 0,
+    "body_footprint": [
+      13,
+      9
+    ],
+    "body_height": 4,
+    "awning_footprint": [
+      12,
+      2
+    ],
+    "preserve_existing_awning": true,
+    "closed_door_center_local": [
+      4.35,
+      1.2,
+      -4.51
+    ],
+    "front_world_z": 26.5,
+    "preserve_sign_world": [
+      46,
+      3.1,
+      26.38
+    ],
+    "hide_old_render_nodes": [
+      "Bakery (MeshInstance descendants only; keep StaticBody)",
+      "ShopWindow"
+    ]
+  },
+  "workshop": {
+    "world_origin": [
+      24,
+      0,
+      -44
+    ],
+    "yaw": 3.141592653589793,
+    "body_footprint": [
+      24,
+      16
+    ],
+    "body_height": 7.6,
+    "roof_envelope": [
+      25,
+      17
+    ],
+    "closed_loading_center_local": [
+      1,
+      2.3,
+      -8.014
+    ],
+    "front_world_z": -36,
+    "preserve_sign_world": [
+      24,
+      6.3,
+      -35.9
+    ],
+    "hide_old_render_nodes": [
+      "Warehouse (MeshInstance descendants only; keep StaticBody)",
+      "WarehouseRoof",
+      "LoadingDoor",
+      "LoadingDoorSeam instances at x23,z-35.9,y=.8/1.6/2.4/3.2/4"
+    ]
+  }
+}

@@ -11,6 +11,7 @@ var _intake: Node3D
 var _guidance: Node3D
 var _cones: Node3D
 var _points: Dictionary = {}
+var _person_labels := {}
 var _people: Array[CharacterBody3D] = []
 var _trainee: CharacterBody3D
 var _materials: Dictionary = {}
@@ -77,7 +78,7 @@ func _ready() -> void:
 
 func set_mode(mode: String) -> void:
 	_mode = mode
-	var traffic_active := mode in ["basis", "campaign"]
+	var traffic_active := mode in ["basis", "campaign", "free"]
 	var intake_active := mode == "intake"
 	_set_active(_traffic, traffic_active)
 	_set_active(_intake, intake_active)
@@ -91,18 +92,19 @@ func set_mode(mode: String) -> void:
 		else:
 			_district.objects.erase(id)
 			_district._titles.erase(id)
+	if mode in ["basis", "campaign"]: set_people(preload("res://scripts/police_case.gd").PEOPLE)
 	set_simulation_active(traffic_active)
 
 
 func set_simulation_active(active: bool) -> void:
-	_simulation_active = active and _mode in ["basis", "campaign"]
+	_simulation_active = active and _mode in ["basis", "campaign", "free"]
 	for person in _people:
 		person.set_simulation_active(_simulation_active)
 	if is_instance_valid(_trainee): _trainee.set_simulation_active(active and _mode == "intake")
 
 
 func show_guidance(enabled: bool) -> void:
-	_guidance.visible = enabled and _mode in ["basis", "campaign"]
+	_guidance.visible = enabled and _mode in ["basis", "campaign", "free"]
 
 
 func sync_cones(positions: Array) -> void:
@@ -124,6 +126,15 @@ func sync_cones(positions: Array) -> void:
 		shape.height = 0.65
 		_mesh(cone, Vector3(0, 0.4, 0), shape, Color("e39a42"), false)
 		_cylinder(cone, Vector3(0, 0.42, 0), 0.13, 0.11, Color("eee8d5"))
+		var body := StaticBody3D.new()
+		var collision := CollisionShape3D.new()
+		var blocker := CylinderShape3D.new()
+		blocker.radius = 0.22
+		blocker.height = 0.65
+		collision.shape = blocker
+		collision.position.y = 0.4
+		body.add_child(collision)
+		cone.add_child(body)
 
 
 func _process(delta: float) -> void:
@@ -136,7 +147,7 @@ func _process(delta: float) -> void:
 
 
 func _set_active(node: Node, enabled: bool) -> void:
-	if node is Node3D: node.visible = enabled
+	if node is Node3D: node.visible = enabled and not node.get_meta("replaced_visual", false)
 	if node is CollisionObject3D:
 		if not node.has_meta("original_layer"):
 			node.set_meta("original_layer", node.collision_layer)
@@ -160,6 +171,11 @@ func _build_wreck() -> void:
 		for z in [-1.3, 1.3]:
 			var wheel := _cylinder(wreck, Vector3(x, 0.42, z), 0.41, 0.18, Color("293541"))
 			wheel.rotation.z = PI / 2.0
+	_hide_wreck_meshes(wreck)
+	var authored: Node3D = load("res://assets/models/traffic/civilian_hatchback.glb").instantiate()
+	wreck.add_child(authored)
+	# Localized original scrape: an actual visible damage observation at front-right.
+	_box(wreck, Vector3(0.81, 0.7, -1.80), Vector3(0.22, 0.10, 0.05), Color("34383a"))
 	_label(_traffic, "VERKEERSINCIDENT", Vector3(-18, 2.8, 18), 0.0035)
 
 
@@ -172,6 +188,7 @@ func _person(id: String, title: String, at: Vector3, clothes: Color) -> void:
 	_people.append(person)
 	_points[id] = {"node": person, "title": title}
 	_label(_traffic, title.trim_prefix("Spreken · "), at + Vector3(0, 2.1, 0), 0.003)
+	_person_labels[id] = _traffic.get_child(-1)
 
 
 func _point(id: String, title: String, at: Vector3, parent: Node3D) -> void:
@@ -229,3 +246,17 @@ func _mesh(parent: Node3D, at: Vector3, shape: PrimitiveMesh, color: Color, soli
 	result.position = at
 	parent.add_child(result)
 	return result
+
+func set_people(people: Dictionary) -> void:
+	for person: String in ["lotte", "bram"]:
+		var id := "pc_" + person
+		var title := "Spreken · " + str(people[person].source)
+		_points[id].title = title
+		_person_labels[id].text = str(people[person].source)
+		if _district.objects.has(id): _district._titles[id] = title
+
+func _hide_wreck_meshes(node: Node) -> void:
+	if node is MeshInstance3D:
+		node.set_meta("replaced_visual", true)
+		node.hide()
+	for child in node.get_children(): _hide_wreck_meshes(child)

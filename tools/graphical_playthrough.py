@@ -15,7 +15,7 @@ parser.add_argument("--timeout", type=int, default=90)
 parser.add_argument("--rendering-method", choices=("gl_compatibility", "mobile", "forward_plus"))
 parser.add_argument("--rendering-driver", help="Explicit Godot driver for renderer research")
 parser.add_argument(
-    "--scenario", choices=("--playthrough", "--duty-playthrough", "--police-playthrough", "--visual-playthrough"), default="--playthrough",
+    "--scenario", choices=("--playthrough", "--duty-playthrough", "--police-playthrough", "--visual-playthrough", "--fire-playthrough", "--research-playthrough"), default="--playthrough",
     help="Use --scenario=--police-playthrough for the M2 police integration",
 )
 args = parser.parse_args()

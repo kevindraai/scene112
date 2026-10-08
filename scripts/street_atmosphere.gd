@@ -208,6 +208,7 @@ func register_ground(mesh: MeshInstance3D) -> bool:
 
 func _classify(mesh: MeshInstance3D, original: StandardMaterial3D) -> String:
 	var explicit := str(mesh.get_meta("street_surface",""))
+	if explicit == "interior": return ""
 	if explicit in ["ground","exterior","glass"]: return explicit
 	var tag := original.resource_name.to_lower()
 	if tag.contains("painted timber frames") and _is_lamp_mesh(mesh): return "luminaire"
@@ -351,11 +352,15 @@ func _set_material_condition(wet: bool) -> void:
 			_apple_materials = AppleSoftwareMaterials.new()
 			_apple_materials.setup(_district.get_parent() if _district.get_parent() is Node3D else _district)
 		else: _apple_materials.refresh()
+		_apple_materials.set_lighting(_sun, _environment, _lamps)
 
 
 func source_material(mesh: MeshInstance3D, surface: int) -> Material:
 	return _apple_materials.original_material(mesh, surface) if _apple_materials != null else mesh.get_active_material(surface)
 
+
+func sync_incident_albedo(mesh: MeshInstance3D, surface: int, source: StandardMaterial3D) -> void:
+	if _apple_materials != null: _apple_materials.sync_albedo(mesh, surface, source)
 
 func _exit_tree() -> void:
 	if _apple_materials != null: _apple_materials.restore()

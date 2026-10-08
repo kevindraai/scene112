@@ -1,0 +1,17 @@
+{
+  "author": "Original SCENE112 deterministic source",
+  "license": "Project private/proprietary",
+  "seed": 112404,
+  "size": [
+    512,
+    512
+  ],
+  "channels": {
+    "R": "mottled soot deposit",
+    "G": "vertical streak variation",
+    "B": "char edge microstructure",
+    "A": "water irregularity"
+  },
+  "sha256": "95b9b140500c81ed36525360900b3b71620ac5d0d113def7d0095dab8b28fd07",
+  "source": "source/aftermath/author_masks.py"
+}

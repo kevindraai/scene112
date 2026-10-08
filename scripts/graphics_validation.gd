@@ -23,7 +23,7 @@ func run(root_app: Node3D) -> void:
 	app.start_new("police")
 	app.state.equipment = true
 	app.state.radio_checked = true
-	if not _check(app.state.SCHEMA == 4 and app.state.condition == "day" and app.state.graphics_quality == "portable", "schema4 and safe visual defaults"): return
+	if not _check(app.state.SCHEMA == 7 and app.state.condition == "day" and app.state.graphics_quality == "portable", "schema7 and safe visual defaults"): return
 	app._apply_visual_settings()
 	if not _check(is_instance_valid(app.district.atmosphere), "atmosphere actually attached to root district"): return
 	_stage("models_and_rigs")
@@ -82,7 +82,7 @@ func _inspect_models() -> bool:
 				var active: Material = child.get_active_material(surface)
 				var material := app.district.atmosphere.source_material(child, surface) as StandardMaterial3D
 				if app.district.atmosphere.apple_software_basic and material != null:
-					if not _check(active is StandardMaterial3D and active != material and active.shading_mode in [BaseMaterial3D.SHADING_MODE_PER_VERTEX, BaseMaterial3D.SHADING_MODE_UNSHADED] and not active.normal_enabled and active.roughness_texture == null and active.albedo_texture == material.albedo_texture, "Apple vertex rendering retains actual source albedo: " + key): return false
+					if not _check(active != material and ((active is ShaderMaterial and active.get_meta("scene112_apple_vertex", false) and active.get_shader_parameter("albedo_texture") == material.albedo_texture and active.shader.code.contains("render_mode unshaded, fog_disabled")) or (active is StandardMaterial3D and active.shading_mode == BaseMaterial3D.SHADING_MODE_UNSHADED and active.albedo_texture == material.albedo_texture)), "Apple vertex rendering retains actual source albedo: " + key): return false
 				if material == null or materials.has(material.get_instance_id()): continue
 				materials[material.get_instance_id()] = true
 				if material.albedo_texture == null or material.roughness_texture == null or not material.normal_enabled or material.normal_texture == null: continue
@@ -205,7 +205,16 @@ func _drive() -> bool:
 	var before := _wheel_rotations(car)
 	var start := car.global_position
 	Input.action_press("move_forward")
-	if not await app._wait_for(func(): return car.global_position.distance_to(start) > 20, "actual authored vehicle >20m drive", 40): return false
+	var drive_trace := {"last_ms":0,"samples":[]}
+	var observed_drive := func():
+		var now := Time.get_ticks_msec()
+		if now - int(drive_trace.last_ms) >= 5000:
+			drive_trace.last_ms = now
+			drive_trace.samples.append({"wall_ms":now,"physics_frame":Engine.get_physics_frames(),"render_frame":Engine.get_frames_drawn(),"distance":car.global_position.distance_to(start),"speed":car.speed,"position":[car.position.x,car.position.y,car.position.z],"throttle":Input.get_action_strength("move_forward"),"brake":Input.is_action_pressed("brake"),"enabled":car.enabled_input})
+		return car.global_position.distance_to(start) > 20
+	var drove: bool = await app._wait_for(observed_drive, "actual authored vehicle >20m drive", 40)
+	print("SCENE112_GRAPHICS_DRIVE=", JSON.stringify(drive_trace))
+	if not drove: return false
 	if not _check(_wheel_motion(before, _wheel_rotations(car)), "actual forward movement rotates all imported wheels"): return false
 	if not _check(_wheel_centres_same(centres, _wheel_centres(car)), "rolling keeps wheel axle centres fixed in vehicle coordinates"): return false
 	var yaw: float = car.rotation.y

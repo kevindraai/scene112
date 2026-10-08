@@ -36,6 +36,7 @@ func show_academy() -> void:
 	_modal("Academie", "Oefen echte handelingen. De begeleider beoordeelt wat je doet en hoe je dat vastlegt.")
 	_app._button("Les 1 · Basisdienst op straat", _start_lesson.bind("basis", false))
 	_app._button("Les 2 · Arrestant en rapportage", _start_lesson.bind("intake", false))
+	_app._button("Les 3 · Brandweer basisinzet", _app.fire_ui.start_lesson)
 	_app._button("Basisdienst zelfstandig oefenen", _start_lesson.bind("basis", true))
 	_app._button("Terug naar mijn dienst", _return_to_app)
 
@@ -78,6 +79,7 @@ func _sync_site() -> void:
 		_site.set_mode(_mode)
 		if _practice: _site.show_guidance(false)
 	_site.sync_cones(data.cones)
+	if _model.mode == "free": _site.set_people(_model.person_data())
 
 
 func tick(delta: float) -> void:
@@ -86,7 +88,7 @@ func tick(delta: float) -> void:
 	if not _app.active or _app.paused: return
 	if _model.mode == "none": return
 	_model.tick(delta)
-	if _model.mode in ["basis", "campaign"]:
+	if _model.mode in ["basis", "campaign", "free"]:
 		var data: Dictionary = _model.to_dict()
 		var basics: Dictionary = data.basics
 		if _app.state.equipment and not basics.equipment: _model.mark_basics("equipment")
@@ -100,7 +102,7 @@ func tick(delta: float) -> void:
 		elif basics.drive and not basics.exit and _app.officer.global_position.distance_to(Vector3(-18, 0, 18)) < 16.0:
 			_model.mark_basics("exit")
 	_app.objective.text = _model.objective()
-	if _model.mode in ["basis", "campaign"]:
+	if _model.mode in ["basis", "campaign", "free"]:
 		var position: Vector3 = _app._controlled_position()
 		_app.route_label.text = "Kruising · %.0f m · Q: afzetten · E: waarnemen/spreken" % Vector2(position.x + 18, position.z - 18).length()
 	else:
@@ -134,8 +136,14 @@ func on_interact(id: String) -> bool:
 
 
 func handle_input(event: InputEvent) -> bool:
-	if not _app.active or _app.paused or _model.mode not in ["basis", "campaign"]:
+	if not _app.active or _app.paused or _model.mode not in ["basis", "campaign", "free"]:
 		return false
+	if _model.mode == "free" and event.is_action_pressed("radio"):
+		_modal(_model.case_title(), "Zet veilig af, verzamel eigen waarnemingen en beide verklaringen, en maak een onderbouwd PV.")
+		_app._button("Proces-verbaal opstellen", _show_report, not _model.can_report())
+		_app._button("Meldkamer · doorgeven", _app.show_radio)
+		_app._button("Terug naar de locatie", _app._resume)
+		return true
 	var requested: bool = event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_Q
 	if InputMap.has_action("place_cone") and event.is_action_pressed("place_cone"): requested = true
 	if not requested: return false
@@ -171,7 +179,7 @@ func _feedback(result: Dictionary) -> void:
 
 
 func _conversation(person: String) -> void:
-	var title := "Lotte · bestuurder" if person == "lotte" else "Bram · getuige"
+	var title := str(_model.person_data(person).source)
 	_modal(title, "Vraag wat iemand zelf zag of deed. Houd verklaringen apart van je eigen waarnemingen.")
 	_app._button("Open vraag: vertel wat er gebeurde", _speak.bind(person, "open"))
 	_app._button("Suggestie: u reed vast te hard?", _speak.bind(person, "suggestive"))
@@ -362,8 +370,14 @@ func _show_review(result: Dictionary) -> void:
 		_app.menu_items.add_child(summary)
 	if _model.phase == "completed": _show_archived_rows()
 	if _model.phase != "completed": _app._button("Concept verbeteren", _show_report)
-	var replay: Callable = start_campaign if _model.mode == "campaign" else _start_lesson.bind(str(_model.mode), _practice)
-	_app._button("Oefening opnieuw beginnen", replay)
+	if _model.mode == "free":
+		if _model.phase != "completed" and not result.is_empty():
+			_app._button("Afsluiten met deze tekortkomingen", _finalize_free)
+	else:
+		var replay: Callable = start_campaign if _model.mode == "campaign" else _start_lesson.bind(str(_model.mode), _practice)
+		_app._button("Oefening opnieuw beginnen", replay)
+	if _model.mode == "campaign" and _model.phase == "completed":
+		_app._button("Volgende zaak · De woningbrand", _app.fire_ui.start_campaign)
 	_app._button("Dienst vervolgen", _app._resume)
 
 
@@ -384,3 +398,9 @@ func _show_archived_rows() -> void:
 		text.custom_minimum_size.x = 390
 		text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		rows.add_child(text)
+
+func _finalize_free() -> void:
+	var result: Dictionary = _model.finalize_report()
+	if not result.get("ok", false): return
+	completed.emit("free", result.score.duplicate(true))
+	_show_review(result.score)

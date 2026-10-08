@@ -1,0 +1,94 @@
+{
+  "asset": "training_interiors",
+  "author": "SCENE112 original authoring",
+  "blender": "4.3.2",
+  "meshes": 4,
+  "triangles": 28620,
+  "animations": [],
+  "coordinate_convention": "Blender +Y forward, +Z up; glTF/Godot -Z forward, +Y up",
+  "license": "SCENE112 original private/proprietary project content; docs/LICENSES.md",
+  "source_blend": "source/3d/interiors/training_interiors.blend",
+  "source_builder": "source/3d/interiors/build_interiors.py",
+  "source_helper": "source/3d/interiors/assetkit.py",
+  "texture_directory": "assets/textures/interiors",
+  "runtime_glb": "assets/models/interiors/training_interiors.glb",
+  "glb_sha256": "b8368afe6442fce0d6f0a70dfc92451194505d9aeb9b658daa93b7ce391307a4",
+  "packed_editable_images": 12,
+  "preview_rendered": false,
+  "source_rebuild_glb_sha256": "a1e9c6edb1ed74329ba24a8203d738ccc479e7cdc24fa964c8a19edc5750d570",
+  "runtime_bytes_preserved": true,
+  "source_rebuild_comparison": {
+    "asset": "training_interiors",
+    "accepted_glb_sha256": "b8368afe6442fce0d6f0a70dfc92451194505d9aeb9b658daa93b7ce391307a4",
+    "rebuild_glb_sha256": "a1e9c6edb1ed74329ba24a8203d738ccc479e7cdc24fa964c8a19edc5750d570",
+    "byte_identical": false,
+    "json_identical": true,
+    "embedded_images_identical": true,
+    "positions_uv_weights_animations_identical": true,
+    "equivalent_geometry": true,
+    "allowed_evaluation_deltas": [
+      {
+        "buffer_view": 35,
+        "kind": "oriented triangle ordering only"
+      },
+      {
+        "buffer_view": 59,
+        "kind": "oriented triangle ordering only"
+      },
+      {
+        "buffer_view": 67,
+        "kind": "oriented triangle ordering only"
+      }
+    ]
+  },
+  "textures": [
+    {
+      "path": "assets/textures/interiors/Interior brushed steel_albedo.png",
+      "sha256": "095f3ea73229ebfb036aca1fbf13cdc517ff965c0e329dfdd62788583b3b4c21"
+    },
+    {
+      "path": "assets/textures/interiors/Interior brushed steel_normal.png",
+      "sha256": "7d5f636a220360f59a008a33e999c8afdfba90cc375531b9152fbba3d4c1b245"
+    },
+    {
+      "path": "assets/textures/interiors/Interior brushed steel_roughness.png",
+      "sha256": "b894bc6395de1a57370851a9d47161315b62360123e36beca348a3b0b9a331bb"
+    },
+    {
+      "path": "assets/textures/interiors/Interior laminated oak_albedo.png",
+      "sha256": "439fa680838ab69f9d3753a99cc945381d02bd59961ce3a9e48b4a9eaa6ed41a"
+    },
+    {
+      "path": "assets/textures/interiors/Interior laminated oak_normal.png",
+      "sha256": "4b5e252a9d75b679c9ea3652e1461ec05e0e6c03b3b9499ad0e3695d6e54f048"
+    },
+    {
+      "path": "assets/textures/interiors/Interior laminated oak_roughness.png",
+      "sha256": "3fc421b5e190799b8657b14a1e8e2169215356d41e54de6d6eb69046603d7893"
+    },
+    {
+      "path": "assets/textures/interiors/Interior original powder coating_albedo.png",
+      "sha256": "206401ad83bbcff4048512d023993c810d02fe5927af5c3786b9dda18116aade"
+    },
+    {
+      "path": "assets/textures/interiors/Interior original powder coating_normal.png",
+      "sha256": "ca6a1efc55544070d1203b1f4a9dc3fb43a34c6a588300581bb21f32dccca17b"
+    },
+    {
+      "path": "assets/textures/interiors/Interior original powder coating_roughness.png",
+      "sha256": "4126790a4a52ed3857f9110b9f2de627223155a863703ebf0ff22fea8199aede"
+    },
+    {
+      "path": "assets/textures/interiors/Interior upholstery and polymer_albedo.png",
+      "sha256": "eae793b2ce1ad825cbb2de6699d3f67e6681701a2a4c3f4a8d59e7f79f97c4e0"
+    },
+    {
+      "path": "assets/textures/interiors/Interior upholstery and polymer_normal.png",
+      "sha256": "06814fd7f50bf61818423199647feb30b611d4cd9c3954b021c2e2353146bc2e"
+    },
+    {
+      "path": "assets/textures/interiors/Interior upholstery and polymer_roughness.png",
+      "sha256": "06b2497dce303da39520566d1bc679670034a4dd5906650c99f31663cd0a8e7a"
+    }
+  ]
+}

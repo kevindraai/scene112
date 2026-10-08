@@ -47,7 +47,7 @@ func _initialize() -> void:
 	check(not restored.restore(invalid_vehicle), "reject invalid incident save")
 	check(restored.to_dict() == original, "vehicle/incident rejection leaves duty untouched")
 	var ledger := preload("res://scripts/dispatch.gd").new()
-	ledger.start(112)
+	ledger.start(112, "fire")
 	ledger.tick(25.0)
 	ledger.accept()
 	var driving := State.new()
@@ -55,6 +55,10 @@ func _initialize() -> void:
 	driving.occupied_vehicle = "fire_truck"
 	driving.vehicles.fire_truck = {"position": [42.0, 0.1, -28.0], "yaw": -1.2}
 	driving.dispatch = ledger.to_dict()
+	var outside := preload("res://scripts/outside_fire_case.gd").new()
+	var fire_at: Array = ledger.incident.position
+	outside.begin(ledger.serial, int(ledger.incident.variant), Vector3(fire_at[0], fire_at[1], fire_at[2]))
+	driving.outside_fire = outside.to_dict()
 	var seated := State.new()
 	check(seated.restore(driving.to_dict()) and seated.occupied_vehicle == "fire_truck", "restore seated role and vehicle state")
 	check(seated.dispatch.incident.phase == "accepted", "restore accepted incident and chronology")

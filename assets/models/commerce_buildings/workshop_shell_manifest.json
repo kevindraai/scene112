@@ -1,0 +1,18 @@
+{
+  "asset": "workshop_shell",
+  "author": "SCENE112 original authoring",
+  "blender": "4.3.2",
+  "meshes": 3,
+  "triangles": 6282,
+  "animations": [],
+  "coordinate_convention": "Godot local front-Z/up+Y/metres; Blender +Y forward/+Z up",
+  "license": "SCENE112 original private/proprietary project content; docs/LICENSES.md",
+  "source_blend": "source/3d/commerce_buildings/workshop_shell.blend",
+  "source_builder": "source/3d/commerce_buildings/build_commerce.py",
+  "source_helper": "source/3d/commerce_buildings/assetkit.py",
+  "texture_directory": "assets/textures/commerce_buildings",
+  "runtime_glb": "assets/models/commerce_buildings/workshop_shell.glb",
+  "glb_sha256": "e80699d258aa585ebf8c70721538c8d821e9e0a39dd7c3c0022bec115116b19e",
+  "packed_editable_images": true,
+  "preview_rendered": false
+}

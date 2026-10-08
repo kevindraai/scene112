@@ -8,8 +8,9 @@ import sys
 import math
 import bpy
 from mathutils import Vector
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'vehicles'))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 import assetkit as k
+from character_polish import improve
 
 BASE = Path(__file__).resolve().parents[3]
 TEX = BASE / 'assets/textures/characters'
@@ -33,7 +34,7 @@ def skin(obj, bone, weights=None):
     return obj
 
 
-def ringbody(name, sections, mat, root, bone, count=32, weights=None):
+def ringbody(name, sections, mat, root, bone, count=24, weights=None):
     # Elliptical anatomical cross-sections, rounded by one Catmull-Clark pass.
     vertices = []
     for z, cx, cy, rx, ry in sections:
@@ -60,7 +61,7 @@ def limb(name, points, radii, mat, root, bone, weights=None):
     normal = axis.cross(Vector((0, 1, 0))).normalized()
     other = axis.cross(normal).normalized()
     vertices = []
-    count = 24
+    count = 16
     for at, radius in zip(points, radii):
         for i in range(count):
             a = i * math.tau / count
@@ -80,7 +81,7 @@ def limb(name, points, radii, mat, root, bone, weights=None):
     return skin(obj, bone, weights)
 
 
-def sphere(name, at, scale, mat, root, bone, segments=24, rings=14):
+def sphere(name, at, scale, mat, root, bone, segments=16, rings=10):
     return skin(k.sphere(name, at, scale, mat, root, segments, rings), bone)
 
 
@@ -100,7 +101,7 @@ def materials(police):
         'eye': k.material('eye_white', (.80, .83, .81), .30),
         'iris': k.material('iris', (.055, .16, .12) if police else (.15, .078, .028), .32),
         'pupil': k.material('pupil', (.006, .008, .007), .25),
-        'top': k.material('police_navy_cloth' if police else 'civilian_sage_cloth', (.018, .052, .089) if police else (.14, .19, .115), .89, 0, TEX, 'fabric'),
+        'top': k.material('police_navy_cloth' if police else 'civilian_sage_cloth', (.035, .075, .12) if police else (.14, .19, .115), .89, 0, TEX, 'fabric'),
         'pants': k.material('police_trouser_cloth' if police else 'civilian_denim', (.028, .036, .048) if police else (.036, .075, .125), .91, 0, TEX, 'fabric'),
         'rubber': k.material('duty_boot_rubber' if police else 'trainer_rubber', (.025, .025, .029), .87, 0, TEX, 'rubber'),
         'leather': k.material('duty_boot_upper' if police else 'trainer_upper', (.032, .042, .041) if police else (.16, .12, .085), .57, 0, TEX, 'rubber'),
@@ -296,6 +297,7 @@ def build(police):
     root=k.empty('OfficerAvatar' if police else 'CivilianAdult')
     m=materials(police)
     body(root,m,police);face(root,m,police)
+    improve(sys.modules[__name__],root,m,police)
     arm=rig(root);animate(arm)
     k.finish(root,OUT,'officer' if police else 'civilian',3.6,1.85)
 

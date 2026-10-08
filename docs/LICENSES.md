@@ -11,3 +11,11 @@ Alle audio in `assets/audio` is origineel gecomponeerd/gesynthetiseerd voor SCÈ
 Godot 4.7.2 en de exporttemplates: MIT, https://godotengine.org/license/ . De engine bevat componenten onder aanvullende licenties: https://github.com/godotengine/godot/blob/4.7.2-stable/COPYRIGHT.txt . De licentiepagina is vanuit het hoofdmenu bereikbaar; distributies moeten Godot’s copyright/licenties behouden.
 
 De projectbron is private/proprietary, tenzij de repository-eigenaar later een projectlicentie vaststelt. De aanwezigheid van MIT-enginecode verleent geen licentie op de gamebron.
+
+## Conceptbundel M3–M5
+
+De conceptbundel bevat 40 originele offline WAV-bestanden, waaronder de aanvullende brandweer-, onderzoek-/verhoor- en contextlagen. Ze zijn reproduceerbaar gesynthetiseerd/gecomponeerd met de projectbronnen; De manifests onder `assets/audio` (basis, fire, investigation en free) registreren de afzonderlijke herkomst, hashes en PCM-eigenschappen. Er is geen streamingdienst, externe samplebibliotheek of commerciële audiomiddleware nodig. De bestaande private/proprietary projectlicentie blijft gelden.
+
+De aanvullende gevels/interieurs, verkeers- en hulpdienstobjecten, brandnasleep en karakter/PPE-verfijning zijn oorspronkelijke projectassets. Bewerkbare Blender-bronnen, authoringscripts, eigen 512px-maps en manifests blijven onder `source/3d` en `assets` bewaard. De verfijnde volwassenen/PPE gebruiken dezelfde originele 18-bone rig en vier animatieclips; materialen bevatten eigen vertexkleurvariatie. Fictionele emblemen/PPE impliceren geen echt korpsmerk, productcertificatie of operationele beschermingsclaim. Geen betaalde of gedownloade personage-/texturebibliotheek is toegevoegd.
+
+De conceptstatus of opleverdeadline wijzigt geen licentie of herkomstverplichting. Godot en meegeleverde componenten behouden hun eigen copyright-/licentieteksten.

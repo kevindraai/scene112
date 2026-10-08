@@ -17,10 +17,10 @@ func run():
 	source.albedo_texture=texture;source.normal_texture=texture;source.roughness_texture=texture
 	mesh.mesh.material=source;world.add_child(mesh)
 	var p:=Profile.new();p.setup(app)
-	var simple:=mesh.get_active_material(0) as StandardMaterial3D
-	check(simple!=source and simple.shading_mode==BaseMaterial3D.SHADING_MODE_PER_VERTEX,"vertex shading on instance")
-	check(not simple.normal_enabled and simple.normal_texture==null and simple.roughness_texture==null and not simple.clearcoat_enabled and simple.specular_mode==BaseMaterial3D.SPECULAR_DISABLED,"remove expensive fragment features")
-	check(simple.albedo_texture==texture and simple.albedo_color==source.albedo_color,"retain real albedo")
+	var simple:=mesh.get_active_material(0) as ShaderMaterial
+	check(simple!=source and simple.shader.code.contains("render_mode unshaded, fog_disabled"),"small vertex diffuse shader on instance")
+	check(not simple.shader.code.contains("NORMAL_MAP") and not simple.shader.code.contains("ROUGHNESS") and not simple.shader.code.contains("SPECULAR"),"remove expensive fragment features")
+	check(simple.get_shader_parameter("albedo_texture")==texture and simple.get_shader_parameter("base_color")==source.albedo_color,"retain real albedo")
 	check(source.normal_enabled and source.normal_texture==texture and source.clearcoat_enabled,"cached source untouched")
 	check(p.original_material(mesh,0)==source,"strong source retained for PBR validation")
 	p.refresh();check(mesh.get_active_material(0)==simple,"stable identity on repeated refresh")

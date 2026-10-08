@@ -8,6 +8,8 @@ signal interacted(id: String)
 const VehicleScript = preload("res://scripts/vehicle.gd")
 const PedestrianScript = preload("res://scripts/pedestrian.gd")
 const AtmosphereScript = preload("res://scripts/street_atmosphere.gd")
+const Traffic = preload("res://scripts/district_traffic.gd")
+var traffic: Node3D
 var atmosphere: Node3D
 var lamp_heads: Array[Vector3] = []
 var _pbr_materials: Dictionary = {}
@@ -47,14 +49,20 @@ func _ready() -> void:
 	_vehicle("fire_truck", "Tankautospuit · brandweer", Vector3(28, 0, 5), true)
 	_civilians()
 	_authored_street()
+	_authored_duty_buildings()
+	_authored_commerce()
 	atmosphere = AtmosphereScript.new()
 	atmosphere.setup(self)
 	atmosphere.set_lamp_positions(lamp_heads)
 	atmosphere.set_quality("portable")
+	traffic = Traffic.new()
+	add_child(traffic)
+	traffic.setup_routes(self)
 
 
 func set_simulation_active(active: bool) -> void:
 	simulation_active = active
+	if is_instance_valid(traffic): traffic.set_simulation_active(active)
 	for pedestrian in _pedestrians:
 		pedestrian.set_simulation_active(active)
 	for vehicle in _vehicles:
@@ -198,16 +206,11 @@ func _fire_station() -> void:
 	_box("GarageFloor", Vector3(29, 0.018, -6.4), Vector3(19.5, 0.025, 10), Color("a3abb0"), false)
 	_sign("BRANDWEER  /  NOORDERKADE", Vector3(29, 5.05, -1.25), 0.13, CREAM)
 	_sign("Veilig uit. Samen thuis.", Vector3(29, 3.2, -11.25), 0.09, CREAM)
-	for x in [22.0, 36.0]:
-		_box("KitCabinet", Vector3(x, 1.0, -9), Vector3(2.1, 2.0, 0.7), RED)
-		for y in [0.8, 1.35]:
-			_box("KitStripe", Vector3(x, y, -8.63), Vector3(1.7, 0.09, 0.04), Color("e6d26c"), false)
+	for x in [22.0, 36.0]: _training_prop("TrainingLocker", Vector3(x, 0.02, -9))
 	_station("fire_equipment", "PBM · brandweerdienst", Vector3(22, 0, -7.5))
 	_sign("PBM  /  UITRUSTING", Vector3(22, 2.5, -8.6), 0.07, NAVY)
 	var radio := _station("fire_radio", "Meldkamer · kazerneradio", Vector3(29, 0, -9.5))
-	_box("KazerneRadioDesk", Vector3(0, 0.6, -0.7), Vector3(2.4, 1.2, 0.8), NAVY, true, radio)
-	_box("KazerneRadio", Vector3(0, 1.35, -0.7), Vector3(0.65, 0.23, 0.38), Color("252f37"), false, radio)
-	_box("KazerneRadioScreen", Vector3(0, 1.36, -0.5), Vector3(0.4, 0.1, 0.02), Color("75d1b5"), false, radio)
+	_training_prop("RadioDesk", Vector3(0, 0.02, -0.7), radio)
 	_sign("MELDKAMER", Vector3(29, 2.1, -9.8), 0.07, NAVY)
 	_box("TrainingApron", Vector3(46, 0.014, -3), Vector3(10, 0.025, 20), PAVING, false)
 	for z in [-9.0, -3.0, 3.0]:
@@ -567,3 +570,59 @@ func _prop_collision(label: String, at: Vector3, size: Vector3) -> void:
 	collider.shape = shape
 	body.add_child(collider)
 	add_child(body)
+
+
+func _training_prop(id: String, at: Vector3, parent: Node3D = self) -> Node3D:
+	var set_scene := load("res://assets/models/interiors/training_interiors.glb") as PackedScene
+	var set_root := set_scene.instantiate() as Node3D
+	var prop := set_root.find_child(id, true, false) as Node3D
+	for node: Node in _prop_nodes(prop): node.owner = null
+	prop.get_parent().remove_child(prop)
+	prop.position = at
+	parent.add_child(prop)
+	set_root.free()
+	for node: Node in _prop_nodes(prop):
+		if not node is MeshInstance3D: continue
+		node.set_meta("street_surface", "interior")
+		var body := StaticBody3D.new()
+		var collision := CollisionShape3D.new()
+		collision.shape = node.mesh.create_trimesh_shape()
+		body.add_child(collision)
+		node.add_child(body)
+	return prop
+
+func _prop_nodes(parent: Node) -> Array[Node]:
+	var nodes: Array[Node] = [parent]
+	for child in parent.get_children(): nodes.append_array(_prop_nodes(child))
+	return nodes
+
+func _authored_duty_buildings() -> void:
+	var names := ["BureauRear", "BureauWest", "BureauEast", "BureauFrontLeft", "BureauFrontRight", "BureauLintel", "BureauRoof", "BureauWindow", "KazerneRear", "KazerneSide", "KazerneFront", "KazerneRoof", "GarageColumn"]
+	for node: Node in get_children():
+		var old_visual := false
+		for prefix: String in names:
+			if str(node.name).begins_with(prefix): old_visual = true
+		if str(node.name).begins_with("WindowFrame") and absf(node.position.z - 0.265) < 0.001: old_visual = true
+		if old_visual:
+			if node is MeshInstance3D: node.hide()
+			for child: Node in node.get_children():
+				if child is MeshInstance3D: child.hide()
+	for item in [["bureau_shell", Vector3(0, 0, -4.5)], ["kazerne_shell", Vector3(29, 0, -6.4)]]:
+		var shell: Node3D = load("res://assets/models/duty_buildings/%s.glb" % item[0]).instantiate()
+		shell.name = "Authored_" + str(item[0])
+		shell.position = item[1]
+		add_child(shell)
+
+func _authored_commerce() -> void:
+	for node: Node in get_children():
+		if str(node.name) in ["Bakery", "Warehouse"]:
+			for child: Node in node.get_children():
+				if child is MeshInstance3D: child.hide()
+		elif str(node.name) in ["ShopWindow", "WarehouseRoof", "LoadingDoor"] or str(node.name).begins_with("LoadingDoorSeam"):
+			if node is MeshInstance3D: node.hide()
+	for item in [["bakery_shell", Vector3(46, 0, 31), 0.0], ["workshop_shell", Vector3(24, 0, -44), PI]]:
+		var shell: Node3D = load("res://assets/models/commerce_buildings/%s.glb" % item[0]).instantiate()
+		shell.name = "Authored_" + str(item[0])
+		shell.position = item[1]
+		shell.rotation.y = item[2]
+		add_child(shell)

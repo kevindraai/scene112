@@ -21,7 +21,7 @@ func _run() -> void:
 	root.add_child(director)
 	await process_frame
 	director.set_process(false)
-	check(director.status().missing.is_empty() and director.status().waves_loaded == 24, "all original audio assets import and load")
+	check(director.status().missing.is_empty() and director.status().waves_loaded == Director.FILES.size(), "all original audio assets import and load")
 	for bus: String in Director.BUSES:
 		check(AudioServer.get_bus_index(bus) >= 0, "mixer bus exists: " + bus)
 	var maximum_peak := 0.0

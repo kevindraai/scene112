@@ -1,0 +1,101 @@
+[
+  {
+    "file": "commerce_masonry_albedo.png",
+    "resolution": [
+      512,
+      512
+    ],
+    "sha256": "6cc40d91fc1771611dbfb5eae68e2e4c8f00b9f61e457acd8ea4e9ec6c0da508",
+    "author": "Original SCENE112",
+    "source": "source/3d/commerce_buildings/build_commerce.py / street_surface_fields.py",
+    "license": "Project private/proprietary"
+  },
+  {
+    "file": "commerce_masonry_normal.png",
+    "resolution": [
+      512,
+      512
+    ],
+    "sha256": "246bf3a571b77016c24ddc24d2e1aaf9663049dae1df2bb7b14409b2293937e6",
+    "author": "Original SCENE112",
+    "source": "source/3d/commerce_buildings/build_commerce.py / street_surface_fields.py",
+    "license": "Project private/proprietary"
+  },
+  {
+    "file": "commerce_masonry_roughness.png",
+    "resolution": [
+      512,
+      512
+    ],
+    "sha256": "bdcefc554cc8ef8965be14678630d51b1f005f387cf687f5f26da0f4d8e137f6",
+    "author": "Original SCENE112",
+    "source": "source/3d/commerce_buildings/build_commerce.py / street_surface_fields.py",
+    "license": "Project private/proprietary"
+  },
+  {
+    "file": "commerce_paint_albedo.png",
+    "resolution": [
+      512,
+      512
+    ],
+    "sha256": "52aa2366fafe1d5fad25aa51b1503900aa6492fb956412da480428ce06a83562",
+    "author": "Original SCENE112",
+    "source": "source/3d/commerce_buildings/build_commerce.py / street_surface_fields.py",
+    "license": "Project private/proprietary"
+  },
+  {
+    "file": "commerce_paint_normal.png",
+    "resolution": [
+      512,
+      512
+    ],
+    "sha256": "624df6052da6eac4847406654d20d40c5280eaf71ba8a2d50d44f7f0e28a225d",
+    "author": "Original SCENE112",
+    "source": "source/3d/commerce_buildings/build_commerce.py / street_surface_fields.py",
+    "license": "Project private/proprietary"
+  },
+  {
+    "file": "commerce_paint_roughness.png",
+    "resolution": [
+      512,
+      512
+    ],
+    "sha256": "acd292bcd86c5f9d4622d9c98a9c1dca45613a03226eed8eb7b6a062ecc20abc",
+    "author": "Original SCENE112",
+    "source": "source/3d/commerce_buildings/build_commerce.py / street_surface_fields.py",
+    "license": "Project private/proprietary"
+  },
+  {
+    "file": "commerce_sheet_albedo.png",
+    "resolution": [
+      512,
+      512
+    ],
+    "sha256": "a67a138901e45197f22cbba3cd3035455102ed288a05e2c072298377bf5b60fe",
+    "author": "Original SCENE112",
+    "source": "source/3d/commerce_buildings/build_commerce.py / street_surface_fields.py",
+    "license": "Project private/proprietary"
+  },
+  {
+    "file": "commerce_sheet_normal.png",
+    "resolution": [
+      512,
+      512
+    ],
+    "sha256": "624df6052da6eac4847406654d20d40c5280eaf71ba8a2d50d44f7f0e28a225d",
+    "author": "Original SCENE112",
+    "source": "source/3d/commerce_buildings/build_commerce.py / street_surface_fields.py",
+    "license": "Project private/proprietary"
+  },
+  {
+    "file": "commerce_sheet_roughness.png",
+    "resolution": [
+      512,
+      512
+    ],
+    "sha256": "a114e32ec44ec4283fcfdda2fbcb6441b0cf0cb6758250d609304f3b7a015cc5",
+    "author": "Original SCENE112",
+    "source": "source/3d/commerce_buildings/build_commerce.py / street_surface_fields.py",
+    "license": "Project private/proprietary"
+  }
+]

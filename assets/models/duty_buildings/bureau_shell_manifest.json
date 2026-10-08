@@ -1,0 +1,156 @@
+{
+  "asset": "bureau_shell",
+  "author": "SCENE112 original authoring",
+  "blender": "4.3.2",
+  "meshes": 2,
+  "triangles": 18210,
+  "animations": [],
+  "coordinate_convention": "Godot local front+Z/up+Y/metres; Blender -Y forward/+Z up",
+  "license": "SCENE112 original private/proprietary project content; docs/LICENSES.md",
+  "source_blend": "source/3d/duty_buildings/bureau_shell.blend",
+  "source_builder": "source/3d/duty_buildings/build_duty_buildings.py",
+  "source_helper": "source/3d/duty_buildings/assetkit.py",
+  "texture_directory": "assets/textures/duty_buildings",
+  "runtime_glb": "assets/models/duty_buildings/bureau_shell.glb",
+  "glb_sha256": "1b4bbc1bf0008d0ddaabeb056625afa6afd1aac728c60a4a3c2325fdb0588c6f",
+  "packed_editable_images": true,
+  "preview_rendered": false,
+  "source_rebuild": {
+    "asset": "bureau_shell",
+    "accepted_glb_sha256": "1b4bbc1bf0008d0ddaabeb056625afa6afd1aac728c60a4a3c2325fdb0588c6f",
+    "rebuild_glb_sha256": "1b4bbc1bf0008d0ddaabeb056625afa6afd1aac728c60a4a3c2325fdb0588c6f",
+    "byte_identical": true,
+    "json_identical": true,
+    "embedded_images_identical": true,
+    "positions_uv_weights_animations_identical": true,
+    "equivalent_geometry": true,
+    "allowed_evaluation_deltas": []
+  },
+  "packed_images": 15,
+  "headless_checks": 142,
+  "graphical_checks": 146,
+  "fixture_actual_geometry_clearance": true,
+  "native_hardware_claim": false,
+  "original_maps": [
+    {
+      "path": "assets/textures/duty_buildings/Duty cast concrete_albedo.png",
+      "sha256": "ab6f0ff71a30481f241530ae1b2a90fbdafb2a82d54b73d5dbdc934385668f47",
+      "resolution": [
+        512,
+        512
+      ]
+    },
+    {
+      "path": "assets/textures/duty_buildings/Duty cast concrete_normal.png",
+      "sha256": "8a1fb150869a5a4f5de82e9b99bc0e5d6ba94b04c31a29a751ecc7130cd21819",
+      "resolution": [
+        512,
+        512
+      ]
+    },
+    {
+      "path": "assets/textures/duty_buildings/Duty cast concrete_roughness.png",
+      "sha256": "de7d6851bed66847efdd7d8e9224ff089dc83f29c4ee82fdda0e54da7b314cea",
+      "resolution": [
+        512,
+        512
+      ]
+    },
+    {
+      "path": "assets/textures/duty_buildings/Duty gasket and recessed trim_albedo.png",
+      "sha256": "2f00a1b716dbc49ab482556f76ea84c11605dd8157cde8c891cdf587c2182ddb",
+      "resolution": [
+        512,
+        512
+      ]
+    },
+    {
+      "path": "assets/textures/duty_buildings/Duty gasket and recessed trim_normal.png",
+      "sha256": "90a1d726bbf744ab54715ce7c09719c0197e3fe4a46cf3761a78a8afbb9fbf7e",
+      "resolution": [
+        512,
+        512
+      ]
+    },
+    {
+      "path": "assets/textures/duty_buildings/Duty gasket and recessed trim_roughness.png",
+      "sha256": "ebc4bb1b0b1a304aec9ad1a1d1e570ebe74f9222c5f044cf65f395767899999b",
+      "resolution": [
+        512,
+        512
+      ]
+    },
+    {
+      "path": "assets/textures/duty_buildings/Duty painted powder steel_albedo.png",
+      "sha256": "f131e6f1871c427f5f2893d66d794d6e4ac0aa51a2576442032c8bf45a7cbcc7",
+      "resolution": [
+        512,
+        512
+      ]
+    },
+    {
+      "path": "assets/textures/duty_buildings/Duty painted powder steel_normal.png",
+      "sha256": "c78a0a9ab0333818e3377831563cef9b7519faa33256092a951591fbec3bc657",
+      "resolution": [
+        512,
+        512
+      ]
+    },
+    {
+      "path": "assets/textures/duty_buildings/Duty painted powder steel_roughness.png",
+      "sha256": "617e3aabe967a3a17b091dd871317f83b0df195a18158d0daad2af50ca791d59",
+      "resolution": [
+        512,
+        512
+      ]
+    },
+    {
+      "path": "assets/textures/duty_buildings/Duty zinc roof metal_albedo.png",
+      "sha256": "e0904e823051379e0065ce9e6750a7d325a3d88c0e20887ccf257c146a53f5a8",
+      "resolution": [
+        512,
+        512
+      ]
+    },
+    {
+      "path": "assets/textures/duty_buildings/Duty zinc roof metal_normal.png",
+      "sha256": "1b3fc00a73aaa3dc03537020cad382cb2cb52647ec5b55c09945d7876ab1a171",
+      "resolution": [
+        512,
+        512
+      ]
+    },
+    {
+      "path": "assets/textures/duty_buildings/Duty zinc roof metal_roughness.png",
+      "sha256": "f8682f090d1faddb0a8ec5bda4b4fd928195e9b74fce5465928c91e341d2f64e",
+      "resolution": [
+        512,
+        512
+      ]
+    },
+    {
+      "path": "assets/textures/duty_buildings/duty_masonry_albedo.png",
+      "sha256": "6cc40d91fc1771611dbfb5eae68e2e4c8f00b9f61e457acd8ea4e9ec6c0da508",
+      "resolution": [
+        512,
+        512
+      ]
+    },
+    {
+      "path": "assets/textures/duty_buildings/duty_masonry_normal.png",
+      "sha256": "246bf3a571b77016c24ddc24d2e1aaf9663049dae1df2bb7b14409b2293937e6",
+      "resolution": [
+        512,
+        512
+      ]
+    },
+    {
+      "path": "assets/textures/duty_buildings/duty_masonry_roughness.png",
+      "sha256": "bdcefc554cc8ef8965be14678630d51b1f005f387cf687f5f26da0f4d8e137f6",
+      "resolution": [
+        512,
+        512
+      ]
+    }
+  ]
+}

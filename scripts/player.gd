@@ -9,6 +9,7 @@ var _pivot: Node3D
 var _arm: SpringArm3D
 var _graphics: Node3D
 var speed_scale := 1.0
+var _role := "police"
 const Actor = preload("res://scripts/authored_actor.gd")
 var _pitch := -0.23
 
@@ -96,6 +97,21 @@ func _avatar() -> void:
 	_graphics.name = "Uniform"
 	_graphics.uniform = true
 	add_child(_graphics)
+
+func set_role(role: String) -> void:
+	if _role == role: return
+	_role = role
+	var previous := _graphics
+	_graphics = Actor.new()
+	_graphics.name = "Uniform"
+	_graphics.uniform = role != "research"
+	_graphics.clothes = Color("526576")
+	_graphics.firefighter = role == "fire"
+	_graphics.rotation = previous.rotation
+	remove_child(previous)
+	previous.queue_free()
+	add_child(_graphics)
+	_graphics.set_simulation_active(is_physics_processing())
 
 func set_simulation_active(active: bool) -> void:
 	set_physics_process(active)

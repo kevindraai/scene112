@@ -4,14 +4,17 @@ extends Node3D
 ## the owning CharacterBody3D; animation has no root-motion/collision authority.
 
 var uniform := false
+var firefighter := false
 var clothes := Color.WHITE
 var skin := Color.WHITE
 var model: Node3D
 var animation: AnimationPlayer
 var _clip := ""
+var _tint_bindings: Array[Dictionary] = []
 
 func _ready() -> void:
 	var path := "res://assets/models/characters/officer.glb" if uniform else "res://assets/models/characters/civilian.glb"
+	if firefighter: path = "res://assets/models/characters/fire_officer.glb"
 	var packed := load(path) as PackedScene
 	if packed == null:
 		push_error("AUTHORED_ACTOR_MISSING: " + path)
@@ -43,7 +46,9 @@ func _tint(node: Node) -> void:
 			if tint != Color.WHITE:
 				var material := original.duplicate() as StandardMaterial3D
 				material.albedo_color *= tint
+				var previous: Material = node.get_surface_override_material(index)
 				node.set_surface_override_material(index, material)
+				_tint_bindings.append({"mesh": node, "surface": index, "material": material, "previous": previous})
 	for child in node.get_children(): _tint(child)
 
 func set_motion(speed: float, sprinting: bool = false, carrying: bool = false) -> void:
@@ -66,3 +71,14 @@ func diagnostics() -> Dictionary:
 
 func set_simulation_active(active: bool) -> void:
 	if is_instance_valid(animation): animation.active = active
+
+func _exit_tree() -> void:
+	# Clear only our own overrides while their materials remain alive. A cached
+	# imported mesh can outlive this actor; stale renderer material RIDs must not.
+	for binding: Dictionary in _tint_bindings:
+		var mesh := binding.mesh as MeshInstance3D
+		if not is_instance_valid(mesh) or mesh.mesh == null: continue
+		var surface: int = binding.surface
+		if surface < mesh.mesh.get_surface_count() and mesh.get_surface_override_material(surface) == binding.material:
+			mesh.set_surface_override_material(surface, binding.previous)
+	_tint_bindings.clear()

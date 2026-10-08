@@ -1,17 +1,19 @@
-# Original SCÈNE 112 adults — normalized source
+# Original SCÈNE 112 adults — M5 refinement
 
-`build_characters.py` authors original adult geometry, garment details, facial features,512px skin/cloth/rubber PBR maps and the Scene112 eighteen-bone rig. It imports `../vehicles/assetkit.py` from the sibling source family. No purchased kit, downloaded scan, likeness or official crest is used. Private/proprietary project content: [project licenses](../../../docs/LICENSES.md).
+`build_characters.py`, local `assetkit.py` and `character_polish.py` author original adult geometry, clothing, faces, 512px PBR maps and the Scene112 eighteen-bone rig. No purchased kit, downloaded scan, likeness or official crest. Private/proprietary project content under `docs/LICENSES.md`.
 
-Final layout: editable packed .blend/builder in `source/3d/characters`, GLBs and manifests in `assets/models/characters`, authored PNGs in `assets/textures/characters`. Retain the shared helper at `source/3d/vehicles/assetkit.py` and the `source/3d/.gdignore` import exclusion.
+The refinement broadens shoulders/torso, overlaps neck/garment joins, shortens the long facial mass, replaces intersecting hair strips with a fitted scalp, and adds clothing volume at vest, pockets, elbows and knees. Skin warmth and cloth variation use editable vertex color. Fabric/hair no longer inherit the vehicle helper's clearcoat. Removing oversampled tiny details offsets new useful forms: officer 29,198 triangles (formerly 39,896), civilian 24,862 (formerly 35,780). Godot's existing importer continues to generate mesh LODs.
 
-Run Blender4.3.2 with the standard glTF addon and NumPy. All paths resolve from __file__, independently of current working directory. Use an absolute script path when invoking from outside the checkout:
+Run Blender 4.3.2 with its standard glTF addon and NumPy:
 
 ```sh
-blender --background --factory-startup --threads 1 --python-use-system-env --python-exit-code 1 --python source/3d/characters/build_characters.py
+blender --background --factory-startup --threads 1 --python-use-system-env --python-exit-code 1 --python /absolute/repository/source/3d/characters/build_characters.py
 ```
 
-The default rebuild performs no renders. It exports `officer.glb`/`civilian.glb`, original maps, normalized manifests and packed editable sources. Optional `-- --preview` writes internal previews only under ignored `source/3d/characters/previews/`. Each .blend embeds its images with final-layout relative fallback paths `../../../assets/textures/characters/...`; GLBs independently embed the used images. Native players require no Blender or NumPy installation. The discarded temporary `characters/source` and `characters/models` layout is not a rebuild dependency.
+Paths resolve from `__file__`; the local helper replaces the former vehicle-helper dependency. Default rebuilding performs no renders. It exports GLBs, manifests, PNG maps and packed editable `.blend` sources. Optional `-- --preview` writes internal authoring previews only. Each `.blend` embeds 15 maps with relative fallback paths; GLBs independently embed used images. Retain `source/3d/.gdignore`. Native players need no Blender/Python/NumPy.
 
-Both meshes face Godot-Z, use metres and have feet at Y0; officer≈1.848m, civilian≈1.835m. One skinned render mesh per adult, eighteen named bones. Four in-place clips retain their existing names/durations: idle3s, walk1.6s, run.8s, carry1.6s. The runtime adapter sets loop mode and selects speed/carry poses. Keep player collision/camera and NPC routines on their existing gameplay roots; the assets contain no collision bodies or behavioral script.
+One skinned mesh per adult, 18 original named bones/hierarchy/rest transforms/inverse binds. All four original clips and every channel/keyframe are preserved: idle 3s, walk 1.6s, run 0.8s, carry 1.6s. Metres, feet at Godot Y≈0, front -Z. Assets have no lights, cameras, collision or behavior. Player/NPC gameplay roots remain unchanged.
 
-Normalized validation checks the rebuild against the accepted GLBs, verifies all images packed, then opens source copies from a relocated texture-free directory and re-exports. Those checks prove source/path correctness; model quality and integrated/native gameplay acceptance come from actual runtime QA, not authoring thumbnails.
+The editable `AuthoredMaterialVariation` layer is explicitly exported as single active `COLOR_0`. Constant material colors are folded into it; textured colors multiply their existing albedo map. Values must remain within 0..1: Blender 4.3.2 active-color UNORM export wraps values above one to dark values. Do not revert to implicit material-selected colors, which can emit fake white `COLOR_0` before intended `COLOR_1`.
+
+Validation compares rig/animations to accepted GLBs, checks skin weights/512px PBR maps, and re-exports relocated packed sources without image sidecars. Actual Godot before/after captures use identical day-light settings and cameras at 3.5m/5.5m. These isolated checks do not claim full integrated/native acceptance or showreel quality.
