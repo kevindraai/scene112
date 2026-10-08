@@ -102,9 +102,12 @@ jobs:
               ("tests", ["--headless", "--path", ".", "--script", "tests/run_tests.gd"], "SCENE112_TESTS_OK"),
               ("dispatch-tests", ["--headless", "--path", ".", "--script", "tests/dispatch_tests.gd"], "SCENE112_DISPATCH_TESTS_OK"),
               ("vehicle-tests", ["--headless", "--path", ".", "--script", "tests/vehicle_tests.gd"], "SCENE112_VEHICLE_TESTS_OK"),
+              ("police-case-tests", ["--headless", "--path", ".", "--script", "tests/police_case_tests.gd"], "SCENE112_POLICE_CASE_TESTS_OK"),
+              ("audio-tests", ["--headless", "--path", ".", "--script", "tests/audio_tests.gd"], "SCENE112_AUDIO_TESTS_OK"),
               ("smoke", ["--headless", "--path", ".", "--", "--smoke-test"], "SMOKE_OK"),
               ("playthrough", ["--headless", "--path", ".", "--", "--playthrough"], "SCENE112_PLAYTHROUGH_OK"),
               ("duty-playthrough", ["--headless", "--path", ".", "--", "--duty-playthrough"], "SCENE112_DUTY_OK"),
+              ("police-playthrough", ["--headless", "--path", ".", "--", "--police-playthrough"], "SCENE112_POLICE_OK"),
           ]
           for name, arguments, marker in commands:
               try:
@@ -120,7 +123,7 @@ jobs:
               assert "SCRIPT ERROR:" not in result.stdout and "ERROR:" not in result.stdout, f"{name} emitted errors"
               if marker:
                   assert marker in result.stdout, f"{name} did not complete its assertions"
-      - name: Automated graphical M0 and M1 playthroughs on isolated Linux displays
+      - name: Automated graphical M0, M1 and M2 playthroughs on isolated Linux displays
         env:
           LIBGL_ALWAYS_SOFTWARE: "1"
         shell: python
@@ -133,16 +136,20 @@ jobs:
           scenarios = [
               ("m0", "--playthrough", "SCENE112_PLAYTHROUGH_OK"),
               ("m1", "--duty-playthrough", "SCENE112_DUTY_OK"),
+              ("m2", "--police-playthrough", "SCENE112_POLICE_OK"),
           ]
           for milestone, scenario, marker in scenarios:
               screenshot = Path(os.environ["XDG_DATA_HOME"]) / f"Scene112/{milestone}-playthrough.png"
               screenshot.unlink(missing_ok=True)
+              main_menu = Path(os.environ["XDG_DATA_HOME"]) / "Scene112/m2-main-menu.png"
+              if milestone == "m2":
+                  main_menu.unlink(missing_ok=True)
               log = Path(f"build/logs/graphical-{milestone}-playthrough.txt")
               try:
                   result = subprocess.run([sys.executable, "tools/graphical_playthrough.py",
-                      os.environ["GODOT_BIN"], f"--scenario={scenario}"],
+                      os.environ["GODOT_BIN"], f"--scenario={scenario}", "--timeout=120"],
                       stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                      text=True, encoding="utf-8", errors="replace", timeout=120)
+                      text=True, encoding="utf-8", errors="replace", timeout=150)
               except subprocess.TimeoutExpired as error:
                   log.write_bytes(error.output or b"")
                   raise
@@ -153,6 +160,9 @@ jobs:
               assert marker in result.stdout, f"{milestone} graphical assertions did not finish"
               assert screenshot.is_file() and screenshot.stat().st_size > 1024, f"Missing rendered {milestone} screenshot"
               shutil.copyfile(screenshot, f"build/logs/{milestone}-playthrough.png")
+              if milestone == "m2":
+                  assert main_menu.is_file() and main_menu.stat().st_size > 1024, "Missing rendered M2 main menu screenshot"
+                  shutil.copyfile(main_menu, "build/logs/m2-main-menu.png")
       - name: Preserve Linux logs
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -289,6 +299,7 @@ jobs:
           run("native-smoke", [executable.resolve(), "--headless", "--", "--smoke-test"], "SMOKE_OK", executable.parent.resolve())
           run("native-playthrough", [executable.resolve(), "--headless", "--", "--playthrough"], "SCENE112_PLAYTHROUGH_OK", executable.parent.resolve())
           run("native-duty-playthrough", [executable.resolve(), "--headless", "--", "--duty-playthrough"], "SCENE112_DUTY_OK", executable.parent.resolve())
+          run("native-police-playthrough", [executable.resolve(), "--headless", "--", "--police-playthrough"], "SCENE112_POLICE_OK", executable.parent.resolve())
           provenance = {
               "head": os.environ["GITHUB_SHA"],
               "source_head": os.environ.get("SOURCE_HEAD", os.environ["GITHUB_SHA"]),
@@ -297,7 +308,7 @@ jobs:
               "run": os.environ["GITHUB_RUN_ID"],
               "archive": archive.name,
               "sha256": hashlib.sha256(archive.read_bytes()).hexdigest(),
-              "validation": "structure + architecture + native headless smoke, physical gameplay assertions and accelerated 300-second duty-state replay; automation is not a realtime human playthrough",
+              "validation": "structure + architecture + native headless smoke, physical gameplay, accelerated 300-second duty replay and root police campaign/academy/GUI/save assertions plus imported offline audio and persistent mixer settings; controlled pose fixtures and injected input are disclosed, automation is not a realtime human playthrough",
               "signing": "native macOS ad-hoc codesign; strict verification before and after ZIP roundtrip" if target == "macos" else "unsigned private Windows build",
               "graphical_playthrough": "requires separate desktop evidence",
           }
@@ -384,10 +395,11 @@ jobs:
           run("intel-smoke", [executable.resolve(), "--headless", "--", "--smoke-test"], "SMOKE_OK", executable.parent.resolve())
           run("intel-playthrough", [executable.resolve(), "--headless", "--", "--playthrough"], "SCENE112_PLAYTHROUGH_OK", executable.parent.resolve())
           run("intel-duty-playthrough", [executable.resolve(), "--headless", "--", "--duty-playthrough"], "SCENE112_DUTY_OK", executable.parent.resolve())
+          run("intel-police-playthrough", [executable.resolve(), "--headless", "--", "--police-playthrough"], "SCENE112_POLICE_OK", executable.parent.resolve())
           (logs / "provenance.json").write_text(json.dumps({
               "source_head": provenance["source_head"], "sha256": provenance["sha256"],
               "runner_architecture": platform.machine(),
-              "validation": "same Universal2 artifact: native Intel smoke, physical gameplay assertions and accelerated 300-second duty-state replay; automation is not a realtime human playthrough",
+              "validation": "same Universal2 artifact: native Intel smoke, physical gameplay, accelerated 300-second duty replay and root police campaign/academy/GUI/save assertions plus imported offline audio and persistent mixer settings; controlled pose fixtures and injected input are disclosed, automation is not a realtime human playthrough",
               "graphical_playthrough": "requires separate desktop evidence",
           }, indent=2) + "\n")
         env:

@@ -1,7 +1,8 @@
 class_name GameState
 extends RefCounted
 
-const SCHEMA := 2
+const SCHEMA := 3
+const Police = preload("res://scripts/police_case.gd")
 const Ledger = preload("res://scripts/dispatch.gd")
 const SAVE_PATH := "user://dienst.json"
 var equipment := false
@@ -15,19 +16,27 @@ var occupied_vehicle := ""
 var vehicles := {"police_car": {"position": [2.0, 0.05, 9.0], "yaw": PI},
     "fire_truck": {"position": [28.0, 0.05, 5.0], "yaw": PI}}
 var dispatch := {}
+var police := {}
+var police_campaign := {}
+var police_draft: Array = []
+var police_practice := false
+var campaign_stage := 0
+var course_passes: Array = []
 
 func to_dict() -> Dictionary:
 	return {"schema": SCHEMA, "equipment": equipment, "radio_checked": radio_checked,
 		"academy_visits": academy_visits,
 		"position": [player_position.x, player_position.y, player_position.z],
 		"sensitivity": sensitivity, "role": role, "occupied_vehicle": occupied_vehicle,
-		"vehicles": vehicles.duplicate(true), "dispatch": dispatch.duplicate(true)}
+		"vehicles": vehicles.duplicate(true), "dispatch": dispatch.duplicate(true), "police": police.duplicate(true), "police_campaign": police_campaign.duplicate(true),
+		"police_draft": police_draft.duplicate(true), "police_practice": police_practice,
+		"campaign_stage": campaign_stage, "course_passes": course_passes.duplicate()}
 
 func restore(data: Variant) -> bool:
 	if not data is Dictionary:
 		return false
 	var revision: Variant = data.get("schema")
-	if not (revision is int or revision is float) or (revision != 1 and revision != SCHEMA):
+	if not (revision is int or revision is float) or (revision != 1 and revision != 2 and revision != SCHEMA):
 		return false
 	var p: Variant = data.get("position")
 	if not p is Array or p.size() != 3:
@@ -65,6 +74,55 @@ func restore(data: Variant) -> bool:
 		var ledger := Ledger.new()
 		if not ledger.restore(saved_dispatch):
 			return false
+	var police_save: Variant = data.get("police", {})
+	if not police_save is Dictionary:
+		return false
+	if not police_save.is_empty():
+		var scenario := Police.new()
+		if not scenario.restore(police_save):
+			return false
+	var campaign_save: Variant = data.get("police_campaign", {})
+	if not campaign_save is Dictionary:
+		return false
+	if not campaign_save.is_empty():
+		var campaign_case := Police.new()
+		if not campaign_case.restore(campaign_save) or campaign_case.mode != "campaign":
+			return false
+	var draft: Variant = data.get("police_draft", [])
+	if not draft is Array or draft.size() > 32:
+		return false
+	var available := {}
+	if not police_save.is_empty():
+		var draft_case := Police.new()
+		draft_case.restore(police_save)
+		for card in draft_case.report_cards(): available[card.id] = true
+	var used := {}
+	for row in draft:
+		if not row is Dictionary or row.size() != 3 or not row.get("included") is bool:
+			return false
+		if not available.has(row.get("id")) or used.has(row.get("id")) or row.get("category") not in ["", "observation", "declaration", "action", "conclusion"]:
+			return false
+		used[row.id] = true
+	var practice: Variant = data.get("police_practice", false)
+	if not practice is bool:
+		return false
+	var stage: Variant = data.get("campaign_stage", 0)
+	if not (stage is int or stage is float) or not is_finite(float(stage)) or float(stage) != floorf(float(stage)) or float(stage) < 0 or float(stage) > 3:
+		return false
+	var courses: Variant = data.get("course_passes", [])
+	if not courses is Array or courses.size() > 3:
+		return false
+	var unique := {}
+	for course in courses:
+		if course not in ["basis", "intake", "fire"] or unique.has(course):
+			return false
+		unique[course] = true
+	police = police_save.duplicate(true)
+	police_campaign = campaign_save.duplicate(true)
+	police_draft = draft.duplicate(true)
+	police_practice = practice
+	campaign_stage = int(stage)
+	course_passes = courses.duplicate()
 	role = next_role
 	occupied_vehicle = seated
 	vehicles = saved_vehicles.duplicate(true)

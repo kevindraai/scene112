@@ -60,7 +60,7 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if enabled_input and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and event is InputEventMouseMotion:
+	if enabled_input and (Input.mouse_mode == Input.MOUSE_MODE_CAPTURED or DisplayServer.get_name() == "headless") and event is InputEventMouseMotion:
 		var motion := event as InputEventMouseMotion
 		_pivot.rotation.y -= motion.relative.x * sensitivity
 		_camera_pitch = clampf(_camera_pitch - motion.relative.y * sensitivity, -0.8, 0.15)

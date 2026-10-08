@@ -58,6 +58,47 @@ func _initialize() -> void:
 	var seated := State.new()
 	check(seated.restore(driving.to_dict()) and seated.occupied_vehicle == "fire_truck", "restore seated role and vehicle state")
 	check(seated.dispatch.incident.phase == "accepted", "restore accepted incident and chronology")
+	var schema_two := state.to_dict()
+	schema_two.schema = 2
+	for key in ["police", "police_campaign", "police_draft", "police_practice", "campaign_stage", "course_passes"]: schema_two.erase(key)
+	var upgrade := State.new()
+	check(upgrade.restore(schema_two) and upgrade.police.is_empty(), "M1 save migrates to schema 3 without phantom case")
+	var case_model := preload("res://scripts/police_case.gd").new()
+	case_model.begin("campaign")
+	for action in ["equipment", "radio", "enter", "drive", "exit"]:
+		case_model.tick(1.0)
+		case_model.complete_step(action)
+	for cone in [Vector3(-26, 0, 15), Vector3(-28, 0, 17), Vector3(-26, 0, 19)]: case_model.place_cone(cone)
+	for observation in ["damage", "marks", "road"]: case_model.record_observation(observation)
+	case_model.speak("lotte", "open")
+	case_model.speak("bram", "open")
+	var correct_cards: Array = []
+	var draft_rows: Array = []
+	for card in case_model.report_cards():
+		if card.id != "conclusion_guilt": correct_cards.append({"id": card.id, "category": card.category})
+		draft_rows.append({"id": card.id, "category": card.category, "included": card.id != "conclusion_guilt"})
+	case_model.submit_report(correct_cards)
+	var nested := State.new()
+	nested.police = case_model.to_dict()
+	nested.police_campaign = nested.police.duplicate(true)
+	nested.police_draft = draft_rows
+	nested.campaign_stage = 1
+	nested.course_passes = ["basis", "intake"]
+	var nested_restore := State.new()
+	check(nested_restore.restore(nested.to_dict()) and nested_restore.campaign_stage == 1, "restore police chapter, sources and PV draft")
+	check(nested_restore.police_draft == draft_rows and nested_restore.police_campaign.mode == "campaign", "draft classifications and campaign dossier survive")
+	var invalid_case := nested.to_dict()
+	invalid_case.police.report_score.score = 100000
+	check(not nested_restore.restore(invalid_case), "reject forged case assessment")
+	invalid_case = nested.to_dict()
+	invalid_case.police_draft[0].id = "fabricated"
+	check(not nested_restore.restore(invalid_case), "reject PV draft referencing missing evidence")
+	invalid_case = nested.to_dict()
+	invalid_case.course_passes = ["basis", "basis"]
+	check(not nested_restore.restore(invalid_case), "reject duplicate course completion")
+	invalid_case = nested.to_dict()
+	invalid_case.campaign_stage = NAN
+	check(not nested_restore.restore(invalid_case), "reject nonfinite campaign progress")
 	check(not restored.restore({"schema": 99}), "reject unsupported save version")
 	check(restored.to_dict() == original, "failed restore does not partially mutate state")
 	var malformed := state.to_dict()

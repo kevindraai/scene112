@@ -15,6 +15,8 @@ GODOT_BIN="$PWD/.godot-tools/editor/Godot_v4.7.2-stable_linux.x86_64"
 "$GODOT_BIN" --version
 "$GODOT_BIN" --headless --path . --editor --import
 "$GODOT_BIN" --headless --path . --script tests/run_tests.gd
+"$GODOT_BIN" --headless --path . --script tests/police_case_tests.gd
+"$GODOT_BIN" --headless --path . --script tests/audio_tests.gd
 "$GODOT_BIN" --headless --path . -- --smoke-test
 mkdir -p build/windows
 "$GODOT_BIN" --headless --path . --export-release macOS "$PWD/build/Scene112-macOS-universal.zip"
@@ -38,7 +40,7 @@ Voer `python tools/setup_godot.py --cache-dir .godot-tools --templates` uit vanu
 
 ## CI en bewijs
 
-De workflow [Native builds](../.github/workflows/native-build.yml) controleert de **exacte PR-head** en opnieuw `main` na merge. Linux voert Python-lint, Godot-import, save-, dispatch- en voertuigtests en de ingebouwde applicatiesmoke/playthrough/dienstautomatisering uit. Pas daarna mogen de macOS- en Windows-jobs exporteren. Zij controleren het distributiearchief en starten de standalone executable met `--headless -- --smoke-test`, `--headless -- --playthrough` en `--headless -- --duty-playthrough`; de assertions moeten eindigen met `SMOKE_OK` respectievelijk `SCENE112_PLAYTHROUGH_OK` en exitcode 0. Script-/enginefouten in logs maken de check rood, ook als Godot exitcode 0 teruggeeft.
+De workflow [Native builds](../.github/workflows/native-build.yml) controleert de **exacte PR-head** en opnieuw `main` na merge. Linux voert Python-lint, Godot-import, save-, dispatch-, voertuig-, politie- en audiotests en de ingebouwde applicatiesmoke/playthrough/dienstautomatisering uit. Pas daarna mogen de macOS- en Windows-jobs exporteren. Zij controleren het distributiearchief en starten de standalone executable met `--headless -- --smoke-test`, `--headless -- --playthrough`, `--headless -- --duty-playthrough` en `--headless -- --police-playthrough`; alle scenario-markers en exitcode 0 zijn verplicht. Script-/enginefouten in logs maken de check rood, ook als Godot exitcode 0 teruggeeft.
 
 Linux voert bovendien de geautomatiseerde playthrough met een echte OpenGL-renderer op een geïsoleerd Xvfb-display uit. De gerenderde `m0-playthrough.png` wordt bij de logs bewaard. Deze automatisering stuurt de fysieke loopinput en controleert interacties/save-load; voor sommige nabijheidschecks wordt de positie gezet. Het is technische gameplayvalidatie en geen menselijke playthrough of Mac-/Windows-grafisch bewijs.
 
@@ -47,6 +49,8 @@ Op macOS controleert CI `.app`-structuur, uitvoerrechten, beide CPU-architecture
 De eerste macOS-CI-run wees de ingebouwde Godot-resource seal af (`a sealed resource is missing or invalid`); de exacte oorzaak is niet vastgesteld. De native Mac-job ondertekent daarom de definitieve uitgepakte bundle opnieuw met Apples `codesign --force --sign -`, met behoud van identifier, entitlements en flags. CI controleert de handtekening strikt, verpakt deze app met `ditto --keepParent --sequesterRsrc`, pakt de definitieve distributie opnieuw uit en voert opnieuw `codesign --verify --deep --strict` uit. Pas die laatste uitgepakte app krijgt de runtimetests; dezelfde ZIP krijgt de vastgelegde SHA256 en wordt geüpload. De signaturepoort blijft verplicht. Dit volgt Apples [instructies over resource sealing en distributie van ondertekende code](https://developer.apple.com/library/archive/technotes/tn2206/_index.html). Er zijn geen betaalde signingcredentials nodig en de build is niet genotariseerd.
 
 Voor een vijf echte minuten durende Linux-diensttest: `python tools/graphical_playthrough.py GODOT_BIN --runtime-script tests/real_time_duty.gd --timeout 340`. Deze agent navigeert na gecontroleerde startvoorbereiding zelf via loopinput naar herhaalde meldingen; zie [M1-bewijs](evidence/M1.md). Dit is afzonderlijk van de versnelde CI-dienstsimulatie.
+
+Voor de volledige M2-casus en beide lessen: `python tools/graphical_playthrough.py GODOT_BIN --scenario=--police-playthrough --timeout=120`. Dit doorloopt echte rijinput en camera-raycasts, een fout PV en correctie, wijziging gevolgd door herstel van een concept, herstart gevolgd door herstel van het geaccepteerde dossier en gemeten vingerafdrukuitlijning met afwijzing/herhaling. Nabijheidsposities worden gecontroleerd gezet waar aangegeven; dit blijft een geautomatiseerde technische proef. Hoofdmenu-art is illustratief. Audio-assets zijn originele offline WAVs; asset-/event-/mixchecks met Dummy/headless bewijzen geen hoorbare mixkwaliteit. Zie [M2-bewijs](evidence/M2.md) voor de precieze teststatus.
 
 Elke succesvolle relevante PR-/main-build biedt `Scene112-macOS-universal.zip` en `Scene112-Windows-x64.zip` als workflowartifacts, met een JSON-provenancerecord (broncommit, engine, runnerarchitectuur, run-ID, SHA256 en testniveau). Logs worden ook bij failures bewaard. Artifacts en logs verlopen na 14 dagen. Bij uitsluitend Markdown-/licentiewijzigingen slaat de workflow de zware jobs over; de vaste check **Required native build gate** blijft bestaan en beoordeelt de documentatiecheck. Gebruik deze vaste check voor branch protection. Een handmatig gestarte workflow bouwt altijd beide platformen.
 
