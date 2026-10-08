@@ -1,18 +1,31 @@
 # SCÈNE 112
 
-SCÈNE 112 is een geplande Nederlandstalige 3D-openwereldgame over politie, brandweer, recherche en brandonderzoek, bedoeld voor spelers van 14 jaar en ouder.
+Nederlandstalige 3D-singleplayergame over politie, brandweer, recherche en brandonderzoek, voor spelers van 14+. De volledige productopdracht staat in [docs/WORKORDER.md](docs/WORKORDER.md).
 
-> **Status: opstartfase.** Dit repository bevat momenteel de goedgekeurde werkorder; er is nog geen speelbare game gereleased.
+**Ontwikkelbuild M0:** een compacte procedurele Nederlandse wijk, bureau en kazerne, third-person lopen/sprinten, camera met botsingsdetectie, uitrusting/radio/academie-interactie, hoofdmenu, pauze, instellingen en één persistent save-slot. Voertuigen zijn in deze eerste build nog geparkeerd decor. M1–M5 en v0.1.0 zijn nog niet opgeleverd.
 
-## Aan Codex
+## Spelen
 
-**Begin bij [de master workorder](docs/WORKORDER.md).** Dit document bevat productvisie, architectuurkeuzes, de eerste speelmijlpalen, tutorials, verhoren, processen-verbaal, brandonderzoek, vrije diensten en de exacte criteria voor v0.1.0.
+Download de twee private testbuilds uit de artifacts van een succesvolle [Native builds](../../actions/workflows/native-build.yml)-run. Uitpakken: Windows `Scene112.exe`; macOS `Scene112.app`. Er is geen engine-installatie nodig. macOS is Universal 2 en ad-hoc gesigneerd; nog niet genotariseerd. [Installatie, buildinstructies en testgrenzen](docs/BUILDING.md).
 
-Prioriteit 1: werkend Godot 4.7.2-project met bestuurbaar personage, interactie en een minimale 3D-wijk. Maak **direct** reproduceerbare builds voor:
+Kies **Nieuwe dienst**, loop door de ingang van het bureau naar **Uitrusting**, meld je bij de **Radio** en bezoek de **Academie** op het voorplein. Verken daarna de wijk. Sla op, verplaats je en laad om je dienst te hervatten.
 
-- macOS Universal 2: Apple Silicon + Intel.
-- Windows x86_64.
+| Bediening | Actie |
+|---|---|
+| WASD / Shift | Lopen / sprinten |
+| Muis | Camera draaien |
+| E | Handelen bij een object |
+| M / Esc | Wijkhulp / pauze |
+| F5 / F9 | Dienst opslaan / laatste opslag laden |
 
-Daarna iteratief uitbouwen tot een kleine maar daadwerkelijk speelbare openwereld-simulatie. Gebruik één betekenisvolle implementatie-PR tegelijk, test de exacte head en zorg voor zichtbare build-artefacten.
+Een save wordt pas vervangen wanneer je opslaat. Nieuwe dienst maakt geen bestaande opslag leeg. Opslag staat in de platformcorrecte gebruikersmap `Scene112`. Corrupte of onbekende saveversies worden geweigerd en behouden; een gevalideerde vorige opslag wordt als herstelkopie gebruikt.
 
-De workorder is richtinggevend. Claims over release, screenshots, testresultaten of speelbaarheid vereisen daadwerkelijk bewijs. De code en releases worden hier toegevoegd zodra geïmplementeerd.
+## Ontwikkelen en bewijs
+
+Godot **4.7.2 stable**, standard + GDScript, Compatibility-renderer. Open `project.godot`, of gebruik de geverifieerde taakgebonden toolchain in [BUILDING](docs/BUILDING.md). Geen plugins of betaalde assets nodig.
+
+- [Uitvoeringsplan M0–M5](docs/EXECUTION_PLAN.md)
+- [Testbewijs en open platformgrenzen](docs/evidence/M0.md)
+- [Assetherkomst/licenties](docs/LICENSES.md)
+
+CI importeert en test de exacte PR-head, exporteert native macOS/Windows-distributies, controleert structuur/architectuur en start de verpakte runtime op native runners. Een export of headless starttest bewijst geen menselijke grafische playthrough op macOS/Windows; die status wordt apart vastgelegd. Per speelbaar ijkpunt blijven beide platformen verplicht.

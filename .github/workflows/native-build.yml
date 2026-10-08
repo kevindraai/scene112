@@ -1,0 +1,414 @@
+name: Native builds
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: native-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHONUTF8: "1"
+  GODOT_SILENCE_ROOT_WARNING: "1"
+
+jobs:
+  changes:
+    name: Scope and documentation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      gameplay: ${{ steps.scope.outputs.gameplay }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check source scope and required documentation
+        id: scope
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        shell: python
+        run: |
+          import os
+          from pathlib import Path
+          import subprocess
+          for name in ("README.md", "docs/WORKORDER.md", "docs/BUILDING.md"):
+              text = Path(name).read_text(encoding="utf-8")
+              assert text.strip() and "\0" not in text, f"Invalid documentation: {name}"
+          base = os.environ.get("BASE_SHA", "")
+          head = os.environ["HEAD_SHA"]
+          if not base or set(base) == {"0"}:
+              gameplay = True
+              changed = ["manual/initial build"]
+          else:
+              changed = subprocess.check_output(
+                  ["git", "diff", "--name-only", "-z", base, head]
+              ).decode().rstrip("\0").split("\0")
+              gameplay = any(
+                  path and not (path.endswith(".md") or path in ("LICENSE", "LICENSE.txt"))
+                  for path in changed
+              )
+          print(f"Exact checked-out head: {head}; game/toolchain changes: {gameplay}")
+          with open(os.environ["GITHUB_OUTPUT"], "a") as output:
+              output.write(f"gameplay={str(gameplay).lower()}\n")
+
+  linux:
+    name: Linux import, tests and runtime
+    needs: changes
+    if: needs.changes.outputs.gameplay == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: .godot-tools
+          key: godot-4.7.2-${{ runner.os }}-${{ hashFiles('tools/setup_godot.py') }}-editor
+      - name: Prepare logs and verified editor
+        shell: bash
+        run: |
+          mkdir -p build/logs
+          python tools/setup_godot.py --cache-dir .godot-tools 2>&1 | tee build/logs/setup.txt
+      - name: Python lint
+        shell: bash
+        run: |
+          python -m pip install ruff==0.15.22 2>&1 | tee build/logs/python-tooling.txt
+          python -m compileall -q tools
+          ruff check tools 2>&1 | tee build/logs/lint.txt
+      - name: Import, deterministic tests and application smoke
+        shell: python
+        run: |
+          import os
+          from pathlib import Path
+          import subprocess
+          commands = [
+              ("import", ["--headless", "--path", ".", "--editor", "--import"], None),
+              ("tests", ["--headless", "--path", ".", "--script", "tests/run_tests.gd"], "SCENE112_TESTS_OK"),
+              ("smoke", ["--headless", "--path", ".", "--", "--smoke-test"], "SMOKE_OK"),
+              ("playthrough", ["--headless", "--path", ".", "--", "--playthrough"], "SCENE112_PLAYTHROUGH_OK"),
+          ]
+          for name, arguments, marker in commands:
+              try:
+                  result = subprocess.run([os.environ["GODOT_BIN"], *arguments],
+                      stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
+                      encoding="utf-8", errors="replace", timeout=180)
+              except subprocess.TimeoutExpired as error:
+                  Path(f"build/logs/{name}.txt").write_bytes(error.output or b"")
+                  raise
+              Path(f"build/logs/{name}.txt").write_text(result.stdout, encoding="utf-8")
+              print(result.stdout)
+              assert result.returncode == 0, f"{name} exited {result.returncode}"
+              assert "SCRIPT ERROR:" not in result.stdout and "ERROR:" not in result.stdout, f"{name} emitted errors"
+              if marker:
+                  assert marker in result.stdout, f"{name} did not complete its assertions"
+      - name: Automated graphical playthrough on isolated Linux display
+        env:
+          LIBGL_ALWAYS_SOFTWARE: "1"
+        shell: python
+        run: |
+          import os
+          from pathlib import Path
+          import shutil
+          import subprocess
+          import sys
+          screenshot = Path(os.environ["XDG_DATA_HOME"]) / "Scene112/m0-playthrough.png"
+          screenshot.unlink(missing_ok=True)
+          try:
+              result = subprocess.run([sys.executable, "tools/graphical_playthrough.py", os.environ["GODOT_BIN"]],
+                  stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                  text=True, encoding="utf-8", errors="replace", timeout=120)
+          except subprocess.TimeoutExpired as error:
+              Path("build/logs/graphical-playthrough.txt").write_bytes(error.output or b"")
+              raise
+          Path("build/logs/graphical-playthrough.txt").write_text(result.stdout, encoding="utf-8")
+          print(result.stdout)
+          assert result.returncode == 0, "Automated graphical playthrough failed"
+          assert "SCRIPT ERROR:" not in result.stdout and "ERROR:" not in result.stdout
+          assert "SCENE112_PLAYTHROUGH_OK" in result.stdout, "Graphical assertions did not finish"
+          assert screenshot.is_file() and screenshot.stat().st_size > 1024, "Missing rendered screenshot"
+          shutil.copyfile(screenshot, "build/logs/m0-playthrough.png")
+      - name: Preserve Linux logs
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: linux-logs-${{ github.run_id }}-${{ github.run_attempt }}
+          path: build/logs/
+          if-no-files-found: warn
+          retention-days: 14
+
+  native:
+    name: Native ${{ matrix.platform }} export and launch
+    needs: [changes, linux]
+    if: needs.changes.outputs.gameplay == 'true' && needs.linux.result == 'success'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-15
+            platform: macos
+            archive: Scene112-macOS-universal.zip
+          - os: windows-2022
+            platform: windows
+            archive: Scene112-Windows-x64.zip
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    env:
+      TARGET_PLATFORM: ${{ matrix.platform }}
+      TARGET_ARCHIVE: ${{ matrix.archive }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: .godot-tools
+          key: godot-4.7.2-${{ runner.os }}-${{ hashFiles('tools/setup_godot.py') }}-templates
+      - name: Install SHA256-verified editor and matching templates
+        shell: python
+        run: |
+          from pathlib import Path
+          import subprocess
+          import sys
+          Path("build/logs").mkdir(parents=True, exist_ok=True)
+          with Path("build/logs/setup.txt").open("w", encoding="utf-8") as log:
+              result = subprocess.run([sys.executable, "tools/setup_godot.py",
+                  "--cache-dir", ".godot-tools", "--templates"],
+                  stdout=log, stderr=subprocess.STDOUT, timeout=900)
+          print(Path("build/logs/setup.txt").read_text(encoding="utf-8"))
+          assert result.returncode == 0, "Verified toolchain setup failed"
+      - name: Import, export, validate and launch standalone build
+        shell: python
+        run: |
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+          import platform
+          import subprocess
+          import sys
+          import zipfile
+          logs = Path("build/logs")
+          def run(name, arguments, marker=None, cwd=None):
+              engine_log = (logs / f"{name}.engine.txt").resolve()
+              if marker:
+                  engine_log.unlink(missing_ok=True)
+                  arguments = [arguments[0], "--log-file", engine_log, *arguments[1:]]
+              try:
+                  result = subprocess.run([str(arg) for arg in arguments],
+                      stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                      text=True, encoding="utf-8", errors="replace", timeout=240, cwd=cwd)
+              except subprocess.TimeoutExpired as error:
+                  (logs / f"{name}.txt").write_bytes(error.output or b"")
+                  raise
+              output = result.stdout
+              if marker and engine_log.is_file():
+                  output += "\n" + engine_log.read_text(encoding="utf-8", errors="replace")
+              (logs / f"{name}.txt").write_text(output, encoding="utf-8")
+              print(output)
+              assert result.returncode == 0, f"{name} exited {result.returncode}"
+              assert "SCRIPT ERROR:" not in output and "ERROR:" not in output, f"{name} emitted errors"
+              if marker:
+                  assert marker in output, f"{name} did not complete its assertions"
+          godot = os.environ["GODOT_BIN"]
+          target = os.environ["TARGET_PLATFORM"]
+          archive = Path("build") / os.environ["TARGET_ARCHIVE"]
+          run("import", [godot, "--headless", "--path", ".", "--editor", "--import"])
+          if target == "macos":
+              run("export", [godot, "--headless", "--path", ".", "--export-release", "macOS", archive.resolve()])
+              run("validate", [sys.executable, "tools/validate_artifacts.py", target, archive])
+              staging = Path("build/native-signing")
+              run("unpack-for-signing", ["ditto", "-xk", archive, staging])
+              apps = list(staging.glob("*.app"))
+              assert len(apps) == 1, "Missing standalone application"
+              app = apps[0]
+              run("godot-resource-seal", [sys.executable, "tools/inspect_macos_signature.py", app])
+              # Seal the final bundle using Apple's native signing implementation.
+              # The private build uses no paid identity or notarization service.
+              run("sign", ["codesign", "--force", "--sign", "-", "--timestamp=none",
+                  "--preserve-metadata=identifier,entitlements,flags", "--verbose=2", app])
+              run("native-resource-seal", [sys.executable, "tools/inspect_macos_signature.py", app])
+              run("signature-before-pack", ["codesign", "--verify", "--deep", "--strict", "--verbose=4", app])
+              signed_archive = archive.with_name(archive.stem + ".signed.zip")
+              run("pack-signed", ["ditto", "-c", "-k", "--keepParent", "--sequesterRsrc", app, signed_archive])
+              signed_archive.replace(archive)
+              run("validate-signed", [sys.executable, "tools/validate_artifacts.py", target, archive])
+              # Validate and launch a fresh extraction of the exact uploaded ZIP.
+              extracted = Path("build/native-smoke")
+              run("unpack-final", ["ditto", "-xk", archive, extracted])
+              apps = list(extracted.glob("*.app"))
+              assert len(apps) == 1, "Missing signed standalone application"
+              app = apps[0]
+              run("signature", ["codesign", "--verify", "--deep", "--strict", "--verbose=4", app])
+              import plistlib
+              info = plistlib.loads((app / "Contents/Info.plist").read_bytes())
+              executable = app / "Contents/MacOS" / info["CFBundleExecutable"]
+              run("architectures", ["lipo", "-archs", executable])
+          else:
+              distribution = Path("build/windows")
+              distribution.mkdir(parents=True, exist_ok=True)
+              executable = distribution / "Scene112.exe"
+              run("export", [godot, "--headless", "--path", ".", "--export-release", "Windows", executable.resolve()])
+              with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_DEFLATED) as bundle:
+                  for file in sorted(distribution.rglob("*")):
+                      if file.is_file():
+                          bundle.write(file, file.relative_to(distribution))
+              run("validate", [sys.executable, "tools/validate_artifacts.py", target, archive])
+          # The packaged runtime, without the editor or a source-project path.
+          run("native-smoke", [executable.resolve(), "--headless", "--", "--smoke-test"], "SMOKE_OK", executable.parent.resolve())
+          run("native-playthrough", [executable.resolve(), "--headless", "--", "--playthrough"], "SCENE112_PLAYTHROUGH_OK", executable.parent.resolve())
+          provenance = {
+              "head": os.environ["GITHUB_SHA"],
+              "source_head": os.environ.get("SOURCE_HEAD", os.environ["GITHUB_SHA"]),
+              "godot": "4.7.2.stable", "platform": target,
+              "runner_architecture": platform.machine(),
+              "run": os.environ["GITHUB_RUN_ID"],
+              "archive": archive.name,
+              "sha256": hashlib.sha256(archive.read_bytes()).hexdigest(),
+              "validation": "structure + architecture + native headless smoke and physical playthrough assertions",
+              "signing": "native macOS ad-hoc codesign; strict verification before and after ZIP roundtrip" if target == "macos" else "unsigned private Windows build",
+              "graphical_playthrough": "requires separate desktop evidence",
+          }
+          Path(f"build/{target}-provenance.json").write_text(json.dumps(provenance, indent=2) + "\n")
+        env:
+          SOURCE_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Upload validated native distribution
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: ${{ matrix.platform }}-native-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            build/${{ matrix.archive }}
+            build/${{ matrix.platform }}-provenance.json
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+      - name: Preserve native logs including failures
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: ${{ matrix.platform }}-logs-${{ github.run_id }}-${{ github.run_attempt }}
+          path: build/logs/
+          if-no-files-found: warn
+          retention-days: 14
+
+  macos-intel:
+    name: Same macOS artifact launches on Intel
+    needs: [changes, native]
+    if: needs.changes.outputs.gameplay == 'true' && needs.native.result == 'success'
+    runs-on: macos-15-intel
+    timeout-minutes: 10
+    steps:
+      - name: Download the tested Universal2 distribution
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: macos-native-${{ github.event.pull_request.head.sha || github.sha }}
+          path: build
+      - name: Validate provenance and launch on Intel
+        shell: python
+        run: |
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+          import platform
+          import plistlib
+          import subprocess
+          assert platform.machine() == "x86_64", "Expected an Intel Mac runner"
+          logs = Path("build/logs")
+          logs.mkdir(parents=True, exist_ok=True)
+          archive = Path("build/Scene112-macOS-universal.zip")
+          provenance = json.loads(Path("build/macos-provenance.json").read_text())
+          assert provenance["source_head"] == os.environ["SOURCE_HEAD"], "Artifact source head mismatch"
+          assert hashlib.sha256(archive.read_bytes()).hexdigest() == provenance["sha256"], "Artifact hash mismatch"
+          def run(name, arguments, marker=None, cwd=None):
+              engine_log = (logs / f"{name}.engine.txt").resolve()
+              if marker:
+                  engine_log.unlink(missing_ok=True)
+                  arguments = [arguments[0], "--log-file", engine_log, *arguments[1:]]
+              try:
+                  result = subprocess.run([str(arg) for arg in arguments],
+                      stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                      text=True, encoding="utf-8", errors="replace", timeout=180, cwd=cwd)
+              except subprocess.TimeoutExpired as error:
+                  (logs / f"{name}.txt").write_bytes(error.output or b"")
+                  raise
+              output = result.stdout
+              if marker and engine_log.is_file():
+                  output += "\n" + engine_log.read_text(encoding="utf-8", errors="replace")
+              (logs / f"{name}.txt").write_text(output, encoding="utf-8")
+              print(output)
+              assert result.returncode == 0, f"{name} exited {result.returncode}"
+              assert "SCRIPT ERROR:" not in output and "ERROR:" not in output
+              if marker:
+                  assert marker in output, f"{name} did not complete its assertions"
+          extracted = Path("build/native-smoke")
+          run("unpack", ["ditto", "-xk", archive, extracted])
+          apps = list(extracted.glob("*.app"))
+          assert len(apps) == 1, "Missing standalone application"
+          app = apps[0]
+          run("signature", ["codesign", "--verify", "--deep", "--strict", app])
+          info = plistlib.loads((app / "Contents/Info.plist").read_bytes())
+          executable = app / "Contents/MacOS" / info["CFBundleExecutable"]
+          run("intel-smoke", [executable.resolve(), "--headless", "--", "--smoke-test"], "SMOKE_OK", executable.parent.resolve())
+          run("intel-playthrough", [executable.resolve(), "--headless", "--", "--playthrough"], "SCENE112_PLAYTHROUGH_OK", executable.parent.resolve())
+          (logs / "provenance.json").write_text(json.dumps({
+              "source_head": provenance["source_head"], "sha256": provenance["sha256"],
+              "runner_architecture": platform.machine(),
+              "validation": "same Universal2 artifact: native Intel smoke and physical playthrough assertions",
+              "graphical_playthrough": "requires separate desktop evidence",
+          }, indent=2) + "\n")
+        env:
+          SOURCE_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Preserve Intel native logs including failures
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: macos-intel-logs-${{ github.run_id }}-${{ github.run_attempt }}
+          path: build/logs/
+          if-no-files-found: warn
+          retention-days: 14
+
+  gate:
+    name: Required native build gate
+    if: always()
+    needs: [changes, linux, native, macos-intel]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - name: Require successful applicable checks
+        env:
+          SCOPE_RESULT: ${{ needs.changes.result }}
+          GAMEPLAY: ${{ needs.changes.outputs.gameplay }}
+          LINUX_RESULT: ${{ needs.linux.result }}
+          NATIVE_RESULT: ${{ needs.native.result }}
+          INTEL_RESULT: ${{ needs.macos-intel.result }}
+        shell: python
+        run: |
+          import os
+          assert os.environ["SCOPE_RESULT"] == "success", "Scope/documentation check failed"
+          if os.environ["GAMEPLAY"] == "true":
+              assert os.environ["LINUX_RESULT"] == "success", "Linux import/tests/smoke failed"
+              assert os.environ["NATIVE_RESULT"] == "success", "A required native export/launch failed"
+              assert os.environ["INTEL_RESULT"] == "success", "Intel Mac native launch failed"
+              print("Exact source head passed Linux and both native distribution checks.")
+          else:
+              assert os.environ["GAMEPLAY"] == "false", "Missing scope result"
+              assert all(os.environ[key] == "skipped" for key in ("LINUX_RESULT", "NATIVE_RESULT", "INTEL_RESULT"))
+              print("Documentation-only change validated; heavy native work skipped.")
