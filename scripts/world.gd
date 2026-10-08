@@ -4,7 +4,16 @@ extends Node3D
 
 signal interacted(id: String)
 
+const VehicleScript = preload("res://scripts/vehicle.gd")
+const PedestrianScript = preload("res://scripts/pedestrian.gd")
+
 var objects: Dictionary = {}
+var npc_lines: Dictionary = {}
+var simulation_active := true
+var _pedestrians: Array[CharacterBody3D] = []
+var _vehicles: Array[CharacterBody3D] = []
+var _sun: DirectionalLight3D
+var _daytime := 0.0
 var _titles: Dictionary = {}
 var _materials: Dictionary = {}
 
@@ -30,7 +39,22 @@ func _ready() -> void:
 	_industry()
 	_street_details()
 	_vehicle("police_car", "Dienstauto · politie", Vector3(2, 0, 9), false)
-	_vehicle("fire_truck", "Tankautospuit · brandweer", Vector3(29, 0, 5), true)
+	_vehicle("fire_truck", "Tankautospuit · brandweer", Vector3(28, 0, 5), true)
+	_civilians()
+
+
+func set_simulation_active(active: bool) -> void:
+	simulation_active = active
+	for pedestrian in _pedestrians:
+		pedestrian.set_physics_process(active)
+	for vehicle in _vehicles:
+		vehicle.set_physics_process(active)
+
+
+func _process(delta: float) -> void:
+	if simulation_active and is_instance_valid(_sun):
+		_daytime += delta
+		_sun.rotation_degrees.x = -48.0 + sin(_daytime / 600.0) * 1.5
 
 
 func get_interaction(at: Vector3) -> Dictionary:
@@ -47,6 +71,8 @@ func get_interaction(at: Vector3) -> Dictionary:
 
 func interact(id: String) -> void:
 	if objects.has(id):
+		if id.begins_with("npc_"):
+			objects[id].pause_for(7.0)
 		interacted.emit(id)
 
 
@@ -72,6 +98,7 @@ func _lighting() -> void:
 	environment.environment = settings
 	add_child(environment)
 	var sun := DirectionalLight3D.new()
+	_sun = sun
 	sun.name = "AfternoonSun"
 	sun.rotation_degrees = Vector3(-48, -28, 0)
 	sun.light_color = Color("ffebcd")
@@ -164,6 +191,13 @@ func _fire_station() -> void:
 		_box("KitCabinet", Vector3(x, 1.0, -9), Vector3(2.1, 2.0, 0.7), RED)
 		for y in [0.8, 1.35]:
 			_box("KitStripe", Vector3(x, y, -8.63), Vector3(1.7, 0.09, 0.04), Color("e6d26c"), false)
+	_station("fire_equipment", "PBM · brandweerdienst", Vector3(22, 0, -7.5))
+	_sign("PBM  /  UITRUSTING", Vector3(22, 2.5, -8.6), 0.07, NAVY)
+	var radio := _station("fire_radio", "Meldkamer · kazerneradio", Vector3(29, 0, -9.5))
+	_box("KazerneRadioDesk", Vector3(0, 0.6, -0.7), Vector3(2.4, 1.2, 0.8), NAVY, true, radio)
+	_box("KazerneRadio", Vector3(0, 1.35, -0.7), Vector3(0.65, 0.23, 0.38), Color("252f37"), false, radio)
+	_box("KazerneRadioScreen", Vector3(0, 1.36, -0.5), Vector3(0.4, 0.1, 0.02), Color("75d1b5"), false, radio)
+	_sign("MELDKAMER", Vector3(29, 2.1, -9.8), 0.07, NAVY)
 	_box("TrainingApron", Vector3(46, 0.014, -3), Vector3(10, 0.025, 20), PAVING, false)
 	for z in [-9.0, -3.0, 3.0]:
 		_cone(Vector3(44, 0, z))
@@ -263,11 +297,19 @@ func _street_details() -> void:
 
 
 func _vehicle(id: String, title: String, at: Vector3, fire: bool) -> void:
-	var vehicle := _station(id, title, at)
+	var vehicle := VehicleScript.new()
+	vehicle.setup(id, fire)
+	vehicle.name = id
+	vehicle.position = at
+	vehicle.rotation.y = PI
+	add_child(vehicle)
+	objects[id] = vehicle
+	_titles[id] = title
+	_vehicles.append(vehicle)
 	var length := 5.2 if fire else 4.25
 	var width := 2.15 if fire else 1.75
 	var color := RED if fire else Color("e8ede8")
-	_box("VehicleChassis", Vector3(0, 0.66, 0), Vector3(width, 0.68, length), color, true, vehicle)
+	_box("VehicleChassis", Vector3(0, 0.66, 0), Vector3(width, 0.68, length), color, false, vehicle)
 	_box("Cab", Vector3(0, 1.3, -0.25), Vector3(width * 0.92, 0.74, 2.35), color, false, vehicle)
 	_box("Windscreen", Vector3(0, 1.38, -1.44), Vector3(width * 0.83, 0.47, 0.05), GLASS, false, vehicle)
 	_box("RearWindow", Vector3(0, 1.38, 0.955), Vector3(width * 0.83, 0.45, 0.05), GLASS, false, vehicle)
@@ -292,6 +334,41 @@ func _vehicle(id: String, title: String, at: Vector3, fire: bool) -> void:
 		_box("RoofLadder", Vector3(0, 2.12, 0.8), Vector3(0.68, 0.1, 3.2), CREAM, false, vehicle)
 	else:
 		_box("BonnetStripe", Vector3(0, 1.01, -1.6), Vector3(1.1, 0.02, 0.55), BLUE, false, vehicle)
+
+
+func _civilians() -> void:
+	var names := ["Els", "Samir", "Marieke", "Bram", "Roos", "Joost"]
+	var outfits := [Color("9a6666"), Color("587ea0"), Color("c7a55f"), Color("628479"), Color("8e7d9b"), Color("88985d")]
+	var routes := [
+		PackedVector3Array([Vector3(1, 0.03, 23.3), Vector3(15, 0.03, 23.3), Vector3(15, 0.03, 33), Vector3(1, 0.03, 33)]),
+		PackedVector3Array([Vector3(-12.6, 0.03, -20), Vector3(-12.6, 0.03, 7)]),
+		PackedVector3Array([Vector3(32, 0.03, 23.3), Vector3(56, 0.03, 23.3)]),
+		PackedVector3Array([Vector3(8, 0.03, -32), Vector3(38, 0.03, -32)]),
+		PackedVector3Array([Vector3(-31, 0.03, -45), Vector3(-31, 0.03, -8)]),
+		PackedVector3Array([Vector3(24, 0.03, 25), Vector3(24, 0.03, 40)])
+	]
+	var lines := [
+		"Els: Op het plein kent iedereen elkaar. Goed dat jullie ook te voet langskomen.",
+		"Samir: Ik loop naar de bakker. Rond de kruising is het vaak druk; houd de oversteek vrij.",
+		"Marieke: De winkel sluit straks. De meldkamer weet of iemand hier hulp nodig heeft.",
+		"Bram: Ik werk aan de Industrieweg. Bij een incident houd ik afstand en meld ik wat ik zelf zag.",
+		"Roos: De Noorderkade is een fijne buurt. Luisteren helpt vaak beter dan meteen optreden.",
+		"Joost: De brandweerkazerne is vlakbij. Bij rook zorg ik eerst dat ik veilig buiten ben."
+	]
+	for i in range(names.size()):
+		var civilian := PedestrianScript.new()
+		var id := "npc_%d" % i
+		civilian.name = id
+		civilian.route = routes[i]
+		civilian.position = routes[i][0]
+		civilian.walking_speed = 1.05 + i * 0.08
+		civilian.clothes = outfits[i]
+		civilian.skin = Color("bd8d69") if i % 2 else Color("d8ae8b")
+		add_child(civilian)
+		objects[id] = civilian
+		_titles[id] = "Spreken · " + names[i]
+		npc_lines[id] = lines[i]
+		_pedestrians.append(civilian)
 
 
 func _station(id: String, title: String, at: Vector3) -> Node3D:

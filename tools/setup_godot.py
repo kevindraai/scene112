@@ -42,9 +42,14 @@ def sha256(path: Path) -> str:
 
 
 def read_release() -> dict:
+	# GitHub-hosted runners share public API quotas. Use their read-only workflow
+	# token for metadata on api.github.com only; never forward it to asset hosts.
+    headers = {"Accept": "application/vnd.github+json", "User-Agent": "scene112-build"}
+    if token := os.environ.get("GITHUB_TOKEN"):
+        headers["Authorization"] = f"Bearer {token}"
     request = urllib.request.Request(
         RELEASE_API,
-        headers={"Accept": "application/vnd.github+json", "User-Agent": "scene112-build"},
+        headers=headers,
     )
     with urllib.request.urlopen(request, timeout=60) as response:
         release = json.load(response)
