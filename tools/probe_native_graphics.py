@@ -219,6 +219,7 @@ def profile(
     engine_log.unlink(missing_ok=True)
     command = [
         str(executable),
+        "--verbose",
         "--log-file",
         str(engine_log),
         "--windowed",
@@ -247,6 +248,8 @@ def profile(
     try:
         backend = backend_from_log(output)
         result["actual_backend"] = backend
+        if backend is not None:
+            result.update(implementation_details(backend))
         result["status"] = classify(
             output, code, backend, renderer, driver, allow_angle_fallback
         )
@@ -291,7 +294,11 @@ def profile(
             result["adapter_classification"] = (
                 "software (detected)"
                 if result["software_adapter_detected"]
-                else "unclassified; physical hardware not accepted"
+                else (
+                    "virtual/paravirtual (detected); physical hardware not accepted"
+                    if result["virtual_adapter_detected"]
+                    else "unclassified; physical hardware not accepted"
+                )
             )
             result["physical_target_gpu_acceptance"] = False
     except (ValueError, OSError, KeyError, TypeError, AttributeError) as error:
@@ -312,6 +319,80 @@ def compatibility_passed(results: list[dict], target: str) -> bool:
         and results[2]["requested_driver"] == "opengl3_angle"
         and results[2]["status"] == "passed"
     )
+
+
+def profile_drivers(target: str, architecture: str) -> tuple[str, str]:
+    if target == "windows":
+        return "d3d12", "opengl3"
+    # The pinned official x86_64 template disables Metal; its registered RD
+    # driver is Vulkan. Explicit ANGLE avoids the observed blank native-GL hang.
+    if architecture.lower() in ("x86_64", "amd64"):
+        return "vulkan", "opengl3_angle"
+    if architecture.lower() in ("arm64", "aarch64"):
+        return "metal", "opengl3"
+    raise ValueError("Unsupported native macOS runner architecture")
+
+
+def implementation_details(backend: dict) -> dict:
+    signature = " ".join(
+        str(backend.get(key, "")) for key in ("driver", "adapter", "api", "vendor")
+    ).lower()
+    angle = backend.get("driver") == "opengl3_angle" or bool(
+        re.search(r"\bangle\b", signature)
+    )
+    virtual = any(
+        token in signature
+        for token in (
+            "paravirtual",
+            "virtual machine",
+            "virtual adapter",
+            "vmware",
+            "parallels",
+            "virtualbox",
+        )
+    )
+    software = backend.get("adapter_type") == 4 or any(
+        token in signature
+        for token in (
+            "llvmpipe",
+            "lavapipe",
+            "software renderer",
+            "basic render driver",
+            "gdi generic",
+            "warp",
+        )
+    )
+    native_gl = (
+        backend.get("renderer") == "gl_compatibility"
+        and backend.get("driver") == "opengl3"
+        and not angle
+        and "opengl es" not in signature
+    )
+    return {
+        "angle_translation_detected": angle,
+        "angle_backend": (
+            "metal"
+            if "metal" in signature
+            else (
+                "d3d11"
+                if "d3d11" in signature or "direct3d11" in signature
+                else "unidentified"
+            )
+        )
+        if angle
+        else None,
+        "virtual_adapter_detected": virtual,
+        "native_opengl_implementation": native_gl,
+        "software_adapter_detected": software,
+        "adapter_classification": "software (detected)"
+        if software
+        else (
+            "virtual/paravirtual (detected); physical hardware not accepted"
+            if virtual
+            else "unclassified; physical hardware not accepted"
+        ),
+        "physical_target_gpu_acceptance": False,
+    }
 
 
 def main() -> int:
@@ -359,7 +440,7 @@ def main() -> int:
             executable = staging / "Scene112.exe"
         if not executable.is_file():
             raise ValueError("Missing standalone executable")
-        primary = "metal" if args.platform == "macos" else "d3d12"
+        primary, compatibility = profile_drivers(args.platform, platform.machine())
         results.append(
             profile(
                 executable.resolve(),
@@ -375,7 +456,7 @@ def main() -> int:
                 args.output_dir,
                 user_directory(args.platform),
                 "gl_compatibility",
-                "opengl3",
+                compatibility,
                 allow_angle_fallback=args.platform == "windows",
             )
         )
@@ -404,11 +485,14 @@ def main() -> int:
         "results": results,
         "required_compatibility_passed": compatibility_passed(results, args.platform),
         "native_opengl_validated": results[1]["status"] == "passed"
-        and (results[1].get("actual_backend") or {}).get("driver") == "opengl3",
+        and results[1].get("native_opengl_implementation", False),
         "automatic_angle_fallback_detected": results[1]["status"]
         == "clean_angle_fallback_detected",
-        "explicit_angle_validated": len(results) == 3
-        and results[2]["status"] == "passed",
+        "explicit_angle_validated": any(
+            result["requested_driver"] == "opengl3_angle"
+            and result["status"] == "passed"
+            for result in results
+        ),
         "primary_forward_plus_validated": results[0]["status"] == "passed",
         "gate_passed": passed,
         "default_renderer_changed": False,

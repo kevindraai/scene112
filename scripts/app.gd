@@ -41,14 +41,17 @@ func _ready() -> void:
 	DisplayServer.window_set_title("SCÈNE 112")
 	get_tree().auto_accept_quit = false
 	_bind_inputs()
+	_trace_graphics_stage("world_begin")
 	district = World.new()
 	add_child(district)
+	_trace_graphics_stage("world_ready")
 	police_site = PoliceSiteScript.new()
 	police_site.attach_to(district)
 	officer = Player.new()
 	add_child(officer)
 	officer.position = state.player_position
 	officer.enable_input = false
+	_trace_graphics_stage("actor_ready")
 	district.interacted.connect(_interact)
 	incident_marker = Label3D.new()
 	incident_marker.font_size = 42
@@ -64,6 +67,7 @@ func _ready() -> void:
 	add_child(audio)
 	audio.setup(self)
 	_show_main()
+	_trace_graphics_stage("menu_and_audio_ready")
 	var args := OS.get_cmdline_user_args()
 	test_mode = "--smoke-test" in args or "--playthrough" in args or "--duty-playthrough" in args or "--police-playthrough" in args or "--visual-playthrough" in args
 	if "--smoke-test" in args:
@@ -76,6 +80,10 @@ func _ready() -> void:
 		_police_playthrough.call_deferred()
 	elif "--visual-playthrough" in args:
 		_graphics_playthrough.call_deferred()
+
+func _trace_graphics_stage(value: String) -> void:
+	if "--visual-playthrough" in OS.get_cmdline_user_args():
+		print("SCENE112_GRAPHICS_STAGE=", value, " elapsed_ms=", Time.get_ticks_msec())
 
 func _bind_inputs() -> void:
 	var keys := {"move_forward": KEY_W, "move_back": KEY_S, "move_left": KEY_A,

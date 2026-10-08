@@ -16,23 +16,31 @@ func run(root_app: Node3D) -> void:
 	app = root_app
 	app._test_timeout(240)
 	_cleanup()
+	_stage("initial_draw")
 	await app._test_frames(2)
 	print("SCENE112_GRAPHICS_BACKEND=", JSON.stringify(_backend()))
+	_stage("start_new")
 	app.start_new("police")
 	app.state.equipment = true
 	app.state.radio_checked = true
 	if not _check(app.state.SCHEMA == 4 and app.state.condition == "day" and app.state.graphics_quality == "portable", "schema4 and safe visual defaults"): return
 	app._apply_visual_settings()
 	if not _check(is_instance_valid(app.district.atmosphere), "atmosphere actually attached to root district"): return
+	_stage("models_and_rigs")
 	if not _inspect_models(): return
 	if not _inspect_actor(app.officer._graphics, "officer"): return
 	if not _check(app.district._pedestrians.size() >= 3, "existing live civilians remain in district"): return
 	for npc: CharacterBody3D in app.district._pedestrians:
 		if not _inspect_actor(npc._graphics, str(npc.name)): return
+	_stage("roof_camera")
 	if not await _max_pitch_roof_camera(): return
+	_stage("walk_and_pause")
 	if not await _walk_camera_and_pause(): return
+	_stage("vehicle")
 	if not await _drive(): return
+	_stage("connected_street")
 	if not await _frontage_drive(): return
+	_stage("conditions_and_save")
 	if not await _conditions_and_save(): return
 	report["checks"] = checks
 	report["engine"] = Engine.get_version_info()
@@ -50,6 +58,9 @@ func run(root_app: Node3D) -> void:
 	print("SCENE112_VISUAL_OK checks=", checks, " renderer=", report.renderer, " driver=", report.driver, " adapter=", report.adapter, " screenshots=", DisplayServer.get_name() != "headless", " fixtures=initial positions and equipment; actual walk>10m drive>20m reverse/steering/brake/exit, imported PBR/rig/wheel/camera/pause, conditions and root save/load")
 	app._test_finished = true
 	await app.quit_game(0)
+
+func _stage(value: String) -> void:
+	print("SCENE112_GRAPHICS_STAGE=", value, " elapsed_ms=", Time.get_ticks_msec(), " checks=", checks)
 
 func _inspect_models() -> bool:
 	var roots := {}
@@ -259,6 +270,7 @@ func _conditions_and_save() -> bool:
 	_fixture_foot(Vector3(-2, 0.1, 38), PI, -0.1)
 	app.state.graphics_quality = "balanced"
 	for condition: String in ["day", "dusk", "rain"]:
+		_stage("condition_" + condition)
 		app.state.condition = condition
 		app._apply_visual_settings()
 		await app._test_frames(2)
@@ -284,6 +296,7 @@ func _conditions_and_save() -> bool:
 			info["primitives"] = Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME)
 			info["video_bytes"] = Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED)
 		report.conditions.append(info)
+	_stage("high_rain")
 	app.state.graphics_quality = "high"
 	app._apply_visual_settings()
 	var high: Dictionary = app.district.atmosphere.diagnostics()

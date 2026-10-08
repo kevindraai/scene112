@@ -1,9 +1,9 @@
 shader_type spatial;
 render_mode diffuse_burley, specular_schlick_ggx;
 
-uniform sampler2D albedo_texture : source_color, hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
-uniform sampler2D roughness_texture : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
-uniform sampler2D normal_texture : hint_normal, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D albedo_texture : source_color, hint_default_white, filter_linear_mipmap, repeat_enable;
+uniform sampler2D roughness_texture : hint_default_white, filter_linear_mipmap, repeat_enable;
+uniform sampler2D normal_texture : hint_normal, filter_linear_mipmap, repeat_enable;
 uniform vec4 base_color : source_color = vec4(1.0);
 uniform vec2 uv_scale = vec2(1.0);
 uniform vec2 uv_offset = vec2(0.0);

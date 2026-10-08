@@ -512,7 +512,7 @@ func _pbr(kind: String) -> StandardMaterial3D:
 	material.uv1_triplanar = true
 	material.uv1_world_triplanar = true
 	material.uv1_scale = Vector3(0.5, 0.5, 0.5)
-	material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+	material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	_pbr_materials[kind] = material
 	return material
 
