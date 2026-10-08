@@ -239,10 +239,12 @@ jobs:
               apps = list(staging.glob("*.app"))
               assert len(apps) == 1, "Missing standalone application"
               app = apps[0]
+              run("godot-resource-seal", [sys.executable, "tools/inspect_macos_signature.py", app])
               # Seal the final bundle using Apple's native signing implementation.
               # The private build uses no paid identity or notarization service.
               run("sign", ["codesign", "--force", "--sign", "-", "--timestamp=none",
                   "--preserve-metadata=identifier,entitlements,flags", "--verbose=2", app])
+              run("native-resource-seal", [sys.executable, "tools/inspect_macos_signature.py", app])
               run("signature-before-pack", ["codesign", "--verify", "--deep", "--strict", "--verbose=4", app])
               signed_archive = archive.with_name(archive.stem + ".signed.zip")
               run("pack-signed", ["ditto", "-c", "-k", "--keepParent", "--sequesterRsrc", app, signed_archive])

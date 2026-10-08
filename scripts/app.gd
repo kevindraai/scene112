@@ -20,6 +20,7 @@ var notice_time := 0.0
 var test_mode := false
 
 func _ready() -> void:
+	DisplayServer.window_set_title("SCÈNE 112")
 	_bind_inputs()
 	district = World.new()
 	add_child(district)
